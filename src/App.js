@@ -4,6 +4,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import LeadsNewPage from "./pages/LeadsCreateNew.js";
 import { ToastContainer } from 'react-toastify';
+import UserProfilePage from "./pages/UserProfile.js";
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/leads/new" element={<LeadsNewPage />} />
+      <Route path="/user-profile" element={<UserProfilePage />} />
     </Routes>
     <ToastContainer position="top-right" />
     </>

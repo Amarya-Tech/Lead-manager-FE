@@ -1,11 +1,13 @@
 import "./css/LeadsTable.css";
 import { useState, useEffect, useMemo } from "react";
 import apiClient from "../apicaller/APIClient.js";
+import Cookies from 'js-cookie'; 
 
 export default function LeadsTable({ searchTerm = "", statusFilter = "ALL LEADS" }) {
   const [leads, setLeads] = useState([]);
   const [selectedLeadDetails, setSelectedLeadDetails] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const userId = Cookies.get("user_id")
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -14,7 +16,7 @@ export default function LeadsTable({ searchTerm = "", statusFilter = "ALL LEADS"
   useEffect(() => {
     const fetchLeads = async () => {
       try {
-        const response = await apiClient.get("/lead/fetch-lead-table-detail");
+        const response = await apiClient.get(`/lead/fetch-lead-table-detail/${userId}`);
         if (Array.isArray(response.data.data)) {
           setLeads(response.data.data);
         } else {
@@ -29,11 +31,9 @@ export default function LeadsTable({ searchTerm = "", statusFilter = "ALL LEADS"
     fetchLeads();
   }, []);
 
-  // Filter leads based on search term and status filter
   const filteredLeads = useMemo(() => {
     let filtered = leads;
 
-    // Apply status filter first
     if (statusFilter !== "ALL LEADS") {
       switch (statusFilter) {
         case "OPEN LEADS":
@@ -50,7 +50,6 @@ export default function LeadsTable({ searchTerm = "", statusFilter = "ALL LEADS"
       }
     }
 
-    // Apply search filter
     if (searchTerm.trim()) {
       filtered = filtered.filter(lead => 
         lead.company_name?.toLowerCase().includes(searchTerm.toLowerCase().trim())
@@ -60,18 +59,16 @@ export default function LeadsTable({ searchTerm = "", statusFilter = "ALL LEADS"
     return filtered;
   }, [leads, searchTerm, statusFilter]);
 
-  // Reset to first page when search term or status filter changes
   useEffect(() => {
     setCurrentPage(1);
-    setSelectedLeadDetails(null); // Close details when searching/filtering
+    setSelectedLeadDetails(null); 
   }, [searchTerm, statusFilter]);
 
-  // Calculate pagination values based on filtered leads
+
   const totalPages = Math.ceil(filteredLeads.length / leadsPerPage);
   const startIndex = (currentPage - 1) * leadsPerPage;
   const endIndex = startIndex + leadsPerPage;
-  
-  // Get current page leads from filtered results
+ 
   const currentLeads = useMemo(() => {
     return filteredLeads.slice(startIndex, endIndex);
   }, [filteredLeads, startIndex, endIndex]);
@@ -98,9 +95,6 @@ export default function LeadsTable({ searchTerm = "", statusFilter = "ALL LEADS"
     }
   };
 
-    useEffect(()=>{
-      console.log("selectedLeadDetails",selectedLeadDetails)
-    },[])
   // Pagination handlers
   const goToPage = (page) => {
     setCurrentPage(page);
