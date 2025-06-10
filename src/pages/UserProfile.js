@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from "../apicaller/APIClient.js";
 import Sidebar from "../components/SideBar.js";
+import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import './css/UserProfile.css';
 
@@ -11,8 +12,11 @@ const UserProfilePage = () => {
     const [isEditingStatus, setIsEditingStatus] = useState(false);
     const [editedStatus, setEditedStatus] = useState(false);
     const [editedRole, setEditedRole] = useState('');
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
+
     
     const userId = Cookies.get("user_id")
+     const navigate = useNavigate();
 
     useEffect(() => {
         fetchUserProfile();
@@ -47,6 +51,34 @@ const UserProfilePage = () => {
             console.log('Error response:', error.response?.data); 
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Add logout functionality
+    const handleLogout = async () => {
+        try {
+            setIsLoggingOut(true);
+
+            const response = await apiClient.get(`/user/logout/${userId}`);
+
+            Cookies.remove('user_id');
+            Cookies.remove('jwt');
+
+            localStorage.clear();
+            sessionStorage.clear();
+            navigate('/login', { replace: true });
+
+        } catch (error) {
+            console.error('Error during logout:', error);
+            // Cookies.remove('user_id');
+            // Cookies.remove('jwt');
+
+            // localStorage.clear();
+            // sessionStorage.clear();
+            // navigate('/login', { replace: true });
+
+        } finally {
+            setIsLoggingOut(false);
         }
     };
 
@@ -112,6 +144,15 @@ const UserProfilePage = () => {
             <div className="app-layout">
                 <Sidebar />
                 <div className="main-content">
+                    <div className="content-header">
+                        <button 
+                            className="logout-btn"
+                            onClick={handleLogout}
+                            disabled={isLoggingOut}
+                        >
+                            {isLoggingOut ? 'Logging out...' : 'Logout'}
+                        </button>
+                    </div>
                     <div className="profile-container">
                         <div className="loading-spinner">Loading...</div>
                     </div>
@@ -125,6 +166,15 @@ const UserProfilePage = () => {
             <div className="app-layout">
                 <Sidebar />
                 <div className="main-content">
+                    <div className="content-header">
+                        <button
+                            className="logout-btn"
+                            onClick={handleLogout}
+                            disabled={isLoggingOut}
+                        >
+                        {isLoggingOut ? 'Logging out...' : 'Logout'}
+                        </button>
+                    </div>
                     <div className="profile-container">
                         <div className="error-message">Unable to load profile</div>
                     </div>
@@ -137,6 +187,16 @@ const UserProfilePage = () => {
         <div className="app-layout">
             <Sidebar />
             <div className="main-content">
+                <div className="content-header">
+                    <h1 className="page-title">User Profile</h1>
+                    <button 
+                        className="logout-btn"
+                        onClick={handleLogout}
+                        disabled={isLoggingOut}
+                    >
+                        {isLoggingOut ? 'Logging out...' : 'Logout'}
+                    </button>
+                </div>
                 <div className="profile-container">
                     <div className="profile-card">
                         {/* Profile Header with Avatar */}

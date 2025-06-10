@@ -1,26 +1,45 @@
 import { useState } from "react";
+import { useNavigate } from 'react-router-dom';
 import Sidebar from "../components/SideBar.js";
+import LeadsTable from "../components/LeadsTable.js";
 import "./css/Leads.css";
-import LeadsManager from "../components/LeadManager.js";
 
-export default function Leads() {
+export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedFilter, setSelectedFilter] = useState("ALL LEADS");
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
 
+  const navigate = useNavigate();
+
+    const handleNewLead = () => {
+      navigate('/leads/new'); 
+    };
+
   const clearSearch = () => {
     setSearchTerm("");
   };
 
+  const handleFilterChange = (filter) => {
+    setSelectedFilter(filter);
+  };
+
+  const filterButtons = [
+    { label: "All Leads", value: "ALL LEADS" },
+    { label: "Open Leads", value: "OPEN LEADS" },
+    { label: "Contacted Leads", value: "CONTACTED LEADS" },
+    { label: "Closed Leads", value: "CLOSED LEADS" }
+  ];
 
   return (
     <div className="leads-page">
       <Sidebar />
       <div className="leads-content">
-         <div className="leads-header">
-          <h2 className="leads-title">Leads</h2>
+        <div className="leads-header">
+          <h2 className="leads-title">Dashboard</h2>
+          <button className="primary-button" onClick={handleNewLead}>New Lead</button>
         </div>
         
         {/* Enhanced Search Input */}
@@ -72,9 +91,24 @@ export default function Leads() {
             {searchTerm.trim() ? `Searching for: "${searchTerm}"` : ""}
           </div>
         )}
+
+        <div className="filter-buttons">
+          {filterButtons.map((button) => (
+            <button 
+              key={button.value}
+              className={`filter-button ${selectedFilter === button.value ? 'active' : ''}`}
+              onClick={() => handleFilterChange(button.value)}
+            >
+              {button.label}
+            </button>
+          ))}
+        </div>
         
         {/* Pass both search term and filter to LeadsTable */}
-        <LeadsManager searchTerm={searchTerm} />
+        <LeadsTable 
+          searchTerm={searchTerm} 
+          statusFilter={selectedFilter}
+        />
       </div>
     </div>
   );

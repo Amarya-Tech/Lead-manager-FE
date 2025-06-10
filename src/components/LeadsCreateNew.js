@@ -4,12 +4,12 @@ import Cookies from 'js-cookie';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import apiClient from "../apicaller/APIClient.js";
-import Sidebar from "../components/SideBar.js";
+import Sidebar from "./SideBar.js";
 import './css/LeadsCreateNew.css'
 
 const LeadsNewPage = () => {
   const navigate = useNavigate();
-  const userId = Cookies.get("user_id")
+  const userId = Cookies.get("user_id") 
 
   const [leadId, setLeadId] = useState(null);
   const [officeSaved, setOfficeSaved] = useState(false);

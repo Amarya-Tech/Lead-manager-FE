@@ -303,6 +303,60 @@
     gap: 12px;
 }
 
+.content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 0;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+/* Logout button styles */
+.logout-btn {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+}
+
+.logout-btn:hover {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+}
+
+.logout-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+}
+
+.logout-btn:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.logout-btn:disabled:hover {
+    background: #9ca3af;
+    transform: none;
+    box-shadow: none;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .app-layout {
@@ -379,4 +433,31 @@
 
 .profile-card:hover {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.content-header {
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-start;
+}
+
+.logout-btn {
+    align-self: flex-end;
+    width: auto;
+}
+
+.page-title {
+    font-size: 1.5rem;
+}
+
+
+@media (max-width: 480px) {
+    .content-header {
+        padding: 15px 0;
+    }
+    
+    .logout-btn {
+        width: 100%;
+        justify-self: center;
+    }
 }

@@ -7,8 +7,7 @@ export default function Sidebar() {
       <h2>Lead Manager</h2>
       <nav>
         <Link to="/dashboard">Dashboard</Link>
-        <Link to="/update-leads">Update Leads</Link>
-        <Link to="/lead-communication">Lead Communication</Link>
+        <Link to="/leads">Leads</Link>
         <Link to="/user-profile">User</Link>
       </nav>
     </div>
