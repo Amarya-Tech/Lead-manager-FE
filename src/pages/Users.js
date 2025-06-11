@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import FormInput from '../components/FormInput.js';
 import Cookies from 'js-cookie';
 import './css/Users.css';
+import Navbar from '../components/NavBar.js';
 
 const UserPage = () => {
     const [userList, setUserList] = useState([]);
@@ -129,6 +130,8 @@ const UserPage = () => {
     };
 
     return (
+        <>
+        <Navbar />
         <div className="user-page">
             <Sidebar />
             <div className="main-content">
@@ -240,6 +243,7 @@ const UserPage = () => {
                 )}
             </div>
         </div>
+        </>
     );
 };
 

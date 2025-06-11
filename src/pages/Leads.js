@@ -2,6 +2,7 @@ import { useState } from "react";
 import Sidebar from "../components/SideBar.js";
 import "./css/Leads.css";
 import LeadsManager from "../components/LeadManager.js";
+import Navbar from "../components/NavBar.js";
 
 export default function Leads() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -16,6 +17,8 @@ export default function Leads() {
 
 
   return (
+    <>
+    <Navbar />
     <div className="leads-page">
       <Sidebar />
       <div className="leads-content">
@@ -77,5 +80,6 @@ export default function Leads() {
         <LeadsManager searchTerm={searchTerm} />
       </div>
     </div>
+    </>
   );
 }

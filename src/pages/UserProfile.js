@@ -4,6 +4,7 @@ import Sidebar from "../components/SideBar.js";
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import './css/UserProfile.css';
+import Navbar from '../components/NavBar.js';
 
 const UserProfilePage = () => {
     const [userProfile, setUserProfile] = useState(null);
@@ -87,7 +88,7 @@ const UserProfilePage = () => {
     const handleSave = async () => {
         try {
             const payload = { id: userId, ...editedData };
-            if (!payload.password) delete payload.password; // optional password update
+            if (!payload.password) delete payload.password;
             const response = await apiClient.put(`/user/update-user/${userId}`, payload);
             if (response.data.success) {
                 fetchUserProfile();
@@ -104,14 +105,16 @@ const UserProfilePage = () => {
     if (!userProfile) return <div>Unable to load profile</div>;
 
     return (
+        <>
+        <Navbar />
         <div className="app-layout">
             <Sidebar />
             <div className="main-content">
                 <div className="content-header">
                     <h1 className="page-title">User Profile</h1>
-                    <button className="logout-btn" onClick={handleLogout} disabled={isLoggingOut}>
+                    {/* <button className="logout-btn" onClick={handleLogout} disabled={isLoggingOut}>
                         {isLoggingOut ? 'Logging out...' : 'Logout'}
-                    </button>
+                    </button> */}
                 </div>
 
                 <div className="profile-container">
@@ -192,6 +195,7 @@ const UserProfilePage = () => {
                 </div>
             </div>
         </div>
+        </>
     );
 };
 
