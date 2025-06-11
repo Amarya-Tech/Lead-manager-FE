@@ -28,11 +28,9 @@ export default function Login() {
 
     try {
       const response = await axios.post(`${process.env.REACT_APP_API_URL}/user/login`, data, {
-        withCredentials: true, // without this → cookies won't be sent/received
+        withCredentials: true, 
       });
-      // console.log(response.data)
       const encryptionKeyFromHeader = response.headers['x-encryption-key'] || '';
-      // console.log('Encryption Key:', encryptionKeyFromHeader);
 
       setEncryptionKey(encryptionKeyFromHeader);
       toast.success(response.data.message || 'Login successful!');
@@ -76,9 +74,6 @@ export default function Login() {
           </div>
           <button type="submit">Login</button>
         </form>
-        <p className="auth-footer">
-          Don’t have an account? <Link to="/register">Register</Link>
-        </p>
       </div>
     </div>
   );

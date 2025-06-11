@@ -51,7 +51,7 @@ const LeadsNewPage = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await apiClient.get('/user/fetch-user-list');
+      const response = await apiClient.get('/user/fetch-active-user-list');
       console.log(response.data)
       
       if (response.data && response.data.success && response.data.data) {

@@ -8,7 +8,8 @@ export default function Sidebar() {
       <nav>
         <Link to="/dashboard">Dashboard</Link>
         <Link to="/leads">Leads</Link>
-        <Link to="/user-profile">User</Link>
+        <Link to="/users">Users</Link>
+        <Link to="/user-profile">User Profile</Link>
       </nav>
     </div>
   );

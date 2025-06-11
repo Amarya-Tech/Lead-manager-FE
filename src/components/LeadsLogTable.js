@@ -15,7 +15,6 @@ export default function LeadsLogTable({ searchTerm = "", onUpdateLead, onViewLog
         const fetchLeads = async () => {
             try {
                 const response = await apiClient.get(`/lead/fetch-lead-log-list/${userId}`);
-                console.log("Log table response" , response.data.data,)
                 if (Array.isArray(response.data.data)) {
                     setLeads(response.data.data);
                 } else {

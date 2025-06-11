@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from "../components/SideBar.js";
 import LeadsTable from "../components/LeadsTable.js";
 import "./css/Leads.css";
+import Navbar from "../components/NavBar.js";
 
 export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -34,6 +35,8 @@ export default function Dashboard() {
   ];
 
   return (
+    <>
+    <Navbar />
     <div className="leads-page">
       <Sidebar />
       <div className="leads-content">
@@ -111,5 +114,6 @@ export default function Dashboard() {
         />
       </div>
     </div>
+    </>
   );
 }

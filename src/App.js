@@ -2,12 +2,12 @@ import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Dashboard from "./pages/Dashboard.js";
 import Login from "./pages/Login";
-import Register from "./pages/Register";
 import LeadsNewPage from "./components/LeadsCreateNew.js";
 import { ToastContainer } from 'react-toastify';
 import UserProfilePage from "./pages/UserProfile.js";
 import Leads from "./pages/Leads.js";
 import Cookies from 'js-cookie';
+import UserPage from "./pages/Users.js";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -45,7 +45,6 @@ function App() {
         
         {/* Public routes */}
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
         
         {/* Protected routes */}
         <Route 
@@ -69,6 +68,14 @@ function App() {
           element={
             <ProtectedRoute>
               <LeadsNewPage />
+            </ProtectedRoute>
+          } 
+        />
+         <Route 
+          path="/users" 
+          element={
+            <ProtectedRoute>
+              <UserPage />
             </ProtectedRoute>
           } 
         />
