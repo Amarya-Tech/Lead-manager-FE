@@ -188,7 +188,7 @@ const UserProfilePage = () => {
                                     <button className="cancel-btn" onClick={handleCancel}>Cancel</button>
                                 </>
                             ) : (
-                                <button className="edit-btn" onClick={handleEditToggle}>Edit Profile</button>
+                                <button className="edit-btn" onClick={handleEditToggle}>Update Profile</button>
                             )}
                         </div>
                     </div>

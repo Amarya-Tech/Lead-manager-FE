@@ -11,15 +11,14 @@ const UserPage = () => {
     const [userList, setUserList] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showAddUserModal, setShowAddUserModal] = useState(false);
+    const [showUpdateUserModal, setShowUpdateUserModal] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const [selectedUserId, setSelectedUserId] = useState(null);
     const [selectedUser, setSelectedUser] = useState(null);
 
-    const [isEditing, setIsEditing] = useState(false);
     const [isEditingStatus, setIsEditingStatus] = useState(false);
     const [editedStatus, setEditedStatus] = useState(false);
-    const [editedRole, setEditedRole] = useState('');
 
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
@@ -28,6 +27,15 @@ const UserPage = () => {
     const [phone, setPhone] = useState("");
     const [role, setRole] = useState("user");
     const [showErrors, setShowErrors] = useState(false);
+
+    // Update User form states
+    const [editedData, setEditedData] = useState({
+        first_name: '',
+        last_name: '',
+        phone: '',
+        password: '',
+        role: ''
+    });
 
     useEffect(() => {
         fetchUserList();
@@ -58,6 +66,19 @@ const UserPage = () => {
         setPhone("");
     };
 
+    const handleCloseUpdateModal = () => {
+        setShowUpdateUserModal(false);
+        setSelectedUser(null);
+        setSelectedUserId(null);
+        setEditedData({
+            first_name: '',
+            last_name: '',
+            phone: '',
+            password: '',
+            role: ''
+        });
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!firstName || !lastName || !email || !password || !role) {
@@ -85,25 +106,43 @@ const UserPage = () => {
         }
     };
 
-    const handleUpdateRole = async () => {
-        if (!selectedUserId || editedRole === selectedUser.role) {
-            setIsEditing(false);
-            return;
-        }
+    const handleUpdateUser = (user) => {
+        setSelectedUser(user);
+        setSelectedUserId(user.id);
+        setEditedData({
+            first_name: user.first_name || '',
+            last_name: user.last_name || '',
+            phone: user.phone || '',
+            password: '',
+            role: user.role || ''
+        });
+        setShowUpdateUserModal(true);
+    };
+
+    const handleUpdateChange = (e) => {
+        const { name, value } = e.target;
+        setEditedData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleSaveUpdate = async () => {
         try {
-            const response = await apiClient.put(`/user/update-user-role`, {
-                id: selectedUserId,
-                role: editedRole
-            });
-            if (response.data?.success) {
-                toast.success("Role updated");
+            setIsSubmitting(true);
+            const payload = { id: selectedUserId, ...editedData };
+            if (!payload.password) delete payload.password;
+            
+            const response = await apiClient.put(`/user/update-user/${selectedUserId}`, payload);
+            
+            if (response.data.success) {
+                toast.success('User updated successfully');
                 fetchUserList();
-            } else toast.error("Failed to update role");
+                handleCloseUpdateModal();
+            } else {
+                toast.error('Failed to update user');
+            }
         } catch (error) {
-            toast.error("Error updating role");
+            toast.error(error.response?.data?.message || 'Error updating user');
         } finally {
-            setIsEditing(false);
-            setSelectedUserId(null);
+            setIsSubmitting(false);
         }
     };
 
@@ -157,14 +196,7 @@ const UserPage = () => {
                                     <td>{user.first_name} {user.last_name}</td>
                                     <td>{user.email}</td>
                                     <td>{user.phone}</td>
-                                    <td>
-                                        {isEditing && selectedUserId === user.id ? (
-                                            <select value={editedRole} onChange={e => setEditedRole(e.target.value)}>
-                                                <option value="admin">Admin</option>
-                                                <option value="user">User</option>
-                                            </select>
-                                        ) : user.role}
-                                    </td>
+                                    <td>{user.role}</td>
                                     <td className={user.is_active ? 'status-active' : 'status-inactive'}>
                                         {isEditingStatus && selectedUserId === user.id ? (
                                                 <select value={editedStatus ? 'true' : 'false'} onChange={e => setEditedStatus(e.target.value === 'true')}>
@@ -174,18 +206,15 @@ const UserPage = () => {
                                         ) : user.is_active ? 'Active' : 'Inactive'}
                                     </td> 
                                     <td>
-                                        <button onClick={() => {
-                                            setIsEditing(true);
-                                            setSelectedUserId(user.id);
-                                            setEditedRole(user.role);
-                                            setSelectedUser(user);
-                                        }} style={{ marginRight: "20px" }}>Edit Role</button>
+                                        <button onClick={() => handleUpdateUser(user)} style={{ marginRight: "20px" }}>
+                                            Update User
+                                        </button>
                                         <button onClick={() => {
                                             setIsEditingStatus(true);
                                             setSelectedUserId(user.id);
                                             setEditedStatus(user.is_active);
                                             setSelectedUser(user);
-                                        }}>Edit Status</button>
+                                        }}>Update Status</button>
                                     </td>
                                 </tr>
                             ))}
@@ -193,23 +222,14 @@ const UserPage = () => {
                     </table>
                 )}
 
-                {(isEditing || isEditingStatus) && (
+                {isEditingStatus && (
                     <div className="edit-actions">
-                        {isEditing && (
-                            <>
-                                <button className="save-btn" onClick={handleUpdateRole}>Save Role</button>
-                                <button className="cancel-btn" onClick={() => { setIsEditing(false); setSelectedUserId(null); }}>Cancel</button>
-                            </>
-                        )}
-                        {isEditingStatus && (
-                            <>
-                                <button className="save-btn" onClick={handleUpdateStatus}>Save Status</button>
-                                <button className="cancel-btn" onClick={() => { setIsEditingStatus(false); setSelectedUserId(null); }}>Cancel</button>
-                            </>
-                        )}
+                        <button className="save-btn" onClick={handleUpdateStatus}>Save Status</button>
+                        <button className="cancel-btn" onClick={() => { setIsEditingStatus(false); setSelectedUserId(null); }}>Cancel</button>
                     </div>
                 )}
 
+                {/* Add User Modal */}
                 {showAddUserModal && (
                     <div className="modal-overlay">
                         <div className="modal-container">
@@ -238,6 +258,74 @@ const UserPage = () => {
                                     <button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Adding...' : 'Add User'}</button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                )}
+
+                {/* Update User Modal */}
+                {showUpdateUserModal && (
+                    <div className="modal-overlay">
+                        <div className="modal-container">
+                            <div className="modal-header">
+                                <h2>Update User</h2>
+                                <button onClick={handleCloseUpdateModal}>×</button>
+                            </div>
+                            <div className="modal-form">
+                                <div className="form-group">
+                                    <label>First Name</label>
+                                    <input 
+                                        name="first_name" 
+                                        value={editedData.first_name} 
+                                        onChange={handleUpdateChange}
+                                        placeholder="First Name"
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label>Last Name</label>
+                                    <input 
+                                        name="last_name" 
+                                        value={editedData.last_name} 
+                                        onChange={handleUpdateChange}
+                                        placeholder="Last Name"
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label>Phone</label>
+                                    <input 
+                                        name="phone" 
+                                        value={editedData.phone} 
+                                        onChange={handleUpdateChange}
+                                        placeholder="Phone"
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label>Role</label>
+                                    <select 
+                                        name="role" 
+                                        value={editedData.role} 
+                                        onChange={handleUpdateChange}
+                                    >
+                                        <option value="admin">Admin</option>
+                                        <option value="user">User</option>
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>New Password (optional)</label>
+                                    <input 
+                                        name="password" 
+                                        type="text" 
+                                        value={editedData.password} 
+                                        onChange={handleUpdateChange}
+                                        placeholder="Enter new password (leave blank to keep current)"
+                                    />
+                                </div>
+                                <div className="modal-actions">
+                                    <button type="button" onClick={handleCloseUpdateModal}>Cancel</button>
+                                    <button type="button" onClick={handleSaveUpdate} disabled={isSubmitting}>
+                                        {isSubmitting ? 'Updating...' : 'Update User'}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}

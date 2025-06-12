@@ -17,7 +17,7 @@ export default function LeadLogsPage({ leadId, onBack }) {
         const fetchLeadLogs = async () => {
             try {
                 setIsLoading(true);
-                const logsResponse = await apiClient.get(`/lead-com/fetch-lead-log-details/${userId}/${leadId}`);
+                const logsResponse = await apiClient.get(`/lead-com/fetch-lead-log-details/${leadId}`);
                 
                 const leadResponse = await apiClient.get(`/lead/get-lead-detail/${leadId}`);
                 
@@ -67,8 +67,7 @@ export default function LeadLogsPage({ leadId, onBack }) {
             setIsSubmitting(true);
             setError("");
 
-            const response = await apiClient.post(`/lead-com/add-comments/${userId}`, {
-                lead_communication_id: leadCommunicationId,
+            const response = await apiClient.post(`/lead-com/add-comments/${userId}/${leadId}`, {
                 comment: newComment.trim(),
             });
 

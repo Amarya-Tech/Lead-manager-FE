@@ -1,11 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import apiClient from "../apicaller/APIClient.js";
 import Sidebar from "./SideBar.js";
-import './css/LeadsCreateNew.css'
+import './css/LeadsCreateNew.css';
+import FormInput from '../components/FormInput.js';
 
 const LeadsNewPage = () => {
   const navigate = useNavigate();
@@ -20,6 +20,12 @@ const LeadsNewPage = () => {
   const [selectedAssignee, setSelectedAssignee] = useState('');
   const [description, setDescription] = useState('');
   const [assigneeSaved, setAssigneeSaved] = useState(false);
+  const [assigneeSkipped, setAssigneeSkipped] = useState(false);
+
+  // Error state tracking
+  const [showCompanyErrors, setShowCompanyErrors] = useState(false);
+  const [showOfficeErrors, setShowOfficeErrors] = useState(false);
+  const [showContactErrors, setShowContactErrors] = useState(false);
 
   const [companyForm, setCompanyForm] = useState({
     company_name: '',
@@ -44,6 +50,23 @@ const LeadsNewPage = () => {
     email: '',
   });
 
+  // Validation functions
+  const validateCompanyForm = () => {
+    return companyForm.company_name.trim() !== '' && companyForm.product.trim() !== '';
+  };
+
+  const validateOfficeForm = () => {
+    return officeForm.address.trim() !== '' && 
+           officeForm.city.trim() !== '' && 
+           officeForm.district.trim() !== '' && 
+           officeForm.country.trim() !== '' && 
+           officeForm.postal_code.trim() !== '';
+  };
+
+  const validateContactForm = () => {
+    return contactForm.name.trim() !== '';
+  };
+
   // Fetch users list when component mounts
   useEffect(() => {
     fetchUsers();
@@ -66,13 +89,26 @@ const LeadsNewPage = () => {
   };
 
   const createLead = async () => {
+    setShowCompanyErrors(true);
+    
+    if (!validateCompanyForm()) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
     try {
-      const response = await apiClient.post(`/lead/create-lead/${userId}`, companyForm);
+      // Filter out empty optional fields
+      const requestBody = {
+        company_name: companyForm.company_name,
+        product: companyForm.product,
+        ...(companyForm.industry_type && { industry_type: companyForm.industry_type }),
+        ...(companyForm.export_value && { export_value: companyForm.export_value }),
+        ...(companyForm.insured_amount && { insured_amount: companyForm.insured_amount }),
+      };
 
+      const response = await apiClient.post(`/lead/create-lead/${userId}`, requestBody);
       const { success, message, data } = response.data || {};
-
       setLeadId(data.lead_id);
-      
     } catch (error) {
       console.error('Failed to create lead:', error);
       const backendMessage = error.response.data.message;
@@ -81,6 +117,13 @@ const LeadsNewPage = () => {
   };
 
   const saveOffice = async () => {
+    setShowOfficeErrors(true);
+    
+    if (!validateOfficeForm()) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
     try {
       const response = await apiClient.post(`/lead/add-lead-office`, {
         lead_id: leadId,
@@ -97,7 +140,7 @@ const LeadsNewPage = () => {
           country: '',
           postal_code: '',
         });
-
+        setShowOfficeErrors(false);
       } else {
         console.error('Invalid save office response:', response.data);
       }
@@ -109,11 +152,24 @@ const LeadsNewPage = () => {
   };
 
   const saveContact = async () => {
+    setShowContactErrors(true);
+    
+    if (!validateContactForm()) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
     try {
-      const response = await apiClient.post(`/lead/add-lead-contact/${userId}`, {
+      // Filter out empty optional fields
+      const requestBody = {
         lead_id: leadId,
-        ...contactForm,
-      });
+        name: contactForm.name, // Required field
+        ...(contactForm.phone && { phone: contactForm.phone }),
+        ...(contactForm.alt_phone && { alt_phone: contactForm.alt_phone }),
+        ...(contactForm.email && { email: contactForm.email }),
+      };
+
+      const response = await apiClient.post(`/lead/add-lead-contact/${userId}`, requestBody);
 
       if (response.data.success) {
         setContacts([...contacts, contactForm]);
@@ -124,6 +180,7 @@ const LeadsNewPage = () => {
           alt_phone: '',
           email: '',
         });
+        setShowContactErrors(false);
       } else {
         console.error('Invalid save contact response:', response.data);
       }
@@ -141,11 +198,14 @@ const LeadsNewPage = () => {
     }
 
     try {
-      const response = await apiClient.post('/lead-com/add-assignee', {
+      // Filter out empty description field
+      const requestBody = {
         lead_id: leadId,
         assignee_id: selectedAssignee,
-        description: description
-      });
+        ...(description && { description: description }),
+      };
+
+      const response = await apiClient.post('/lead-com/add-assignee', requestBody);
 
       if (response.data.success) {
         setAssigneeSaved(true);
@@ -161,6 +221,11 @@ const LeadsNewPage = () => {
     }
   };
 
+  const skipAssignee = () => {
+    setAssigneeSkipped(true);
+    toast.info('Sales representative assignment skipped. You can assign later from the leads list.');
+  };
+
   return (
     <div className="page-layout">
       <Sidebar />
@@ -174,26 +239,28 @@ const LeadsNewPage = () => {
               <h3>Basic Lead Information</h3>
               
               <div className="form-group">
-                <label className="form-label">Company Name</label>
-                <input
+                <label className="form-label">Company Name *</label>
+                <FormInput
                   type="text"
                   placeholder="Enter company name"
                   value={companyForm.company_name}
                   onChange={(e) =>
                     setCompanyForm({ ...companyForm, company_name: e.target.value })
                   }
+                  showErrors={showCompanyErrors}
                 />
               </div>
 
               <div className="form-group">
-                <label className="form-label">Lead Product</label>
-                 <input
+                <label className="form-label">Lead Product *</label>
+                <FormInput
                   type="text"
                   placeholder="Enter Product"
                   value={companyForm.product}
                   onChange={(e) =>
-                    setCompanyForm({ ...companyForm, product: e.target.value  })
+                    setCompanyForm({ ...companyForm, product: e.target.value })
                   }
+                  showErrors={showCompanyErrors}
                 />
               </div>
 
@@ -250,62 +317,67 @@ const LeadsNewPage = () => {
               <h3>Lead Offices</h3>
               
               <div className="form-group">
-                <label className="form-label">Address</label>
-                <input
+                <label className="form-label">Address *</label>
+                <FormInput
                   type="text"
                   placeholder="Enter address"
                   value={officeForm.address}
                   onChange={(e) =>
                     setOfficeForm({ ...officeForm, address: e.target.value })
                   }
+                  showErrors={showOfficeErrors}
                 />
               </div>
 
               <div className="form-group">
-                <label className="form-label">City</label>
-                <input
+                <label className="form-label">City *</label>
+                <FormInput
                   type="text"
                   placeholder="Enter city"
                   value={officeForm.city}
                   onChange={(e) =>
                     setOfficeForm({ ...officeForm, city: e.target.value })
                   }
+                  showErrors={showOfficeErrors}
                 />
               </div>
 
               <div className="form-group">
-                <label className="form-label">District</label>
-                <input
+                <label className="form-label">District *</label>
+                <FormInput
                   type="text"
                   placeholder="Enter district"
                   value={officeForm.district}
                   onChange={(e) =>
                     setOfficeForm({ ...officeForm, district: e.target.value })
                   }
+                  showErrors={showOfficeErrors}
                 />
               </div>
 
               <div className="form-group">
-                <label className="form-label">Country</label>
-                <input
+                <label className="form-label">Country *</label>
+                <FormInput
                   type="text"
                   placeholder="Enter country"
                   value={officeForm.country}
                   onChange={(e) =>
                     setOfficeForm({ ...officeForm, country: e.target.value })
                   }
+                  showErrors={showOfficeErrors}
                 />
               </div>
 
               <div className="form-group">
-                <label className="form-label">Postal Code</label>
-                <input
+                <label className="form-label">Postal Code *</label>
+                <FormInput
                   type="text"
                   placeholder="Enter postal code"
                   value={officeForm.postal_code}
                   onChange={(e) =>
                     setOfficeForm({ ...officeForm, postal_code: e.target.value })
                   }
+                  showErrors={showOfficeErrors}
                 />
               </div>
 
@@ -322,14 +394,15 @@ const LeadsNewPage = () => {
               <h3>Contact Details</h3>
               
               <div className="form-group">
-                <label className="form-label">Name</label>
-                <input
+                <label className="form-label">Name *</label>
+                <FormInput
                   type="text"
                   placeholder="Enter contact name"
                   value={contactForm.name}
                   onChange={(e) =>
                     setContactForm({ ...contactForm, name: e.target.value })
                   }
+                  showErrors={showContactErrors}
                 />
               </div>
 
@@ -375,10 +448,11 @@ const LeadsNewPage = () => {
             </div>
           )}
 
-          {/* STEP 4 - ASSIGN SALES REP */}
-          {leadId && officeSaved && contactSaved && !assigneeSaved && (
+          {/* STEP 4 - ASSIGN SALES REP (OPTIONAL) */}
+          {leadId && officeSaved && contactSaved && !assigneeSaved && !assigneeSkipped && (
             <div className="form-section">
-              <h3>Assign Sales Representative</h3>
+              <h3>Assign Sales Representative (Optional)</h3>
+              <p className="optional-note">You can assign a sales representative now or skip this step and assign later.</p>
               
               <div className="form-group">
                 <label className="form-label">Select Sales Representative</label>
@@ -405,9 +479,14 @@ const LeadsNewPage = () => {
                 />
               </div>
 
-              <button onClick={assignSalesRep} className="primary-button">
-                Assign Sales Representative
-              </button>
+              <div className="button-group">
+                <button onClick={assignSalesRep} className="primary-button">
+                  Assign Sales Representative
+                </button>
+                <button onClick={skipAssignee} className="secondary-button">
+                  Skip for Now
+                </button>
+              </div>
             </div>
           )}
 
@@ -421,15 +500,23 @@ const LeadsNewPage = () => {
               {assigneeSaved && (
                 <p>✓ Sales Representative Assigned</p>
               )}
+              {assigneeSkipped && (
+                <p>⚠ Sales Representative Assignment Skipped</p>
+              )}
               
-              {assigneeSaved && (
+              {(assigneeSaved || assigneeSkipped) && (
                 <div className="completion-section">
                   <h4>🎉 Lead Created Successfully!</h4>
+                  {assigneeSkipped && (
+                    <p className="skip-note">
+                      Note: You can assign a sales representative later from the leads management page.
+                    </p>
+                  )}
                   <button 
                     onClick={() => navigate('/dashboard')} 
                     className="secondary-button"
                   >
-                    Go to Leads List
+                    Go to Dashboard
                   </button>
                 </div>
               )}
