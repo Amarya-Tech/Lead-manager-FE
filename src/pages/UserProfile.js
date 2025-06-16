@@ -5,6 +5,18 @@ import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import './css/UserProfile.css';
 import Navbar from '../components/NavBar.js';
+import {
+  Avatar,
+  Box,
+  Button,
+  Container,
+  Divider,
+  Grid,
+  TextField,
+  Typography,
+  Chip,
+  Paper,
+} from "@mui/material";
 
 const UserProfilePage = () => {
     const [userProfile, setUserProfile] = useState(null);
@@ -52,22 +64,6 @@ const UserProfilePage = () => {
         }
     };
 
-    const handleLogout = async () => {
-        try {
-            setIsLoggingOut(true);
-            await apiClient.get(`/user/logout/${userId}`);
-            Cookies.remove('user_id');
-            Cookies.remove('jwt');
-            localStorage.clear();
-            sessionStorage.clear();
-            navigate('/login', { replace: true });
-        } catch (error) {
-            console.error('Error during logout:', error);
-        } finally {
-            setIsLoggingOut(false);
-        }
-    };
-
     const handleEditToggle = () => setIsEditing(true);
 
     const handleCancel = () => {
@@ -105,98 +101,210 @@ const UserProfilePage = () => {
     if (!userProfile) return <div>Unable to load profile</div>;
 
     return (
-        <>
-        <Navbar />
-        <div className="app-layout">
-            <Sidebar />
-            <div className="main-content">
-                <div className="content-header">
-                    <h1 className="page-title">User Profile</h1>
-                    {/* <button className="logout-btn" onClick={handleLogout} disabled={isLoggingOut}>
-                        {isLoggingOut ? 'Logging out...' : 'Logout'}
-                    </button> */}
-                </div>
+    <>
+      <Navbar />
+      <Box display="flex" sx={{
+        fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif`
+      }}>
+        <Sidebar />
+        <Box component="main"  sx={{
+              flexGrow: 1,
+              p: 3,
+              ml: '24px',  
+              width: 'calc(100% - 240px)',      
+            }}>
+          <Box
+           display="flex" justifyContent="space-between" alignItems="center" sx={{mb:'20px', mt:'10px'}}>
+            <Typography variant="h5" sx={{
+              fontSize: '28px',
+              fontWeight: 'bold',
+              color: '#000000',
+              fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif`
+            }}>
+              User Profile
+            </Typography>
+          </Box>
 
-                <div className="profile-container">
-                    <div className="profile-card">
-                        <div className="profile-avatar">
-                            <div className="avatar-circle">
-                                {userProfile.first_name?.[0]}{userProfile.last_name?.[0]}
-                            </div>
-                            <div className="profile-info">
-                                <h1 className="user-name">
-                                    {userProfile.first_name} {userProfile.last_name}
-                                </h1>
-                                <p className="user-email">{userProfile.email}</p>
-                            </div>
-                            <div className="role-badge">{userProfile.role?.toUpperCase()}</div>
-                        </div>
+          <Container maxWidth="md">
+            <Paper elevation={1} sx={{ borderRadius: 2, overflow: "hidden" }}>
+              <Box
+                sx={{
+                  p: 4,
+                  display: "flex",
+                  flexDirection: { xs: "column", sm: "row" },
+                  alignItems: "center",
+                  gap: 2,
+                  borderBottom: "1px solid #f1f5f9",
+                }}
+              >
+                <Avatar
+                  sx={{
+                    width: 80,
+                    height: 80,
+                    bgcolor: "#3b82f6",
+                    fontSize: 24,
+                    fontWeight: 600,
+                    color: "white",
+                  }}
+                >
+                  {userProfile.first_name?.[0]}
+                  {userProfile.last_name?.[0]}
+                </Avatar>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="h5" fontWeight={600}>
+                    {userProfile.first_name} {userProfile.last_name}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {userProfile.email}
+                  </Typography>
+                </Box>
+                <Chip
+                  label={userProfile.role?.toUpperCase()}
+                  sx={{
+                    bgcolor: "#3b82f6",
+                    color: "white",
+                    fontWeight: 500,
+                    textTransform: "uppercase",
+                    fontSize: 12,
+                    borderRadius: "16px",
+                  }}
+                />
+              </Box>
 
-                        <div className="about-section">
-                            <h3 className="section-header">About</h3>
+              <Box>
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    px: 4,
+                    pt: 3,
+                    pb: 1,
+                    fontWeight: 600,
+                    bgcolor: "#fafbfc",
+                    borderBottom: "1px solid #f1f5f9",
+                  }}
+                >
+                  About
+                </Typography>
 
-                            <div className="detail-row">
-                                <label>First Name</label>
-                                {isEditing ? (
-                                    <input name="first_name" value={editedData.first_name} onChange={handleChange} />
-                                ) : <span>{userProfile.first_name}</span>}
-                            </div>
+                 <Box sx={{ px: 4, pt: 2 }}>
+                  {[
+                    { key: "first_name", label: "First Name" },
+                    { key: "last_name", label: "Last Name" },
+                    { key: "phone", label: "Phone" },
+                    { key: "password", label: "Password" },
+                  ].map(({ key, label }) => (
+                    <Box
+                      key={key}
+                      sx={{
+                        mb: 2,
+                        display: "flex",
+                        flexDirection: "column",
+                      }}
+                    >
+                      <Typography
+                        sx={{ fontWeight: 500, color: "#64748b", fontSize: 14, mb: 0.5 }}
+                      >
+                        {label}
+                      </Typography>
+                      {isEditing ? (
+                        <TextField
+                          fullWidth
+                          name={key}
+                          value={editedData[key]}
+                          type={key === "password" ? "text" : "text"}
+                          placeholder={key === "password" ? "Enter new password" : ""}
+                          onChange={handleChange}
+                          size="small"
+                        />
+                      ) : (
+                        <Typography sx={{ fontWeight: 500, fontSize: 14 }}>
+                          {key === "password"
+                            ? "******"
+                            : userProfile[key] || "Not provided"}
+                        </Typography>
+                      )}
+                    </Box>
+                ))}
+                <Box sx={{ mb: 2 }}>
+                    <Typography sx={{ fontWeight: 500, color: "#64748b", fontSize: 14, mb: 0.5 }}>
+                      Status
+                    </Typography>
+                    <Chip
+                      label={userProfile.is_active ? "Active" : "Inactive"}
+                      sx={{
+                        bgcolor: userProfile.is_active ? "#dcfce7" : "#fee2e2",
+                        color: userProfile.is_active ? "#166534" : "#991b1b",
+                        fontWeight: 500,
+                        fontSize: 12,
+                        textTransform: "uppercase",
+                        borderRadius: "16px",
+                      }}
+                    />
+                  </Box>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography sx={{ fontWeight: 500, color: "#64748b", fontSize: 14, mb: 0.5 }}>
+                      User ID
+                    </Typography>
+                    <Typography sx={{ fontWeight: 500, fontSize: 14 }}>
+                      {userProfile.id}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography sx={{ fontWeight: 500, color: "#64748b", fontSize: 14, mb: 0.5 }}>
+                      Member Since
+                    </Typography>
+                    <Typography sx={{ fontWeight: 500, fontSize: 14 }}>
+                      {new Date(userProfile.created_at).toLocaleDateString()}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
 
-                            <div className="detail-row">
-                                <label>Last Name</label>
-                                {isEditing ? (
-                                    <input name="last_name" value={editedData.last_name} onChange={handleChange} />
-                                ) : <span>{userProfile.last_name}</span>}
-                            </div>
+              <Divider />
 
-                            <div className="detail-row">
-                                <label>Phone</label>
-                                {isEditing ? (
-                                    <input name="phone" value={editedData.phone} onChange={handleChange} />
-                                ) : <span>{userProfile.phone || 'Not provided'}</span>}
-                            </div>
-
-                            <div className="detail-row">
-                                <label>Password</label>
-                                {isEditing ? (
-                                    <input name="password" type="text" value={editedData.password} onChange={handleChange} placeholder="Enter new password"/>
-                                ) : <span>******</span>}
-                            </div>
-
-                            <div className="detail-row">
-                                <label>Status</label>
-                                <span className={`status ${userProfile.is_active ? 'active' : 'inactive'}`}>
-                                    {userProfile.is_active ? 'Active' : 'Inactive'}
-                                </span>
-                            </div>
-
-                            <div className="detail-row">
-                                <label>User ID</label>
-                                <span>{userProfile.id}</span>
-                            </div>
-
-                            <div className="detail-row">
-                                <label>Member Since</label>
-                                <span>{new Date(userProfile.created_at).toLocaleDateString()}</span>
-                            </div>
-                        </div>
-
-                        <div className="profile-actions">
-                            {isEditing ? (
-                                <>
-                                    <button className="save-btn" onClick={handleSave} style={{marginRight : "20px"}}>Save</button>
-                                    <button className="cancel-btn" onClick={handleCancel}>Cancel</button>
-                                </>
-                            ) : (
-                                <button className="edit-btn" onClick={handleEditToggle}>Update Profile</button>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        </>
-    );
+              <Box
+                sx={{
+                  p: 3,
+                  display: "flex",
+                  justifyContent: "flex-start",
+                  gap: 2,
+                  bgcolor: "#fafbfc",
+                  borderTop: "1px solid #f1f5f9",
+                  flexWrap: "wrap",
+                }}
+              >
+                {isEditing ? (
+                  <>
+                    <Button
+                      variant="contained"
+                      onClick={handleSave}
+                      sx={{ bgcolor: "#10b981", "&:hover": { bgcolor: "#059669" } }}
+                    >
+                      Save
+                    </Button>
+                    <Button
+                      variant="contained"
+                      onClick={handleCancel}
+                      sx={{ bgcolor: "#6b7280", "&:hover": { bgcolor: "#4b5563" } }}
+                    >
+                      Cancel
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                   variant="contained" 
+                    onClick={handleEditToggle} sx={{ fontSize: '13px', backgroundColor: '#007BFF', '&:hover': { backgroundColor: '#0056b3' }, textTransform: 'none'  }}
+                  >
+                    Update Profile
+                  </Button>
+                )}
+              </Box>
+            </Paper>
+          </Container>
+        </Box>
+      </Box>
+    </>
+  );
 };
 
 export default UserProfilePage;

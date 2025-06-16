@@ -1,5 +1,4 @@
 import React from 'react';
-import '../pages/css/Users.css'
 
 const FormInput = ({ type = "text", placeholder, value, onChange, showErrors }) => {
     return (

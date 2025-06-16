@@ -1,11 +1,14 @@
 import { useState } from "react";
+import { useParams } from "react-router-dom"; 
 import Sidebar from "../components/SideBar.js";
-import "./css/Leads.css";
 import LeadsManager from "../components/LeadManager.js";
 import Navbar from "../components/NavBar.js";
+import { Box, Typography, TextField, IconButton, Paper, InputAdornment } from "@mui/material";
+import ClearIcon from '@mui/icons-material/Clear';
 
 export default function Leads() {
   const [searchTerm, setSearchTerm] = useState("");
+  const { status } = useParams();
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
@@ -15,71 +18,75 @@ export default function Leads() {
     setSearchTerm("");
   };
 
-
   return (
-    <>
-    <Navbar />
-    <div className="leads-page">
-      <Sidebar />
-      <div className="leads-content">
-         <div className="leads-header">
-          <h2 className="leads-title">Leads</h2>
-        </div>
-        
-        {/* Enhanced Search Input */}
-        <div style={{ position: "relative", marginBottom: "20px" }}>
-          <input 
-            type="text" 
-            placeholder="Search leads by company name..." 
-            className="search-input"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            style={{
-              paddingRight: searchTerm ? "40px" : "12px"
-            }}
-          />
-          {searchTerm && (
-            <button
-              onClick={clearSearch}
-              style={{
-                position: "absolute",
-                right: "8px",
-                top: "50%",
-                transform: "translateY(-50%)",
-                background: "none",
-                border: "none",
-                fontSize: "18px",
-                cursor: "pointer",
-                color: "#666",
-                padding: "2px 6px",
-                borderRadius: "50%"
-              }}
-              title="Clear search"
-            >
-              ×
-            </button>
-          )}
-        </div>
+    <Box>
+      <Navbar />
+      <Box display="flex">
+        <Sidebar />
+        <Box component="main"
+            sx={{
+              flexGrow: 1,
+              p: 3,
+              ml: '24px',  
+              width: 'calc(100% - 240px)',      
+            }}>
+          <Box justifyContent="space-between" alignItems="center" sx={{mb:'20px', mt:'10px'}}>
+            <Typography variant="h5" sx={{
+              fontSize: '28px',
+              fontWeight: 'bold',
+              color: '#000000',
+              fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif`
+            }}>
+              Leads
+            </Typography>
 
-        {/* Search Results Info */}
-        {searchTerm && (
-          <div style={{
-            marginBottom: "15px",
-            padding: "8px 12px",
-            backgroundColor: "#e7f3ff",
-            border: "1px solid #b3d9ff",
-            borderRadius: "4px",
-            fontSize: "14px",
-            color: "#0056b3"
-          }}>
-            {searchTerm.trim() ? `Searching for: "${searchTerm}"` : ""}
-          </div>
-        )}
-        
-        {/* Pass both search term and filter to LeadsTable */}
-        <LeadsManager searchTerm={searchTerm} />
-      </div>
-    </div>
-    </>
+            <Box position="relative" mt={3} mb={2}>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  placeholder="Search leads by company name..."
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  className="search-input"
+                  InputProps={{
+                    endAdornment: searchTerm && (
+                      <InputAdornment position="end">
+                        <IconButton onClick={clearSearch} title="Clear search">
+                          <ClearIcon sx={{ color: '#666' }} />
+                        </IconButton>
+                      </InputAdornment>
+                    )
+                  }}
+                  sx={{
+                    '& input': {
+                      paddingRight: searchTerm ? '40px' : '10px'
+                    }
+                  }}
+                />
+              </Box>
+
+            {searchTerm && (
+              <Paper
+                elevation={0}
+                sx={{
+                  mb: 2,
+                  px: 2,
+                  py: 1,
+                  backgroundColor: "#e7f3ff",
+                  border: "1px solid #b3d9ff",
+                  borderRadius: "4px",
+                  fontSize: "10px",
+                  color: "#0056b3"
+                }}
+              >
+                {searchTerm.trim() ? `Searching for: "${searchTerm}"` : ""}
+              </Paper>
+            )}
+
+            <LeadsManager searchTerm={searchTerm} statusFilter={status}/>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
   );
 }

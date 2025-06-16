@@ -4,6 +4,20 @@ import { useState, useEffect, useCallback } from "react";
 import apiClient from "../apicaller/APIClient.js";
 import { toast } from 'react-toastify';
 import Cookies from 'js-cookie';
+import {
+  Box,
+  Typography,
+  TextField,
+  Select,
+  MenuItem,
+  Button,
+  IconButton,
+  Divider,
+  FormControl,
+  InputLabel,
+} from "@mui/material";
+import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 
 export default function LeadDetailsPage({ leadId, onBack }) {
     
@@ -53,8 +67,7 @@ export default function LeadDetailsPage({ leadId, onBack }) {
     };
 
     const handleSaveSection = async (section, updatedData) => {
-        if (saving) return; // Prevent multiple simultaneous saves
-        
+        if (saving) return; 
         setSaving(true);
         try {
             let response;
@@ -65,11 +78,11 @@ export default function LeadDetailsPage({ leadId, onBack }) {
                     break;
                     
                 case 'contact':
-                    // Handle contact updates more carefully
                     if (updatedData.contact_details && Array.isArray(updatedData.contact_details)) {
                         const contactPromises = updatedData.contact_details.map(async (contact) => {
                             if (contact.contact_id) {
-                                return await apiClient.put(`/lead/update-lead-contact/${leadId}/${contact.contact_id}`, contact);
+                                const { contact_id, ...contactPayload } = contact;
+                                return await apiClient.put(`/lead/update-lead-contact/${leadId}/${contact.contact_id}`, contactPayload);
                             } else {
                                 return await apiClient.post(`/lead/add-lead-contact/${userId}`, contact);
                             }
@@ -79,7 +92,6 @@ export default function LeadDetailsPage({ leadId, onBack }) {
                     break;
                     
                 case 'office':
-                    // Handle office updates more carefully
                     if (updatedData.office_details && Array.isArray(updatedData.office_details)) {
                         const officePromises = updatedData.office_details.map(async (office) => {
                             if (office.office_id) {
@@ -156,7 +168,6 @@ export default function LeadDetailsPage({ leadId, onBack }) {
             </div>
 
             <div className="lead-details-container">
-                {/* Company & Product Section */}
                 <CompanySection
                     leadDetails={leadDetails}
                     isEditing={editingSection === 'company'}
@@ -166,7 +177,6 @@ export default function LeadDetailsPage({ leadId, onBack }) {
                     saving={saving}
                 />
 
-                {/* Contact Details Section */}
                 <ContactSection
                     leadDetails={leadDetails}
                     leadId={leadId}
@@ -177,7 +187,6 @@ export default function LeadDetailsPage({ leadId, onBack }) {
                     saving={saving}
                 />
 
-                {/* Office Details Section */}
                 <OfficeSection
                     leadDetails={leadDetails}
                     leadId={leadId}
@@ -192,7 +201,6 @@ export default function LeadDetailsPage({ leadId, onBack }) {
     );
 }
 
-// Company Section Component
 function CompanySection({ leadDetails, isEditing, onEdit, onCancel, onSave, saving }) {
     const [formData, setFormData] = useState({
         company_name: '',
@@ -203,7 +211,6 @@ function CompanySection({ leadDetails, isEditing, onEdit, onCancel, onSave, savi
         status: ''
     });
 
-    // Initialize form data when component mounts or leadDetails changes
     useEffect(() => {
         setFormData({
             company_name: leadDetails.company_name || '',
@@ -220,7 +227,6 @@ function CompanySection({ leadDetails, isEditing, onEdit, onCancel, onSave, savi
     };
 
     const handleSave = () => {
-        // Basic validation
         if (!formData.company_name.trim()) {
             toast.error('Company name is required');
             return;
@@ -229,122 +235,112 @@ function CompanySection({ leadDetails, isEditing, onEdit, onCancel, onSave, savi
     };
 
     return (
-        <div className="details-section">
-            <div className="section-header">
-                <h2>Company & Product Information</h2>
-                {!isEditing && (
-                    <button onClick={onEdit} className="edit-button" disabled={saving}>
-                        Edit
-                    </button>
-                )}
-            </div>
+    <Box className="details-section">
+      <Box className="section-header" display="flex" justifyContent="space-between" alignItems="center">
+        <Typography variant="h6">Company & Product Information</Typography>
+        {!isEditing && (
+          <Button
+            variant="outlined"
+            onClick={onEdit}
+            disabled={saving}
+            className="edit-button"
+          >
+            Edit
+          </Button>
+        )}
+      </Box>
 
-            {isEditing ? (
-                <div className="edit-form">
-                    <div className="form-row">
-                        <label>Company Name:</label>
-                        <input
-                            type="text"
-                            value={formData.company_name}
-                            onChange={(e) => handleInputChange('company_name', e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div className="form-row">
-                        <label>Product:</label>
-                        <input
-                            type="text"
-                            value={formData.product}
-                            onChange={(e) => handleInputChange('product', e.target.value)}
-                        />
-                    </div>
-                    <div className="form-row">
-                        <label>Industry Type:</label>
-                        <input
-                            type="text"
-                            value={formData.industry_type}
-                            onChange={(e) => handleInputChange('industry_type', e.target.value)}
-                        />
-                    </div>
-                    <div className="form-row">
-                        <label>Insured Amount:</label>
-                        <input
-                            type="number"
-                            value={formData.insured_amount}
-                            onChange={(e) => handleInputChange('insured_amount', e.target.value)}
-                            min="0"
-                            step="0.01"
-                        />
-                    </div>
-                    <div className="form-row">
-                        <label>Export Value:</label>
-                        <input
-                            type="number"
-                            value={formData.export_value}
-                            onChange={(e) => handleInputChange('export_value', e.target.value)}
-                            min="0"
-                            step="0.01"
-                        />
-                    </div>
-                    <div className="form-row">
-                        <label>Status:</label>
-                        <select
-                            value={formData.status}
-                            onChange={(e) => handleInputChange('status', e.target.value)}
-                        >
-                            <option value="">Select Status</option>
-                            <option value="new">New</option>
-                            <option value="no pickup">No Pickup</option>
-                            <option value="contacted">Contacted</option>
-                            <option value="call back">Call Back</option>
-                            <option value="complete">Complete</option>
-                            <option value="closed">Closed</option>
-                        </select>
-                    </div>
-                    <div className="form-actions">
-                        <button 
-                            onClick={handleSave} 
-                            className="save-button"
-                            disabled={saving}
-                        >
-                            {saving ? 'Saving...' : 'Save'}
-                        </button>
-                        <button 
-                            onClick={onCancel} 
-                            className="cancel-button"
-                            disabled={saving}
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                </div>
-            ) : (
-                <div className="view-content">
-                    <div className="detail-item">
-                        <strong>Company Name:</strong> {leadDetails.company_name || 'N/A'}
-                    </div>
-                    <div className="detail-item">
-                        <strong>Product:</strong> {leadDetails.product || 'N/A'}
-                    </div>
-                    <div className="detail-item">
-                        <strong>Industry Type:</strong> {leadDetails.industry_type || 'N/A'}
-                    </div>
-                    <div className="detail-item">
-                        <strong>Insured Amount:</strong> {leadDetails.insured_amount || "N/A"}
-                    </div>
-                    <div className="detail-item">
-                        <strong>Export Value:</strong> {leadDetails.export_value || "N/A"}
-                    </div>
-                    <div className="detail-item">
-                        <strong>Status:</strong> {leadDetails.status || 'N/A'}
-                    </div>
-                    <div className="detail-item">
-                        <strong>Created Date:</strong> {leadDetails.created_date || 'N/A'}
-                    </div>
-                </div>
-            )}
-        </div>
-    );
+      {isEditing ? (
+        <Box className="edit-form" display="flex" flexDirection="column" gap={2} mt={2}>
+          <TextField
+            label="Company Name"
+            value={formData.company_name}
+            onChange={(e) => handleInputChange('company_name', e.target.value)}
+            required
+            fullWidth
+          />
+
+          <TextField
+            label="Product"
+            value={formData.product}
+            onChange={(e) => handleInputChange('product', e.target.value)}
+            fullWidth
+          />
+
+          <TextField
+            label="Industry Type"
+            value={formData.industry_type}
+            onChange={(e) => handleInputChange('industry_type', e.target.value)}
+            fullWidth
+          />
+
+          <TextField
+            label="Insured Amount"
+            type="number"
+            value={formData.insured_amount}
+            onChange={(e) => handleInputChange('insured_amount', e.target.value)}
+            inputProps={{ min: 0, step: 0.01 }}
+            fullWidth
+          />
+
+          <TextField
+            label="Export Value"
+            type="number"
+            value={formData.export_value}
+            onChange={(e) => handleInputChange('export_value', e.target.value)}
+            inputProps={{ min: 0, step: 0.01 }}
+            fullWidth
+          />
+
+          <FormControl fullWidth>
+            <InputLabel>Status</InputLabel>
+            <Select
+              value={formData.status}
+              onChange={(e) => handleInputChange('status', e.target.value)}
+              label="Status"
+            >
+              <MenuItem value="">Select Status</MenuItem>
+              <MenuItem value="lead">Lead</MenuItem>
+              <MenuItem value="prospect">Prospect</MenuItem>
+              <MenuItem value="active prospect">Active Prospect</MenuItem>
+              <MenuItem value="customer">Customer</MenuItem>
+              <MenuItem value="expired lead">Expired Lead</MenuItem>
+              <MenuItem value="expired prospect">Expired Prospect</MenuItem>
+            </Select>
+          </FormControl>
+
+          <Box className="form-actions" display="flex" gap={2} mt={2}>
+            <Button
+              variant="contained"
+              onClick={handleSave}
+              disabled={saving}
+              className="save-button"
+            >
+              {saving ? 'Saving...' : 'Save'}
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={onCancel}
+              disabled={saving}
+              className="cancel-button"
+            >
+              Cancel
+            </Button>
+          </Box>
+        </Box>
+      ) : (
+        <Box className="view-content" mt={2}>
+          <Typography className="detail-item"><strong>Company Name:</strong> {leadDetails.company_name || 'N/A'}</Typography>
+          <Typography className="detail-item"><strong>Product:</strong> {leadDetails.product || 'N/A'}</Typography>
+          <Typography className="detail-item"><strong>Industry Type:</strong> {leadDetails.industry_type || 'N/A'}</Typography>
+          <Typography className="detail-item"><strong>Insured Amount:</strong> {leadDetails.insured_amount || 'N/A'}</Typography>
+          <Typography className="detail-item"><strong>Export Value:</strong> {leadDetails.export_value || 'N/A'}</Typography>
+          <Typography className="detail-item"><strong>Status:</strong> {leadDetails.status || 'N/A'}</Typography>
+          <Typography className="detail-item"><strong>Created Date:</strong> {leadDetails.created_date || 'N/A'}</Typography>
+        </Box>
+      )}
+    </Box>
+  );
 }
 
 // Contact Section Component
@@ -408,135 +404,129 @@ function ContactSection({ leadDetails, leadId, isEditing, onEdit, onCancel, onSa
     };
 
     return (
-        <div className="details-section">
-            <div className="section-header">
-                <h2>Contact Details</h2>
-                {!isEditing && (
-                    <button onClick={onEdit} className="edit-button" disabled={saving}>
-                        Edit
-                    </button>
-                )}
-            </div>
+        <Box className="details-section" mt={2}>
+      <Box className="section-header" display="flex" justifyContent="space-between" alignItems="center">
+        <Typography variant="h6">Contact Details</Typography>
+        {!isEditing && (
+          <Button variant="outlined"
+            onClick={onEdit}
+            disabled={saving}
+            className="edit-button">
+            Edit
+          </Button>
+        )}
+      </Box>
 
-            {isEditing ? (
-                <div className="edit-form">
-                    {contacts.map((contact, index) => (
-                        <div key={contact.contact_id || index} className="contact-edit-block">
-                            <div className="contact-header">
-                                <h4>Contact {index + 1}</h4>
-                                {contacts.length > 1 && (
-                                    <button 
-                                        type="button"
-                                        onClick={() => removeContact(index)}
-                                        className="remove-button"
-                                        disabled={saving}
-                                    >
-                                        Remove
-                                    </button>
-                                )}
-                            </div>
-                            <div className="form-row">
-                                <label>Name: *</label>
-                                <input
-                                    type="text"
-                                    value={contact.name || ''}
-                                    onChange={(e) => handleContactChange(index, 'name', e.target.value)}
-                                    required
-                                />
-                            </div>
-                            <div className="form-row">
-                                <label>Email:</label>
-                                <input
-                                    type="email"
-                                    value={contact.email || ''}
-                                    onChange={(e) => handleContactChange(index, 'email', e.target.value)}
-                                />
-                            </div>
-                            <div className="form-row">
-                                <label>Phone:</label>
-                                <input
-                                    type="tel"
-                                    value={contact.phone || ''}
-                                    onChange={(e) => handleContactChange(index, 'phone', e.target.value)}
-                                />
-                            </div>
-                            <div className="form-row">
-                                <label>Alt Phone:</label>
-                                <input
-                                    type="tel"
-                                    value={contact.alt_phone || ''}
-                                    onChange={(e) => handleContactChange(index, 'alt_phone', e.target.value)}
-                                />
-                            </div>
-                        </div>
-                    ))}
-                    
-                    <button 
-                        type="button"
-                        onClick={addNewContact}
-                        className="add-button"
-                        disabled={saving}
-                    >
-                        + Add New Contact
-                    </button>
-                    
-                    <div className="form-actions">
-                        <button 
-                            onClick={handleSave} 
-                            className="save-button"
-                            disabled={saving}
-                        >
-                            {saving ? 'Saving...' : 'Save'}
-                        </button>
-                        <button 
-                            onClick={onCancel} 
-                            className="cancel-button"
-                            disabled={saving}
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                </div>
-            ) : (
-                <div className="view-content">
-                    {contacts && contacts.length > 0 ? (
-                        contacts.map((contact, index) => (
-                            <div key={contact.contact_id || index} className="contact-block">
-                                <h4>Contact {index + 1}</h4>
-                                <div className="detail-item">
-                                    <strong>Name:</strong> {contact.name || 'N/A'}
-                                </div>
-                                <div className="detail-item">
-                                    <strong>Email:</strong> {contact.email || 'N/A'}
-                                </div>
-                                <div className="detail-item">
-                                    <strong>Phone:</strong> {contact.phone || 'N/A'}
-                                </div>
-                                <div className="detail-item">
-                                    <strong>Alt Phone:</strong> {contact.alt_phone || 'N/A'}
-                                </div>
-                            </div>
-                        ))
-                    ) : (
-                        <p>No contact details available.</p>
-                    )}
-                </div>
-            )}
-        </div>
-    );
+      {isEditing ? (
+        <Box className="edit-form" mt={2} display="flex" flexDirection="column" gap={3}>
+          {contacts.map((contact, index) => (
+            <Box key={contact.contact_id || index} className="contact-edit-block" p={2} border="1px solid #ddd" borderRadius={2}>
+              <Box display="flex" justifyContent="space-between" alignItems="center">
+                <Typography variant="subtitle1">Contact {index + 1}</Typography>
+                {contacts.length > 1 && (
+                  <IconButton
+                    color="error"
+                    onClick={() => removeContact(index)}
+                    disabled={saving}
+                    size="small"
+                  >
+                    <RemoveCircleOutlineIcon />
+                  </IconButton>
+                )}
+              </Box>
+              <Box mt={2} display="grid" gridTemplateColumns="repeat(auto-fit, minmax(250px, 1fr))" gap={2}>
+                <TextField
+                  label="Name *"
+                  value={contact.name || ''}
+                  onChange={(e) => handleContactChange(index, 'name', e.target.value)}
+                  required
+                  fullWidth
+                />
+                <TextField
+                  label="Email"
+                  value={contact.email || ''}
+                  onChange={(e) => handleContactChange(index, 'email', e.target.value)}
+                  fullWidth
+                />
+                <TextField
+                  label="Phone"
+                  value={contact.phone || ''}
+                  onChange={(e) => handleContactChange(index, 'phone', e.target.value)}
+                  fullWidth
+                />
+                <TextField
+                  label="Alt Phone"
+                  value={contact.alt_phone || ''}
+                  onChange={(e) => handleContactChange(index, 'alt_phone', e.target.value)}
+                  fullWidth
+                />
+              </Box>
+            </Box>
+          ))}
+
+          <Box>
+            <Button
+              startIcon={<AddCircleOutlineIcon />}
+              onClick={addNewContact}
+              disabled={saving}
+              variant="outlined"
+              color="primary"
+            >
+              Add New Contact
+            </Button>
+          </Box>
+
+          <Box display="flex" gap={2} mt={2}>
+            <Button
+              variant="contained"
+              onClick={handleSave}
+              disabled={saving}
+            >
+              {saving ? 'Saving...' : 'Save'}
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={onCancel}
+              disabled={saving}
+            >
+              Cancel
+            </Button>
+          </Box>
+        </Box>
+      ) : (
+        <Box className="view-content" mt={2}>
+          {contacts && contacts.length > 0 ? (
+            contacts.map((contact, index) => (
+              <Box key={contact.contact_id || index} className="contact-block" mb={3}>
+                <Typography variant="subtitle1">Contact {index + 1}</Typography>
+                <Divider sx={{ my: 1 }} />
+                <Typography className="detail-item"><strong>Name:</strong> {contact.name || 'N/A'}</Typography>
+                <Typography className="detail-item"><strong>Email:</strong> {contact.email || 'N/A'}</Typography>
+                <Typography className="detail-item"><strong>Phone:</strong> {contact.phone || 'N/A'}</Typography>
+                <Typography className="detail-item"><strong>Alt Phone:</strong> {contact.alt_phone || 'N/A'}</Typography>
+              </Box>
+            ))
+          ) : (
+            <Typography>No contact details available.</Typography>
+          )}
+        </Box>
+      )}
+    </Box>
+  );
 }
 
 // Office Section Component
 function OfficeSection({ leadDetails, leadId, isEditing, onEdit, onCancel, onSave, saving }) {
     const [offices, setOffices] = useState([]);
 
-    // Initialize offices when component mounts or leadDetails changes
     useEffect(() => {
         const initialOffices = leadDetails.office_details || [];
         setOffices(initialOffices.length > 0 ? initialOffices : [{
             address: '',
             city: '',
-            country: ''
+            district: '',
+            country: '',
+            postal_code: ''
         }]);
     }, [leadDetails.office_details]);
 
@@ -583,125 +573,128 @@ function OfficeSection({ leadDetails, leadId, isEditing, onEdit, onCancel, onSav
     };
 
     return (
-        <div className="details-section">
-            <div className="section-header">
-                <h2>Office Details</h2>
-                {!isEditing && (
-                    <button onClick={onEdit} className="edit-button" disabled={saving}>
-                        Edit
-                    </button>
-                )}
-            </div>
+       <Box className="details-section" mt={3}>
+      <Box display="flex" justifyContent="space-between" alignItems="center">
+        <Typography variant="h6">Office Details</Typography>
+        {!isEditing && (
+          <Button variant="outlined"
+            onClick={onEdit}
+            disabled={saving}
+            className="edit-button">
+            Edit
+          </Button>
+        )}
+      </Box>
 
-            {isEditing ? (
-                <div className="edit-form">
-                    {offices.map((office, index) => (
-                        <div key={office.office_id || index} className="office-edit-block">
-                            <div className="office-header">
-                                <h4>Office {index + 1}</h4>
-                                {offices.length > 1 && (
-                                    <button 
-                                        type="button"
-                                        onClick={() => removeOffice(index)}
-                                        className="remove-button"
-                                        disabled={saving}
-                                    >
-                                        Remove
-                                    </button>
-                                )}
-                            </div>
-                            <div className="form-row">
-                                <label>Address: *</label>
-                                <textarea
-                                    value={office.address || ''}
-                                    onChange={(e) => handleOfficeChange(index, 'address', e.target.value)}
-                                    rows="3"
-                                    required
-                                />
-                            </div>
-                            <div className="form-row">
-                                <label>City:</label>
-                                <input
-                                    type="text"
-                                    value={office.city || ''}
-                                    onChange={(e) => handleOfficeChange(index, 'city', e.target.value)}
-                                />
-                            </div>
-                             <div className="form-row">
-                                <label>District:</label>
-                                <input
-                                    type="text"
-                                    value={office.district || ''}
-                                    onChange={(e) => handleOfficeChange(index, 'district', e.target.value)}
-                                />
-                            </div>
-                            <div className="form-row">
-                                <label>Country:</label>
-                                <input
-                                    type="text"
-                                    value={office.country || ''}
-                                    onChange={(e) => handleOfficeChange(index, 'country', e.target.value)}
-                                />
-                            </div>
-                            <div className="form-row">
-                                <label>Postal Code:</label>
-                                <input
-                                    type="text"
-                                    value={office.postal_code || ''}
-                                    onChange={(e) => handleOfficeChange(index, 'postal_code', e.target.value)}
-                                />
-                            </div>
-                        </div>
-                    ))}
-                    
-                    <button 
-                        type="button"
-                        onClick={addNewOffice}
-                        className="add-button"
-                        disabled={saving}
-                    >
-                        + Add New Office
-                    </button>
-                    
-                    <div className="form-actions">
-                        <button 
-                            onClick={handleSave} 
-                            className="save-button"
-                            disabled={saving}
-                        >
-                            {saving ? 'Saving...' : 'Save'}
-                        </button>
-                        <button 
-                            onClick={onCancel} 
-                            className="cancel-button"
-                            disabled={saving}
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                </div>
-            ) : (
-                <div className="view-content">
-                    {offices && offices.length > 0 ? (
-                        offices.map((office, index) => (
-                            <div key={office.office_id || index} className="office-block">
-                                <h4>Office {index + 1}</h4>
-                                <div className="detail-item">
-                                    <strong>Address:</strong> {office.address || 'N/A'}
-                                </div>
-                                <div className="detail-item">
-                                    <strong>City:</strong> {office.city || 'N/A'}
-                                </div>
-                                <div className="detail-item">
-                                    <strong>Country:</strong> {office.country || 'N/A'}
-                                </div>
-                            </div>
-                        ))
-                    ) : (
-                        <p>No office details available.</p>
-                    )}
-                </div>
-            )}
-        </div>
-    );
+      {isEditing ? (
+        <Box mt={2} display="flex" flexDirection="column" gap={3}>
+          {offices.map((office, index) => (
+            <Box
+              key={office.office_id || index}
+              p={2}
+              border="1px solid #ddd"
+              borderRadius={2}
+              className="office-edit-block"
+            >
+              <Box display="flex" justifyContent="space-between" alignItems="center">
+                <Typography variant="subtitle1">Office {index + 1}</Typography>
+                {offices.length > 1 && (
+                  <IconButton
+                    color="error"
+                    onClick={() => removeOffice(index)}
+                    disabled={saving}
+                    size="small"
+                  >
+                    <RemoveCircleOutlineIcon />
+                  </IconButton>
+                )}
+              </Box>
+
+              <Box mt={2} display="grid" gridTemplateColumns="repeat(auto-fit, minmax(250px, 1fr))" gap={2}>
+                <TextField
+                  label="Address *"
+                  value={office.address || ''}
+                  onChange={(e) => handleOfficeChange(index, 'address', e.target.value)}
+                  required
+                  multiline
+                  minRows={3}
+                  fullWidth
+                />
+                <TextField
+                  label="City"
+                  value={office.city || ''}
+                  onChange={(e) => handleOfficeChange(index, 'city', e.target.value)}
+                  fullWidth
+                />
+                <TextField
+                  label="District"
+                  value={office.district || ''}
+                  onChange={(e) => handleOfficeChange(index, 'district', e.target.value)}
+                  fullWidth
+                />
+                <TextField
+                  label="Country"
+                  value={office.country || ''}
+                  onChange={(e) => handleOfficeChange(index, 'country', e.target.value)}
+                  fullWidth
+                />
+                <TextField
+                  label="Postal Code"
+                  value={office.postal_code || ''}
+                  onChange={(e) => handleOfficeChange(index, 'postal_code', e.target.value)}
+                  fullWidth
+                />
+              </Box>
+            </Box>
+          ))}
+
+          <Box>
+            <Button
+              variant="outlined"
+              startIcon={<AddCircleOutlineIcon />}
+              onClick={addNewOffice}
+              disabled={saving}
+            >
+              Add New Office
+            </Button>
+          </Box>
+
+          <Box display="flex" gap={2}>
+            <Button
+              variant="contained"
+              onClick={handleSave}
+              disabled={saving}
+            >
+              {saving ? 'Saving...' : 'Save'}
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={onCancel}
+              disabled={saving}
+            >
+              Cancel
+            </Button>
+          </Box>
+        </Box>
+      ) : (
+        <Box className="view-content" mt={2}>
+          {offices && offices.length > 0 ? (
+            offices.map((office, index) => (
+              <Box key={office.office_id || index} mb={3} className="office-block">
+                <Typography variant="subtitle1">Office {index + 1}</Typography>
+                <Divider sx={{ my: 1 }} />
+                <Typography><strong>Address:</strong> {office.address || 'N/A'}</Typography>
+                <Typography><strong>City:</strong> {office.city || 'N/A'}</Typography>
+                <Typography><strong>District:</strong> {office.district || 'N/A'}</Typography>
+                <Typography><strong>Country:</strong> {office.country || 'N/A'}</Typography>
+                <Typography><strong>Postal Code:</strong> {office.postal_code || 'N/A'}</Typography>
+              </Box>
+            ))
+          ) : (
+            <Typography>No office details available.</Typography>
+          )}
+        </Box>
+      )}
+    </Box>
+  ); 
 }

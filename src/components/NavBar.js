@@ -1,9 +1,15 @@
-// src/components/Navbar.js
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import apiClient from '../apicaller/APIClient';
-import './css/NavBar.css';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  Box,
+  Container
+} from '@mui/material';
 
 export default function Navbar() {
   const [userName, setUserName] = useState('');
@@ -30,6 +36,7 @@ export default function Navbar() {
       await apiClient.get(`/user/logout/${userId}`);
       Cookies.remove('user_id');
       Cookies.remove('jwt');
+      Cookies.remove('role');
       localStorage.clear();
       sessionStorage.clear();
       navigate('/login');
@@ -39,9 +46,24 @@ export default function Navbar() {
   };
 
   return (
-    <div className="navbar">
-      <div className="navbar-user">{userName || 'User'}</div>
-      <button className="navbar-logout" onClick={handleLogout}>Logout</button>
-    </div>
+    <AppBar position="static" sx={{ backgroundColor: '#2A262E', color: '#333', boxShadow: 1 }}>
+      <Container maxWidth="l">
+        <Toolbar disableGutters sx={{ justifyContent: 'flex-end' }}>
+          <Box sx={{ display: 'flex', alignItems: 'right', gap: 2 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 500, color: '#ffffff' }}>
+              {userName}
+            </Typography>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={handleLogout}
+              sx={{ color: '#fff', textTransform: 'none', '&:hover': { backgroundColor: '#A2120B' }  }}
+            >
+              Logout
+            </Button>
+          </Box>
+        </Toolbar>
+      </Container>
+    </AppBar>
   );
 }

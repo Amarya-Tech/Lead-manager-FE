@@ -1,15 +1,27 @@
-import "./css/LeadsTable.css";
+import {
+  Box,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Button,
+  Divider,
+} from "@mui/material";
 import { useState, useEffect, useMemo } from "react";
 import apiClient from "../apicaller/APIClient.js";
-import Cookies from 'js-cookie'; 
+import Cookies from 'js-cookie';
+import './css/LeadsTable.css'
 
-export default function LeadsTable({ searchTerm = "", statusFilter = "ALL LEADS" }) {
+export default function LeadsTable({ searchTerm = "" }) {
   const [leads, setLeads] = useState([]);
   const [selectedLeadDetails, setSelectedLeadDetails] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
-  const userId = Cookies.get("user_id")
-  
-  // Pagination state
+  const userId = Cookies.get("user_id");
+
   const [currentPage, setCurrentPage] = useState(1);
   const leadsPerPage = 5;
 
@@ -32,61 +44,28 @@ export default function LeadsTable({ searchTerm = "", statusFilter = "ALL LEADS"
   }, []);
 
   const filteredLeads = useMemo(() => {
-    let filtered = leads;
-
-    if (statusFilter !== "ALL LEADS") {
-      switch (statusFilter) {
-        case "OPEN LEADS":
-          filtered = filtered.filter(lead => lead.status === "new");
-          break;
-        case "CONTACTED LEADS":
-          filtered = filtered.filter(lead => lead.status === "contacted");
-          break;
-        case "CLOSED LEADS":
-          filtered = filtered.filter(lead => lead.status === "closed");
-          break;
-        default:
-          break;
-      }
-    }
-
-    if (searchTerm.trim()) {
-      filtered = filtered.filter(lead => 
-        lead.company_name?.toLowerCase().includes(searchTerm.toLowerCase().trim())
-      );
-    }
-
-    return filtered;
-  }, [leads, searchTerm, statusFilter]);
+    return searchTerm.trim()
+      ? leads.filter((lead) =>
+          lead.company_name?.toLowerCase().includes(searchTerm.toLowerCase().trim())
+        )
+      : leads;
+  }, [leads, searchTerm]);
 
   useEffect(() => {
     setCurrentPage(1);
-    setSelectedLeadDetails(null); 
-  }, [searchTerm, statusFilter]);
-
+    setSelectedLeadDetails(null);
+  }, [searchTerm]);
 
   const totalPages = Math.ceil(filteredLeads.length / leadsPerPage);
   const startIndex = (currentPage - 1) * leadsPerPage;
-  const endIndex = startIndex + leadsPerPage;
- 
-  const currentLeads = useMemo(() => {
-    return filteredLeads.slice(startIndex, endIndex);
-  }, [filteredLeads, startIndex, endIndex]);
+  const currentLeads = useMemo(() => filteredLeads.slice(startIndex, startIndex + leadsPerPage), [filteredLeads, startIndex]);
 
   const handleViewDetails = async (leadId) => {
+    setLoadingDetails(true);
+    setSelectedLeadDetails(null);
     try {
-      setLoadingDetails(true);
-      setSelectedLeadDetails(null);
-
       const response = await apiClient.get(`/lead/get-lead-detail/${leadId}`);
-      // console.log("Full response:", response.data);
-      // console.log("Response data:", response.data.data);
-      
-      const leadData = Array.isArray(response.data.data) 
-        ? response.data.data[0] 
-        : response.data.data;
-      
-      // console.log("Lead data to set:", leadData);
+      const leadData = Array.isArray(response.data.data) ? response.data.data[0] : response.data.data;
       setSelectedLeadDetails(leadData || null);
     } catch (error) {
       console.error("Failed to fetch lead details", error);
@@ -95,293 +74,175 @@ export default function LeadsTable({ searchTerm = "", statusFilter = "ALL LEADS"
     }
   };
 
-  // Pagination handlers
-  const goToPage = (page) => {
-    setCurrentPage(page);
-    setSelectedLeadDetails(null);
-  };
-
-  const goToPreviousPage = () => {
-    if (currentPage > 1) {
-      goToPage(currentPage - 1);
-    }
-  };
-
-  const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      goToPage(currentPage + 1);
-    }
-  };
-
-  // Generate page numbers for pagination
-  const getPageNumbers = () => {
-    const pages = [];
-    const maxVisiblePages = 5;
-    
-    if (totalPages <= maxVisiblePages) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      if (currentPage <= 3) {
-        for (let i = 1; i <= 3; i++) pages.push(i);
-        if (totalPages > 4) pages.push('...');
-        pages.push(totalPages);
-      } else if (currentPage >= totalPages - 2) {
-        pages.push(1);
-        if (totalPages > 4) pages.push('...');
-        for (let i = totalPages - 2; i <= totalPages; i++) pages.push(i);
-      } else {
-        pages.push(1);
-        pages.push('...');
-        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
-        pages.push('...');
-        pages.push(totalPages);
-      }
-    }
-    
-    return pages;
-  };
-
-  // Highlight search term in company name
-  const highlightSearchTerm = (text, searchTerm) => {
-    if (!searchTerm.trim() || !text) return text;
-    
-    const regex = new RegExp(`(${searchTerm.trim()})`, 'gi');
+  const highlightSearchTerm = (text, term) => {
+    if (!term.trim() || !text) return text;
+    const regex = new RegExp(`(${term.trim()})`, 'gi');
     const parts = text.split(regex);
-    
-    return parts.map((part, index) => 
-      regex.test(part) ? (
-        <mark key={index} style={{ backgroundColor: '#ffeb3b', padding: '1px 2px' }}>
-          {part}
-        </mark>
-      ) : part
+    return parts.map((part, index) =>
+      regex.test(part) ? <mark key={index} style={{ backgroundColor: '#ffeb3b', padding: '1px 2px' }}>{part}</mark> : part
     );
   };
 
+    const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'lead':
+        return '#e0e0e0';
+      case 'prospect':
+        return '#bbdefb';
+      case 'active prospect':
+        return '#ffe0b2'; 
+      case 'customer':
+        return '#c8e6c9';
+      default:
+        return '#f5f5f5';
+    }
+  };
+
   return (
-    <>
-      {/* Leads Table */}
-      <div style={{ marginBottom: "20px" }}>
-        {(searchTerm || statusFilter !== "ALL LEADS") && filteredLeads.length === 0 && (
-          <div style={{
-            textAlign: "center",
-            padding: "40px 20px",
-            backgroundColor: "#f8f9fa",
-            border: "1px solid #dee2e6",
-            borderRadius: "4px",
-            marginBottom: "20px"
-          }}>
-            <h3 style={{ color: "#6c757d", marginBottom: "10px" }}>No leads found</h3>
-            <p style={{ color: "#6c757d", margin: 0 }}>
-              {searchTerm && statusFilter !== "ALL LEADS" 
-                ? `No companies match "${searchTerm}" in ${statusFilter.toLowerCase()}.`
-                : searchTerm 
-                ? `No companies match "${searchTerm}". Try adjusting your search term.`
-                : `No leads found for ${statusFilter.toLowerCase()}.`
-              }
-            </p>
-          </div>
-        )}
+    <Box>
+      {searchTerm && filteredLeads.length === 0 && (
+        <Box textAlign="center" mt={2}>
+          <Typography variant="h6">No leads found</Typography>
+          <Typography variant="body2">No companies match "{searchTerm}". Try adjusting your search.</Typography>
+        </Box>
+      )}
 
-        {/* Results Summary */}
-        {(searchTerm || statusFilter !== "ALL LEADS") && filteredLeads.length > 0 && (
-          <div style={{
-            marginBottom: "15px",
-            padding: "8px 12px",
-            backgroundColor: "#d4edda",
-            border: "1px solid #c3e6cb",
-            borderRadius: "4px",
-            fontSize: "14px",
-            color: "#155724"
-          }}>
-            Found {filteredLeads.length} lead{filteredLeads.length !== 1 ? 's' : ''} 
-            {searchTerm && statusFilter !== "ALL LEADS" 
-              ? ` matching "${searchTerm}" in ${statusFilter.toLowerCase()}`
-              : searchTerm 
-              ? ` matching "${searchTerm}"`
-              : ` in ${statusFilter.toLowerCase()}`
-            }
-          </div>
-        )}
+      {searchTerm && filteredLeads.length > 0 && (
+        <Box textAlign="center" mb={2}>
+          <Typography variant="subtitle1">
+            Found {filteredLeads.length} lead{filteredLeads.length !== 1 ? "s" : ""} matching "{searchTerm}"
+          </Typography>
+        </Box>
+      )}
 
-        {currentLeads.length > 0 && (
-          <table className="leads-table">
-            <thead>
-              <tr>
-                <th>Company Name</th>
-                <th>Product</th>
-                <th>Industry Type</th>
-                <th>Status</th>
-                <th>Created Date</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
+      {currentLeads.length > 0 && (
+        <TableContainer component={Paper} sx={{ mb: 3, border: '1px solid #ddd' }}>
+          <Table sx={{ minWidth: 650, borderCollapse: 'collapse' }} aria-label="leads table">
+            <TableHead>
+              <TableRow sx={{ backgroundColor: '#f4f4f4', height: 20 }}>
+                <TableCell><strong>Company Name</strong></TableCell>
+                <TableCell><strong>Product</strong></TableCell>
+                <TableCell><strong>Industry Type</strong></TableCell>
+                <TableCell><strong>Status</strong></TableCell>
+                <TableCell><strong>Created Date</strong></TableCell>
+                <TableCell><strong>Action</strong></TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
               {currentLeads.map((lead, index) => (
-                <tr key={lead.id || index}>
-                  <td>{highlightSearchTerm(lead.company_name, searchTerm)}</td>
-                  <td>{lead.product}</td>
-                  <td>{lead.industry_type}</td>
-                  <td>{lead.status}</td>
-                  <td>{lead.created_date}</td>
-                  <td>
-                    <button onClick={() => handleViewDetails(lead.id)}>View Details</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-
-        {/* Pagination Controls */}
-        {totalPages > 1 && (
-          <div style={{ 
-            display: "flex", 
-            justifyContent: "center", 
-            alignItems: "center", 
-            gap: "10px", 
-            marginTop: "20px",
-            padding: "10px"
-          }}>
-            {/* Previous Button */}
-            <button 
-              onClick={goToPreviousPage}
-              disabled={currentPage === 1}
-              style={{
-                padding: "8px 12px",
-                border: "1px solid #ccc",
-                backgroundColor: currentPage === 1 ? "#f5f5f5" : "#fff",
-                cursor: currentPage === 1 ? "not-allowed" : "pointer",
-                borderRadius: "4px"
-              }}
-            >
-              Previous
-            </button>
-
-            {/* Page Numbers */}
-            {getPageNumbers().map((page, index) => (
-              <span key={index}>
-                {page === '...' ? (
-                  <span style={{ padding: "8px 4px", color: "#666" }}>...</span>
-                ) : (
-                  <button
-                    onClick={() => goToPage(page)}
-                    style={{
-                      padding: "8px 12px",
-                      border: "1px solid #ccc",
-                      backgroundColor: currentPage === page ? "#007bff" : "#fff",
-                      color: currentPage === page ? "#fff" : "#000",
-                      cursor: "pointer",
-                      borderRadius: "4px",
-                      fontWeight: currentPage === page ? "bold" : "normal"
+                <TableRow key={lead.id || index} sx={{
+                      '& td': {
+                        paddingTop: '4px',
+                        paddingBottom: '4px',
+                        lineHeight: '1.2',
+                      },
+                      height: '32px',
+                    }}>
+                  <TableCell>{highlightSearchTerm(lead.company_name, searchTerm)}</TableCell>
+                  <TableCell>{lead.product}</TableCell>
+                  <TableCell>{lead.industry_type}</TableCell>
+                  <TableCell><Box
+                    component="span"
+                    sx={{
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: '12px',
+                      color: '#333',
+                      fontWeight: 500,
+                      fontSize: '0.8rem',
+                      backgroundColor: getStatusColor(lead.status)
                     }}
                   >
-                    {page}
-                  </button>
-                )}
-              </span>
-            ))}
+                    {lead.status}
+                  </Box></TableCell>
+                  <TableCell>{lead.created_date}</TableCell>
+                  <TableCell>
+                    <Button onClick={() => handleViewDetails(lead.id)} variant="contained" sx={{ fontSize: '13px', backgroundColor: '#007BFF', '&:hover': { backgroundColor: '#0056b3' }, textTransform: 'none'  }}>View Details</Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
 
-            {/* Next Button */}
-            <button 
-              onClick={goToNextPage}
-              disabled={currentPage === totalPages}
-              style={{
-                padding: "8px 12px",
-                border: "1px solid #ccc",
-                backgroundColor: currentPage === totalPages ? "#f5f5f5" : "#fff",
-                cursor: currentPage === totalPages ? "not-allowed" : "pointer",
-                borderRadius: "4px"
-              }}
-            >
-              Next
-            </button>
+      {totalPages > 1 && (
+        <Box className="pagination">
+          <button onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} disabled={currentPage === 1}>
+            Previous
+          </button>
+          {[...Array(totalPages)].map((_, i) => {
+            const page = i + 1;
+            return (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={currentPage === page ? "active" : ""}
+              >
+                {page}
+              </button>
+            );
+          })}
+          <button onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>
+            Next
+          </button>
+          <span className="page-info">Page {currentPage} of {totalPages}</span>
+        </Box>
+      )}
 
-            {/* Page Info */}
-            <span style={{ marginLeft: "15px", color: "#666", fontSize: "14px" }}>
-              Page {currentPage} of {totalPages} 
-              ({filteredLeads.length} {(searchTerm || statusFilter !== "ALL LEADS") ? 'filtered' : 'total'} leads)
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Lead Details Section */}
-      {loadingDetails && <p>Loading lead details...</p>}
+      {loadingDetails && <Typography>Loading lead details...</Typography>}
 
       {selectedLeadDetails && (
-        <div className="lead-details" style={{ 
-          marginTop: "20px", 
-          padding: "15px", 
-          border: "1px solid #ccc",
-          borderRadius: "4px",
-          backgroundColor: "#f9f9f9"
-        }}>
-          <h2>Lead Details</h2>
-          <div style={{ display: "flex", gap: "40px", marginBottom: "20px" }}>
-            {/* Left: Lead Basic Info */}
-            <div style={{ flex: 1 }}>
-              <p><strong>Company Name:</strong> {selectedLeadDetails.company_name}</p>
-              <p><strong>Product:</strong> {selectedLeadDetails.product}</p>
-              <p><strong>Industry Type:</strong> {selectedLeadDetails.industry_type}</p>
-              <p><strong>Insured Amount:</strong> {selectedLeadDetails.insured_amount || "N/A"}</p>
-              <p><strong>Export Value:</strong> {selectedLeadDetails.export_value || "N/A"}</p>
-              <p><strong>Status:</strong> {selectedLeadDetails.status}</p>
-              <p><strong>Created Date:</strong> {selectedLeadDetails.created_date}</p>
-            </div>
-
-            {/* Right: Lead Contact Details */}
-            <div style={{ flex: 1 }}>
-              <h3>Contact Details</h3>
+        <Box className="lead-details" sx={{ mt: 4 }}>
+          <Typography variant="h5">Lead Details</Typography>
+          <Divider sx={{ my: 2 }} />
+          <Box className="lead-info-grid" sx={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+            <Box>
+              <Typography><strong>Company Name:</strong> {selectedLeadDetails.company_name}</Typography>
+              <Typography><strong>Product:</strong> {selectedLeadDetails.product}</Typography>
+              <Typography><strong>Industry Type:</strong> {selectedLeadDetails.industry_type}</Typography>
+              <Typography><strong>Insured Amount:</strong> {selectedLeadDetails.insured_amount || "N/A"}</Typography>
+              <Typography><strong>Export Value:</strong> {selectedLeadDetails.export_value || "N/A"}</Typography>
+              <Typography><strong>Status:</strong> {selectedLeadDetails.status}</Typography>
+              <Typography><strong>Created Date:</strong> {selectedLeadDetails.created_date}</Typography>
+            </Box>
+            <Box>
+              <Typography variant="h6">Contact Details</Typography>
               {Array.isArray(selectedLeadDetails.contact_details) && selectedLeadDetails.contact_details.length > 0 ? (
-                selectedLeadDetails.contact_details.map((contact, idx) => (
-                  <div key={contact.contact_id || idx} style={{ marginBottom: "10px" }}>
-                    <p><strong>Name:</strong> {contact.name}</p>
-                    <p><strong>Email:</strong> {contact.email}</p>
-                    <p><strong>Phone:</strong> {contact.phone}</p>
-                    <p><strong>Alt Phone:</strong> {contact.alt_phone}</p>
-                    <hr />
-                  </div>
+                selectedLeadDetails.contact_details.map((c, i) => (
+                  <Box key={c.contact_id || i}>
+                    <Typography><strong>Name:</strong> {c.name}</Typography>
+                    <Typography><strong>Email:</strong> {c.email}</Typography>
+                    <Typography><strong>Phone:</strong> {c.phone}</Typography>
+                    <Typography><strong>Alt Phone:</strong> {c.alt_phone}</Typography>
+                    <Divider sx={{ my: 1 }} />
+                  </Box>
                 ))
               ) : (
-                <p>No contact details available.</p>
+                <Typography>No contact details available.</Typography>
               )}
-            </div>
-          </div>
-
-          {/* Office Details Section */}
-          <div style={{ marginBottom: "20px" }}>
-            <h3>Office Details</h3>
+            </Box>
+          </Box>
+          <Box mt={3}>
+            <Typography variant="h6">Office Details</Typography>
             {Array.isArray(selectedLeadDetails.office_details) && selectedLeadDetails.office_details.length > 0 ? (
-              selectedLeadDetails.office_details.map((office, idx) => (
-                <div key={office.office_id || idx} style={{ marginBottom: "10px" }}>
-                  <p><strong>Address:</strong> {office.address}</p>
-                  <p><strong>City:</strong> {office.city}</p>
-                  <p><strong>Country:</strong> {office.country}</p>
-                  <hr />
-                </div>
+              selectedLeadDetails.office_details.map((o, i) => (
+                <Box key={o.office_id || i}>
+                  <Typography><strong>Address:</strong> {o.address}</Typography>
+                  <Typography><strong>City:</strong> {o.city}</Typography>
+                  <Typography><strong>Country:</strong> {o.country}</Typography>
+                  <Divider sx={{ my: 1 }} />
+                </Box>
               ))
             ) : (
-              <p>No office details available.</p>
+              <Typography>No office details available.</Typography>
             )}
-          </div>
-
-          <button 
-            onClick={() => setSelectedLeadDetails(null)}
-            style={{
-              padding: "10px 20px",
-              backgroundColor: "#dc3545",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer"
-            }}
-          >
+          </Box>
+          <Button onClick={() => setSelectedLeadDetails(null)} color="error" sx={{ mt: 2, color: '#ffffff', backgroundColor: 'red', '&:hover': { backgroundColor: '#A2120B' }, textTransform: 'none'  }}>
             Close Details
-          </button>
-        </div>
+          </Button>
+        </Box>
       )}
-    </>
+    </Box>
   );
 }

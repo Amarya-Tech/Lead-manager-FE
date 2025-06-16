@@ -1,11 +1,15 @@
+
 import React, { useState, useEffect } from 'react';
 import apiClient from "../apicaller/APIClient.js";
 import Sidebar from "../components/SideBar.js";
-import { toast } from 'react-toastify';
-import FormInput from '../components/FormInput.js';
-import Cookies from 'js-cookie';
-import './css/Users.css';
 import Navbar from '../components/NavBar.js';
+import { toast } from 'react-toastify';
+import Cookies from 'js-cookie';
+import {
+    Box, Typography, Button, CircularProgress, Table, TableBody, TableCell, TableContainer,
+    TableHead, TableRow, Paper, Select, MenuItem, Dialog, DialogTitle, DialogContent,
+    DialogActions, TextField, InputLabel, FormControl
+} from '@mui/material';
 
 const UserPage = () => {
     const [userList, setUserList] = useState([]);
@@ -13,10 +17,8 @@ const UserPage = () => {
     const [showAddUserModal, setShowAddUserModal] = useState(false);
     const [showUpdateUserModal, setShowUpdateUserModal] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-
     const [selectedUserId, setSelectedUserId] = useState(null);
     const [selectedUser, setSelectedUser] = useState(null);
-
     const [isEditingStatus, setIsEditingStatus] = useState(false);
     const [editedStatus, setEditedStatus] = useState(false);
 
@@ -28,18 +30,11 @@ const UserPage = () => {
     const [role, setRole] = useState("user");
     const [showErrors, setShowErrors] = useState(false);
 
-    // Update User form states
     const [editedData, setEditedData] = useState({
-        first_name: '',
-        last_name: '',
-        phone: '',
-        password: '',
-        role: ''
+        first_name: '', last_name: '', phone: '', password: '', role: ''
     });
 
-    useEffect(() => {
-        fetchUserList();
-    }, []);
+    useEffect(() => { fetchUserList(); }, []);
 
     const fetchUserList = async () => {
         try {
@@ -54,29 +49,17 @@ const UserPage = () => {
         }
     };
 
-    const handleAddUser = () => {
-        setShowAddUserModal(true);
-    };
+    const handleAddUser = () => setShowAddUserModal(true);
 
     const handleCloseModal = () => {
         setShowAddUserModal(false);
-        setFirstName("");
-        setLastName("");
-        setEmail("");
-        setPhone("");
+        setFirstName(""); setLastName(""); setEmail(""); setPhone("");
     };
 
     const handleCloseUpdateModal = () => {
         setShowUpdateUserModal(false);
-        setSelectedUser(null);
-        setSelectedUserId(null);
-        setEditedData({
-            first_name: '',
-            last_name: '',
-            phone: '',
-            password: '',
-            role: ''
-        });
+        setSelectedUser(null); setSelectedUserId(null);
+        setEditedData({ first_name: '', last_name: '', phone: '', password: '', role: '' });
     };
 
     const handleSubmit = async (e) => {
@@ -85,20 +68,14 @@ const UserPage = () => {
             setShowErrors(true);
             return;
         }
-        setShowErrors(false);
-        setIsSubmitting(true);
+        setShowErrors(false); setIsSubmitting(true);
         try {
             const response = await apiClient.post(`/user/add-new-user`, {
-                first_name: firstName,
-                last_name: lastName,
-                email,
-                password,
-                phone: Number(phone),
-                role
+                first_name: firstName, last_name: lastName, email,
+                password, phone: Number(phone), role
             });
             toast.success(response.data.message || 'User added successfully');
-            handleCloseModal();
-            fetchUserList();
+            handleCloseModal(); fetchUserList();
         } catch (error) {
             toast.error(error.response?.data?.message || 'Unexpected error');
         } finally {
@@ -107,14 +84,12 @@ const UserPage = () => {
     };
 
     const handleUpdateUser = (user) => {
-        setSelectedUser(user);
-        setSelectedUserId(user.id);
+        setSelectedUser(user); setSelectedUserId(user.id);
         setEditedData({
             first_name: user.first_name || '',
             last_name: user.last_name || '',
             phone: user.phone || '',
-            password: '',
-            role: user.role || ''
+            password: '', role: user.role || ''
         });
         setShowUpdateUserModal(true);
     };
@@ -129,16 +104,11 @@ const UserPage = () => {
             setIsSubmitting(true);
             const payload = { id: selectedUserId, ...editedData };
             if (!payload.password) delete payload.password;
-            
             const response = await apiClient.put(`/user/update-user/${selectedUserId}`, payload);
-            
             if (response.data.success) {
                 toast.success('User updated successfully');
-                fetchUserList();
-                handleCloseUpdateModal();
-            } else {
-                toast.error('Failed to update user');
-            }
+                fetchUserList(); handleCloseUpdateModal();
+            } else toast.error('Failed to update user');
         } catch (error) {
             toast.error(error.response?.data?.message || 'Error updating user');
         } finally {
@@ -153,184 +123,155 @@ const UserPage = () => {
         }
         try {
             const response = await apiClient.put(`/user/active-status`, {
-                id: selectedUserId,
-                is_active: editedStatus
+                id: selectedUserId, is_active: editedStatus
             });
             if (response.data?.success) {
-                toast.success("Status updated");
-                fetchUserList();
+                toast.success("Status updated"); fetchUserList();
             } else toast.error("Failed to update status");
         } catch (error) {
             toast.error("Error updating status");
         } finally {
-            setIsEditingStatus(false);
-            setSelectedUserId(null);
+            setIsEditingStatus(false); setSelectedUserId(null);
         }
     };
-
     return (
         <>
-        <Navbar />
-        <div className="user-page">
-            <Sidebar />
-            <div className="main-content">
-                <div className="content-header">
-                    <h1 className="page-title">Users List</h1>
-                    <button className="add-user-btn" onClick={handleAddUser}>+ Add New User</button>
-                </div>
-                {loading ? <div>Loading...</div> : (
-                    <table className="leads-table">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Phone</th>
-                                <th>Role</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {userList.map((user, index) => (
-                                <tr key={user.id || index}>
-                                    <td>{user.first_name} {user.last_name}</td>
-                                    <td>{user.email}</td>
-                                    <td>{user.phone}</td>
-                                    <td>{user.role}</td>
-                                    <td className={user.is_active ? 'status-active' : 'status-inactive'}>
-                                        {isEditingStatus && selectedUserId === user.id ? (
-                                                <select value={editedStatus ? 'true' : 'false'} onChange={e => setEditedStatus(e.target.value === 'true')}>
-                                                    <option value="true">Active</option>
-                                                    <option value="false">Inactive</option>
-                                                </select>
-                                        ) : user.is_active ? 'Active' : 'Inactive'}
-                                    </td> 
-                                    <td>
-                                        <button onClick={() => handleUpdateUser(user)} style={{ marginRight: "20px" }}>
-                                            Update User
-                                        </button>
-                                        <button onClick={() => {
-                                            setIsEditingStatus(true);
-                                            setSelectedUserId(user.id);
-                                            setEditedStatus(user.is_active);
-                                            setSelectedUser(user);
-                                        }}>Update Status</button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                )}
+            <Navbar />
+            <Box display="flex">
+                <Sidebar />
+                <Box component="main"
+                    sx={{
+                    flexGrow: 1,
+                    p: 3,
+                    ml: '24px',  
+                    width: 'calc(100% - 240px)',      
+                    }}>
+                    <Box display="flex" justifyContent="space-between" alignItems="center" sx={{mb:'20px', mt:'10px'}}>
+                        <Typography variant="h5" sx={{
+                            fontSize: '28px',
+                            fontWeight: 'bold',
+                            color: '#000000',
+                            fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif`
+                            }}>Users List</Typography>
+                        <Button variant="contained" color="primary" className="primary-button" onClick={handleAddUser}>+ Add New User</Button>
+                    </Box>
+                    {loading ? <CircularProgress /> : (
+                        <TableContainer component={Paper} sx={{ mb: 3, border: '1px solid #ddd' }}>
+                            <Table>
+                                <TableHead>
+                                    <TableRow sx={{ backgroundColor: '#f4f4f4', height: 20, '& th': { fontWeight: 'bold' } }}>
+                                        <TableCell>Name</TableCell>
+                                        <TableCell>Email</TableCell>
+                                        <TableCell>Phone</TableCell>
+                                        <TableCell>Role</TableCell>
+                                        <TableCell>Status</TableCell>
+                                        <TableCell>Actions</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {userList.map((user) => (
+                                        <TableRow key={user.id} sx={{
+                                            '& td': {
+                                                paddingTop: '4px',
+                                                paddingBottom: '4px',
+                                                lineHeight: '1.2',
+                                            },
+                                            height: '32px',
+                                            }}>
+                                            <TableCell>{user.first_name} {user.last_name}</TableCell>
+                                            <TableCell>{user.email}</TableCell>
+                                            <TableCell>{user.phone}</TableCell>
+                                            <TableCell>{user.role}</TableCell>
+                                            <TableCell>
+                                                {isEditingStatus && selectedUserId === user.id ? (
+                                                    <Select
+                                                        value={editedStatus ? 'true' : 'false'}
+                                                        onChange={(e) => setEditedStatus(e.target.value === 'true')}
+                                                        size="small"
+                                                    >
+                                                        <MenuItem value="true">Active</MenuItem>
+                                                        <MenuItem value="false">Inactive</MenuItem>
+                                                    </Select>
+                                                ) : (
+                                                    <Typography
+                                                    sx={{
+                                                        color: user.is_active ? 'green' : 'red',
+                                                        fontWeight: 500,
+                                                    }}
+                                                    >
+                                                    {user.is_active ? 'Active' : 'Inactive'}
+                                                    </Typography>
+                                                )}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Button onClick={() => handleUpdateUser(user)} variant="contained" sx={{ fontSize: '13px', mr: '10px', backgroundColor: '#007BFF', '&:hover': { backgroundColor: '#0056b3' }, textTransform: 'none'  }}>Update User</Button>
+                                                <Button onClick={() => {
+                                                    setIsEditingStatus(true);
+                                                    setSelectedUserId(user.id);
+                                                    setEditedStatus(user.is_active);
+                                                    setSelectedUser(user);
+                                                }} variant="contained" sx={{ fontSize: '13px', backgroundColor: '#007BFF', '&:hover': { backgroundColor: '#0056b3' }, textTransform: 'none'  }}>Update Status</Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    )}
 
-                {isEditingStatus && (
-                    <div className="edit-actions">
-                        <button className="save-btn" onClick={handleUpdateStatus}>Save Status</button>
-                        <button className="cancel-btn" onClick={() => { setIsEditingStatus(false); setSelectedUserId(null); }}>Cancel</button>
-                    </div>
-                )}
+                    {isEditingStatus && (
+                        <Box display="flex" gap={2} mt={2}>
+                            <Button variant="contained" onClick={handleUpdateStatus}>Save Status</Button>
+                            <Button variant="outlined" onClick={() => { setIsEditingStatus(false); setSelectedUserId(null); }}>Cancel</Button>
+                        </Box>
+                    )}
 
-                {/* Add User Modal */}
-                {showAddUserModal && (
-                    <div className="modal-overlay">
-                        <div className="modal-container">
-                            <div className="modal-header">
-                                <h2>Add New User</h2>
-                                <button onClick={handleCloseModal}>×</button>
-                            </div>
-                            <form onSubmit={handleSubmit} className="modal-form">
-                                <FormInput placeholder="First Name" value={firstName} onChange={e => setFirstName(e.target.value)} showErrors={showErrors} />
-                                <FormInput placeholder="Last Name" value={lastName} onChange={e => setLastName(e.target.value)} showErrors={showErrors} />
-                                <FormInput type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} showErrors={showErrors} />
-                                <div className="form-group">
-                                    <input type="password" placeholder="Password" value={password} readOnly required />
-                                </div>
-                                <div className="form-group">
-                                    <input type="tel" placeholder="Phone" value={phone} onChange={e => setPhone(e.target.value)} />
-                                </div>
-                                <div className="form-group">
-                                    <select value={role} onChange={e => setRole(e.target.value)} required>
-                                        <option value="admin">Admin</option>
-                                        <option value="user">User</option>
-                                    </select>
-                                </div>
-                                <div className="modal-actions">
-                                    <button type="button" onClick={handleCloseModal}>Cancel</button>
-                                    <button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Adding...' : 'Add User'}</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )}
+                    {/* Add User Modal */}
+                    <Dialog open={showAddUserModal} onClose={handleCloseModal} fullWidth>
+                        <DialogTitle>Add New User</DialogTitle>
+                        <DialogContent>
+                            <TextField label="First Name" fullWidth margin="dense" value={firstName} onChange={e => setFirstName(e.target.value)} error={showErrors && !firstName} />
+                            <TextField label="Last Name" fullWidth margin="dense" value={lastName} onChange={e => setLastName(e.target.value)} error={showErrors && !lastName} />
+                            <TextField label="Email" fullWidth margin="dense" type="email" value={email} onChange={e => setEmail(e.target.value)} error={showErrors && !email} />
+                            <TextField label="Password" fullWidth margin="dense" type="password" value={password} InputProps={{ readOnly: true }} />
+                            <TextField label="Phone" fullWidth margin="dense" value={phone} onChange={e => setPhone(e.target.value)} />
+                            <FormControl fullWidth margin="dense">
+                                <InputLabel>Role</InputLabel>
+                                <Select value={role} onChange={e => setRole(e.target.value)} required label="Role">
+                                    <MenuItem value="admin">Admin</MenuItem>
+                                    <MenuItem value="user">User</MenuItem>
+                                </Select>
+                            </FormControl>
+                        </DialogContent>
+                        <DialogActions>
+                            <Button onClick={handleCloseModal}>Cancel</Button>
+                            <Button onClick={handleSubmit} disabled={isSubmitting}>{isSubmitting ? 'Adding...' : 'Add User'}</Button>
+                        </DialogActions>
+                    </Dialog>
 
-                {/* Update User Modal */}
-                {showUpdateUserModal && (
-                    <div className="modal-overlay">
-                        <div className="modal-container">
-                            <div className="modal-header">
-                                <h2>Update User</h2>
-                                <button onClick={handleCloseUpdateModal}>×</button>
-                            </div>
-                            <div className="modal-form">
-                                <div className="form-group">
-                                    <label>First Name</label>
-                                    <input 
-                                        name="first_name" 
-                                        value={editedData.first_name} 
-                                        onChange={handleUpdateChange}
-                                        placeholder="First Name"
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label>Last Name</label>
-                                    <input 
-                                        name="last_name" 
-                                        value={editedData.last_name} 
-                                        onChange={handleUpdateChange}
-                                        placeholder="Last Name"
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label>Phone</label>
-                                    <input 
-                                        name="phone" 
-                                        value={editedData.phone} 
-                                        onChange={handleUpdateChange}
-                                        placeholder="Phone"
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label>Role</label>
-                                    <select 
-                                        name="role" 
-                                        value={editedData.role} 
-                                        onChange={handleUpdateChange}
-                                    >
-                                        <option value="admin">Admin</option>
-                                        <option value="user">User</option>
-                                    </select>
-                                </div>
-                                <div className="form-group">
-                                    <label>New Password (optional)</label>
-                                    <input 
-                                        name="password" 
-                                        type="text" 
-                                        value={editedData.password} 
-                                        onChange={handleUpdateChange}
-                                        placeholder="Enter new password (leave blank to keep current)"
-                                    />
-                                </div>
-                                <div className="modal-actions">
-                                    <button type="button" onClick={handleCloseUpdateModal}>Cancel</button>
-                                    <button type="button" onClick={handleSaveUpdate} disabled={isSubmitting}>
-                                        {isSubmitting ? 'Updating...' : 'Update User'}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
-        </div>
+                    {/* Update User Modal */}
+                    <Dialog open={showUpdateUserModal} onClose={handleCloseUpdateModal} fullWidth>
+                        <DialogTitle>Update User</DialogTitle>
+                        <DialogContent>
+                            <TextField fullWidth margin="dense" label="First Name" name="first_name" value={editedData.first_name} onChange={handleUpdateChange} />
+                            <TextField fullWidth margin="dense" label="Last Name" name="last_name" value={editedData.last_name} onChange={handleUpdateChange} />
+                            <TextField fullWidth margin="dense" label="Phone" name="phone" value={editedData.phone} onChange={handleUpdateChange} />
+                            <FormControl fullWidth margin="dense">
+                                <InputLabel>Role</InputLabel>
+                                <Select name="role" value={editedData.role} onChange={handleUpdateChange} label="Role">
+                                    <MenuItem value="admin">Admin</MenuItem>
+                                    <MenuItem value="user">User</MenuItem>
+                                </Select>
+                            </FormControl>
+                            <TextField fullWidth margin="dense" label="New Password (optional)" name="password" value={editedData.password} onChange={handleUpdateChange} />
+                        </DialogContent>
+                        <DialogActions>
+                            <Button onClick={handleCloseUpdateModal}>Cancel</Button>
+                            <Button onClick={handleSaveUpdate} disabled={isSubmitting}>{isSubmitting ? 'Updating...' : 'Update User'}</Button>
+                        </DialogActions>
+                    </Dialog>
+                </Box>
+            </Box>
         </>
     );
 };

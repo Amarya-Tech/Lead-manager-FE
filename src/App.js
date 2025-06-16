@@ -1,18 +1,37 @@
-import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { CircularProgress, Box } from "@mui/material";
+import { ToastContainer } from 'react-toastify';
+import Cookies from 'js-cookie';
+
+// Pages
 import Dashboard from "./pages/Dashboard.js";
 import Login from "./pages/Login";
 import LeadsNewPage from "./components/LeadsCreateNew.js";
-import { ToastContainer } from 'react-toastify';
 import UserProfilePage from "./pages/UserProfile.js";
 import Leads from "./pages/Leads.js";
-import Cookies from 'js-cookie';
 import UserPage from "./pages/Users.js";
+
+// Get user role from cookies
+const getUserRole = () => Cookies.get('role');
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
-  const token = Cookies.get('jwt'); 
+  const token = Cookies.get('jwt');
   return token ? children : <Navigate to="/login" replace />;
+};
+
+// Role-based Protected Route Component
+const RoleProtectedRoute = ({ children, allowedRoles = [] }) => {
+  const token = Cookies.get('jwt');
+  const userRole = getUserRole();
+
+  if (!token) return <Navigate to="/login" replace />;
+  if (allowedRoles.length && !allowedRoles.includes(userRole)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
 };
 
 function App() {
@@ -21,14 +40,16 @@ function App() {
 
   useEffect(() => {
     const token = Cookies.get('jwt');
-    if (token) {
-      setIsAuthenticated(true);
-    }
+    if (token) setIsAuthenticated(true);
     setLoading(false);
   }, []);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <CircularProgress color="primary" />
+      </Box>
+    );
   }
 
   return (
@@ -37,60 +58,31 @@ function App() {
         <Route 
           path="/" 
           element={
-            isAuthenticated ? 
-            <Navigate to="/dashboard" replace /> : 
-            <Navigate to="/login" replace />
+            isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />
           } 
         />
         
-        {/* Public routes */}
+        {/* Public route */}
         <Route path="/login" element={<Login />} />
-        
-        {/* Protected routes */}
-        <Route 
-          path="/dashboard" 
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/leads" 
-          element={
-            <ProtectedRoute>
-              <Leads />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/leads/new" 
-          element={
-            <ProtectedRoute>
-              <LeadsNewPage />
-            </ProtectedRoute>
-          } 
-        />
-         <Route 
-          path="/users" 
-          element={
-            <ProtectedRoute>
-              <UserPage />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/user-profile" 
-          element={
-            <ProtectedRoute>
-              <UserProfilePage />
-            </ProtectedRoute>
-          } 
-        />
-        
-        {/* Catch all route */}
+
+        {/* Authenticated routes */}
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/leads" element={<ProtectedRoute><Leads /></ProtectedRoute>} />
+        <Route path="/leads/status/:status" element={<ProtectedRoute><Leads /></ProtectedRoute>} />
+        <Route path="/leads/new" element={<ProtectedRoute><LeadsNewPage /></ProtectedRoute>} />
+        <Route path="/user-profile" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
+
+        {/* Admin-only route */}
+        <Route path="/users" element={
+          <RoleProtectedRoute allowedRoles={['admin']}>
+            <UserPage />
+          </RoleProtectedRoute>
+        } />
+
+        {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+
       <ToastContainer position="top-right" />
     </>
   );

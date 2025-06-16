@@ -1,7 +1,17 @@
-import "./css/LeadsLogs.css";
 import { useState, useEffect } from "react";
 import Cookies from 'js-cookie';
 import apiClient from "../apicaller/APIClient.js";
+import {
+    Box,
+    Typography,
+    TextField,
+    Button,
+    CircularProgress,
+    Paper,
+    Avatar,
+    Divider,
+    Stack
+} from '@mui/material';
 
 export default function LeadLogsPage({ leadId, onBack }) {
     const userId = Cookies.get("user_id");
@@ -18,18 +28,16 @@ export default function LeadLogsPage({ leadId, onBack }) {
             try {
                 setIsLoading(true);
                 const logsResponse = await apiClient.get(`/lead-com/fetch-lead-log-details/${leadId}`);
-                
                 const leadResponse = await apiClient.get(`/lead/get-lead-detail/${leadId}`);
-                
+
                 if (Array.isArray(logsResponse.data.data)) {
                     setLeadLogs(logsResponse.data.data);
-                     if (logsResponse.data.data.length > 0 && logsResponse.data.data[0].lead_communication_id) {
+                    if (logsResponse.data.data.length > 0 && logsResponse.data.data[0].lead_communication_id) {
                         setLeadCommunicationId(logsResponse.data.data[0].lead_communication_id);
                     } else if (logsResponse.data.lead_communication_id) {
                         setLeadCommunicationId(logsResponse.data.lead_communication_id);
                     }
                 } else {
-                    console.error("Invalid logs data format:", logsResponse.data);
                     setLeadLogs([]);
                 }
 
@@ -37,7 +45,6 @@ export default function LeadLogsPage({ leadId, onBack }) {
                     setLeadInfo(leadResponse.data.data[0]);
                 }
             } catch (error) {
-                console.error("Failed to fetch lead logs:", error);
                 setError("Failed to load lead logs. Please try again.");
                 setLeadLogs([]);
             } finally {
@@ -45,21 +52,13 @@ export default function LeadLogsPage({ leadId, onBack }) {
             }
         };
 
-        if (leadId) {
-            fetchLeadLogs();
-        }
+        if (leadId) fetchLeadLogs();
     }, [leadId]);
 
     const handleAddComment = async (e) => {
         e.preventDefault();
-        
         if (!newComment.trim()) {
             setError("Please enter a comment before submitting.");
-            return;
-        }
-
-         if (!leadCommunicationId) {
-            setError("Lead communication ID not found. Please refresh the page.");
             return;
         }
 
@@ -75,31 +74,25 @@ export default function LeadLogsPage({ leadId, onBack }) {
                 const newLog = {
                     id: Date.now(),
                     comment: newComment.trim(),
-                    date: new Date().toLocaleString(),
-                    created_by: "You"
+                    created_date: new Date().toISOString(),
+                    created_by_name: "You"
                 };
-                
                 setLeadLogs([newLog, ...leadLogs]);
                 setNewComment("");
             } else {
                 setError("Failed to add comment. Please try again.");
             }
-        } catch (error) {
-            console.error("Failed to add comment:", error);
+        } catch {
             setError("Failed to add comment. Please try again.");
         } finally {
             setIsSubmitting(false);
         }
     };
 
-
     const formatTime = (dateString) => {
         if (!dateString) return "N/A";
         try {
-            return new Date(dateString).toLocaleTimeString([], { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-            });
+            return new Date(dateString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         } catch {
             return dateString.split(' ')[1] || dateString;
         }
@@ -107,25 +100,17 @@ export default function LeadLogsPage({ leadId, onBack }) {
 
     const getDateGroup = (dateString) => {
         if (!dateString) return "Unknown";
-        
         try {
             const date = new Date(dateString);
             const today = new Date();
             const yesterday = new Date(today);
             yesterday.setDate(yesterday.getDate() - 1);
-            
+
             const dateStr = date.toDateString();
-            const todayStr = today.toDateString();
-            const yesterdayStr = yesterday.toDateString();
-            
-            if (dateStr === todayStr) return "Today";
-            if (dateStr === yesterdayStr) return "Yesterday";
-            
-            return date.toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-            });
+            if (dateStr === today.toDateString()) return "Today";
+            if (dateStr === yesterday.toDateString()) return "Yesterday";
+
+            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
         } catch {
             return dateString.split(' ')[0] || "Unknown";
         }
@@ -135,9 +120,7 @@ export default function LeadLogsPage({ leadId, onBack }) {
         const groups = {};
         logs.forEach(log => {
             const dateGroup = getDateGroup(log.created_date);
-            if (!groups[dateGroup]) {
-                groups[dateGroup] = [];
-            }
+            if (!groups[dateGroup]) groups[dateGroup] = [];
             groups[dateGroup].push(log);
         });
         return groups;
@@ -148,101 +131,89 @@ export default function LeadLogsPage({ leadId, onBack }) {
         return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     };
 
-    if (isLoading) {
-        return (
-            <div className="loading-container">
-                <p>Loading lead logs...</p>
-            </div>
-        );
-    }
+    if (isLoading) return <Box p={4}><CircularProgress /></Box>;
 
     return (
-        <div className="lead-logs-container">
-            {/* Header Section */}
-            <div className="lead-logs-header">
-                <div>
-                    <h2 className="lead-logs-title">{leadInfo.company_name} Logs</h2>
-                    {leadInfo && (
-                        <p className="lead-info">
-                            Company: <strong>{leadInfo.company_name}</strong> | 
-                            Product: <strong>{leadInfo.product}</strong> | 
-                            Status: <strong>{leadInfo.status}</strong>
-                        </p>
-                    )}
-                </div>
-                <button
+        <Box p={4} m={4}>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+                <Box>
+                    <Typography variant="h5">{leadInfo?.company_name} Logs</Typography>
+                    <Typography variant="body2">
+                        Company: <strong>{leadInfo?.company_name}</strong> | Product: <strong>{leadInfo?.product}</strong> | Status: <strong>{leadInfo?.status}</strong>
+                    </Typography>
+                </Box>
+                <Button
                     onClick={onBack}
-                    className="back-button"
-                >
-                    ← Back to Leads
-                </button>
-            </div>
-
-            {/* Add New Comment Section */}
-            <div className="add-comment-section">
-                <h3 className="add-comment-title">Add Comment</h3>
-                <form onSubmit={handleAddComment}>
-                    <textarea
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                        placeholder="Add a comment"
-                        rows="4"
-                        className="comment-textarea"
-                    />
-                    
-                    {error && (
-                        <div className="error-message">
-                            {error}
-                        </div>
-                    )}
-
-                    <button
-                        type="submit"
-                        disabled={isSubmitting || !newComment.trim()}
-                        className={`submit-comment-button ${isSubmitting || !newComment.trim() ? 'disabled' : 'enabled'}`}
+                    sx={{
+                        padding: '10px 20px',
+                        backgroundColor: '#6c757d',
+                        color: 'white',
+                        borderRadius: '6px',
+                        fontSize: '14px',
+                        fontWeight: 500,
+                        textTransform: 'none',
+                        '&:hover': {
+                        backgroundColor: '#5a6268',
+                        },
+                    }}
                     >
-                        {isSubmitting ? "Adding Comment..." : "Add Comment"}
-                    </button>
-                </form>
-            </div>
+                    ← Back to Leads
+                    </Button>
+            </Box>
 
-            {/* Logs Display Section */}
-            <div className="logs-container">
-                {leadLogs.length > 0 ? (
-                    Object.entries(groupLogsByDate(leadLogs)).map(([dateGroup, logs]) => (
-                        <div key={dateGroup} className="date-group">
-                            <h4 className="date-header">{dateGroup}</h4>
-                            {logs.map((log, index) => (
-                                <div key={log.id || index} className="log-item">
-                                    <div className="log-avatar">
-                                        {getInitials(log.created_by_name || "You")}
-                                    </div>
-                                    <div className="log-content">
-                                        <div className="log-header">
-                                            <span className="log-user">
-                                                {log.created_by_name || "You"}
-                                            </span>
-                                            <span className="log-time">
+            <Paper elevation={2} sx={{ p: 2, mb: 3 }}>
+                <Typography variant="h6" gutterBottom>Add Comment</Typography>
+                <TextField
+                    multiline
+                    fullWidth
+                    rows={4}
+                    placeholder="Add a comment"
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    error={!!error}
+                    helperText={error}
+                />
+                <Button
+                    onClick={handleAddComment}
+                    variant="contained"
+                    sx={{ mt: 2 }}
+                    disabled={isSubmitting || !newComment.trim()}
+                >
+                    {isSubmitting ? "Adding Comment..." : "Add Comment"}
+                </Button>
+            </Paper>
+
+            {leadLogs.length > 0 ? (
+                Object.entries(groupLogsByDate(leadLogs)).map(([dateGroup, logs]) => (
+                    <Box key={dateGroup} mb={4}>
+                        <Typography variant="subtitle1" color="text.secondary" gutterBottom>{dateGroup}</Typography>
+                        {logs.map((log, idx) => (
+                            <Paper key={log.id || idx} sx={{ p: 2, mb: 2 }}>
+                                <Stack direction="row" spacing={2} alignItems="flex-start">
+                                    <Avatar>{getInitials(log.created_by_name || 'You')}</Avatar>
+                                    <Box>
+                                       <Box display="flex" justifyContent="space-between" alignItems="center" width="100%">
+                                            <Box sx={{ flexGrow: 1 }}>
+                                                <Typography fontWeight="bold" noWrap>
+                                                {log.created_by_name || 'You'}
+                                                </Typography>
+                                            </Box>
+                                            <Box sx={{ textAlign: 'right', minWidth: 70 }}>
+                                                <Typography variant="caption" color="text.secondary" noWrap>
                                                 {formatTime(log.created_date)}
-                                            </span>
-                                        </div>
-                                        <p className="log-comment">
-                                            {log.comment}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ))
-                ) : (
-                    <div className="no-logs-container">
-                        <p className="no-logs-title">No comments found for this lead.</p>
-                        <p className="no-logs-subtitle">
-                            Add the first comment using the form above.
-                        </p>
-                    </div>
-                )}
-            </div>
-        </div>
+                                                </Typography>
+                                            </Box>
+                                        </Box>
+                                        <Typography variant="body1">{log.comment}</Typography>
+                                    </Box>
+                                </Stack>
+                            </Paper>
+                        ))}
+                    </Box>
+                ))
+            ) : (
+                <Typography variant="body2">No comments found for this lead. Add the first comment above.</Typography>
+            )}
+        </Box>
     );
 }

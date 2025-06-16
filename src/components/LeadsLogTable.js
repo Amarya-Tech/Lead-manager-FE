@@ -1,273 +1,203 @@
-
-import "./css/LeadsTable.css";
-import Cookies from 'js-cookie';
 import { useState, useEffect, useMemo } from "react";
+import Cookies from 'js-cookie';
 import apiClient from "../apicaller/APIClient.js";
+import {
+  Box,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Button,
+  Pagination,
+  CircularProgress
+} from "@mui/material";
 
-export default function LeadsLogTable({ searchTerm = "", onUpdateLead, onViewLogs  }) {
+export default function LeadsLogTable({ searchTerm = "", statusFilter = "", onUpdateLead, onViewLogs }) {
+  const userId = Cookies.get("user_id");
+  const [leads, setLeads] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const leadsPerPage = 25;
 
-    const userId = Cookies.get("user_id");
-    const [leads, setLeads] = useState([]);
-    const [currentPage, setCurrentPage] = useState(1);
-    const leadsPerPage = 25;
-
-    useEffect(() => {
-        const fetchLeads = async () => {
-            try {
-                const response = await apiClient.get(`/lead/fetch-lead-log-list/${userId}`);
-                if (Array.isArray(response.data.data)) {
-                    setLeads(response.data.data);
-                } else {
-                    console.error("Invalid data format:", response.data);
-                    setLeads([]);
-                }
-            } catch (error) {
-                console.error("Failed to fetch leads:", error);
-                setLeads([]);
-            }
-        };
-
-        fetchLeads();
-    }, []);
-
-    const handleUpdateLead = (leadId) => {
-        if (onUpdateLead) {
-            onUpdateLead(leadId);
-        }
-    };
-
-    const handleViewLogs = (leadId) => {
-        if (onViewLogs) {
-            onViewLogs(leadId);
-        }
-    };
-
-    const filteredLeads = useMemo(() => {
-        if (!searchTerm.trim()) {
-            return leads;
-        }
-
-        return leads.filter((lead) =>
-            lead.company_name?.toLowerCase().includes(searchTerm.trim().toLowerCase())
-        );
-    }, [leads, searchTerm]);
-
-    const totalPages = Math.ceil(leads.length / leadsPerPage);
-    const startIndex = (currentPage - 1) * leadsPerPage;
-    const endIndex = startIndex + leadsPerPage;
-
-    const currentLeads = useMemo(() => {
-        return filteredLeads.slice(startIndex, endIndex);
-    }, [filteredLeads, startIndex, endIndex]);
-
-    const goToPage = (page) => {
-        setCurrentPage(page);
-    };
-
-    const goToPreviousPage = () => {
-        if (currentPage > 1) {
-            goToPage(currentPage - 1);
-        }
-    };
-
-    const goToNextPage = () => {
-        if (currentPage < totalPages) {
-            goToPage(currentPage + 1);
-        }
-    };
-
-    const getPageNumbers = () => {
-        const pages = [];
-        const maxVisiblePages = 5;
-
-        if (totalPages <= maxVisiblePages) {
-            for (let i = 1; i <= totalPages; i++) {
-                pages.push(i);
-            }
+  useEffect(() => {
+    const fetchLeads = async () => {
+      try {
+        const response = await apiClient.get(`/lead/fetch-lead-log-list/${userId}`);
+        if (Array.isArray(response.data.data)) {
+          setLeads(response.data.data);
         } else {
-            if (currentPage <= 3) {
-                for (let i = 1; i <= 3; i++) pages.push(i);
-                if (totalPages > 4) pages.push('...');
-                pages.push(totalPages);
-            } else if (currentPage >= totalPages - 2) {
-                pages.push(1);
-                if (totalPages > 4) pages.push('...');
-                for (let i = totalPages - 2; i <= totalPages; i++) pages.push(i);
-            } else {
-                pages.push(1);
-                pages.push('...');
-                for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
-                pages.push('...');
-                pages.push(totalPages);
-            }
+          console.error("Invalid data format:", response.data);
+          setLeads([]);
         }
-
-        return pages;
+      } catch (error) {
+        console.error("Failed to fetch leads:", error);
+        setLeads([]);
+      }
     };
 
-    const highlightSearchTerm = (text, searchTerm) => {
-        if (!searchTerm.trim() || !text) return text;
+    fetchLeads();
+  }, []);
 
-        const regex = new RegExp(`(${searchTerm.trim()})`, 'gi');
-        const parts = text.split(regex);
+  const handleUpdateLead = (leadId) => {
+    if (onUpdateLead) onUpdateLead(leadId);
+  };
 
-        return parts.map((part, index) =>
-            regex.test(part) ? (
-                <mark key={index} style={{ backgroundColor: '#ffeb3b', padding: '1px 2px' }}>
-                    {part}
-                </mark>
-            ) : part
-        );
-    };
+  const handleViewLogs = (leadId) => {
+    if (onViewLogs) onViewLogs(leadId);
+  };
 
-    const getStatusStyle = (status) => {
-        switch (status?.toLowerCase()) {
-            case 'new':
-                return { backgroundColor: '#ffe0b2', color: '#8a4b00', padding: '4px 8px', borderRadius: '4px' };
-            case 'no pickup':
-                return { backgroundColor: '#bbdefb', color: '#0d47a1', padding: '4px 8px', borderRadius: '4px' };
-            case 'contacted':
-                return { backgroundColor: '#c8e6c9', color: '#1b5e20', padding: '4px 8px', borderRadius: '4px' };
-            case 'closed':
-                return { backgroundColor: '#ffcdd2', color: '#b71c1c', padding: '4px 8px', borderRadius: '4px' };
-            default:
-                return { backgroundColor: '#e0e0e0', color: '#424242', padding: '4px 8px', borderRadius: '4px' };
-        }
-    };
+  const filteredLeads = useMemo(() => {
+    let result = leads;
 
-    return (
-        <div style={{ marginBottom: "20px" }}>
-            {/* LEAD TABLE */}
-            {currentLeads.length > 0 ? (
-                <table className="leads-table">
-                    <thead>
-                        <tr>
-                            <th>Company Name</th>
-                            <th>Product</th>
-                            <th>Industry Type</th>
-                            <th>Status</th>
-                            <th>Latest Comment</th>
-                            <th>Latest Comment Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {currentLeads.map((lead, index) => (
-                            <tr key={lead.id || index}>
-                                <td>{highlightSearchTerm(lead.company_name, searchTerm)}</td>
-                                <td>{lead.product}</td>
-                                <td>{lead.industry_type}</td>
-                                <td>
-                                    <span style={getStatusStyle(lead.status)}>
-                                        {lead.status}
-                                    </span>
-                                </td>
-                                <td>{lead.latest_comment}</td>
-                                <td>{lead.latest_comment_date}</td>
-                                <td>
-                                    <button
-                                        style={{
-                                            marginRight: '8px',
-                                            padding: '5px 10px',
-                                            backgroundColor: '#28a745',
-                                            color: '#fff',
-                                            border: 'none',
-                                            borderRadius: '4px',
-                                            cursor: 'pointer'
-                                        }}
-                                        onClick={() => handleUpdateLead(lead.lead_id)}
-                                    >
-                                        Update Lead
-                                    </button>
+    if (statusFilter) {
+      result = result.filter((lead) =>
+        lead.status?.toLowerCase() === statusFilter.toLowerCase()
+      );
+    }
 
-                                    <button
-                                        style={{
-                                            padding: '5px 10px',
-                                            backgroundColor: '#17a2b8',
-                                            color: '#fff',
-                                            border: 'none',
-                                            borderRadius: '4px',
-                                            cursor: 'pointer'
-                                        }}
-                                        onClick={() => handleViewLogs(lead.lead_id)}
-                                    >
-                                        View Logs
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            ) : (
-                <p style={{ textAlign: "center", marginTop: "20px" }}>No leads found.</p>
-            )}
+    if (searchTerm.trim()) {
+      result = result.filter((lead) =>
+        lead.company_name?.toLowerCase().includes(searchTerm.trim().toLowerCase())
+      );
+    }
 
-            {/* Pagination Controls */}
-            {totalPages > 1 && (
-                <div style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    gap: "10px",
-                    marginTop: "20px",
-                    padding: "10px"
-                }}>
-                    <button
-                        onClick={goToPreviousPage}
-                        disabled={currentPage === 1}
-                        style={{
-                            padding: "8px 12px",
-                            border: "1px solid #ccc",
-                            backgroundColor: currentPage === 1 ? "#f5f5f5" : "#fff",
-                            cursor: currentPage === 1 ? "not-allowed" : "pointer",
-                            borderRadius: "4px"
-                        }}
-                    >
-                        Previous
-                    </button>
+    return result;
+  }, [leads, searchTerm, statusFilter]);
 
-                    {getPageNumbers().map((page, index) => (
-                        <span key={index}>
-                            {page === '...' ? (
-                                <span style={{ padding: "8px 4px", color: "#666" }}>...</span>
-                            ) : (
-                                <button
-                                    onClick={() => goToPage(page)}
-                                    style={{
-                                        padding: "8px 12px",
-                                        border: "1px solid #ccc",
-                                        backgroundColor: currentPage === page ? "#007bff" : "#fff",
-                                        color: currentPage === page ? "#fff" : "#000",
-                                        cursor: "pointer",
-                                        borderRadius: "4px",
-                                        fontWeight: currentPage === page ? "bold" : "normal"
-                                    }}
-                                >
-                                    {page}
-                                </button>
-                            )}
-                        </span>
-                    ))}
+  const totalPages = Math.ceil(filteredLeads.length / leadsPerPage);
+  const startIndex = (currentPage - 1) * leadsPerPage;
+  const endIndex = startIndex + leadsPerPage;
+  const currentLeads = useMemo(() => filteredLeads.slice(startIndex, endIndex), [filteredLeads, startIndex, endIndex]);
 
-                    <button
-                        onClick={goToNextPage}
-                        disabled={currentPage === totalPages}
-                        style={{
-                            padding: "8px 12px",
-                            border: "1px solid #ccc",
-                            backgroundColor: currentPage === totalPages ? "#f5f5f5" : "#fff",
-                            cursor: currentPage === totalPages ? "not-allowed" : "pointer",
-                            borderRadius: "4px"
-                        }}
-                    >
-                        Next
-                    </button>
+  const goToPage = (page) => setCurrentPage(page);
+  const goToPreviousPage = () => currentPage > 1 && goToPage(currentPage - 1);
+  const goToNextPage = () => currentPage < totalPages && goToPage(currentPage + 1);
 
-                    <span style={{ marginLeft: "15px", color: "#666", fontSize: "14px" }}>
-                        Page {currentPage} of {totalPages} ({leads.length} total leads)
-                    </span>
-                </div>
-            )}
-        </div>
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 3; i++) pages.push(i);
+        if (totalPages > 4) pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        if (totalPages > 4) pages.push('...');
+        for (let i = totalPages - 2; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    return pages;
+  };
+
+  const highlightSearchTerm = (text, searchTerm) => {
+    if (!searchTerm.trim() || !text) return text;
+    const regex = new RegExp(`(${searchTerm.trim()})`, 'gi');
+    const parts = text.split(regex);
+    return parts.map((part, index) =>
+      regex.test(part) ? (
+        <Box component="mark" key={index} sx={{ backgroundColor: '#ffeb3b', px: 0.5 }}>{part}</Box>
+      ) : part
     );
+  };
+
+  const getStatusStyle = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'lead': return { backgroundColor: '#ffe0b2', color: '#8a4b00', px: 1, py: 0.5, borderRadius: 1 };
+      case 'prospect': return { backgroundColor: '#bbdefb', color: '#0d47a1', px: 1, py: 0.5, borderRadius: 1 };
+      case 'active prospect': return { backgroundColor: '#c8e6c9', color: '#1b5e20', px: 1, py: 0.5, borderRadius: 1 };
+      case 'customer': return { backgroundColor: '#ffcdd2', color: '#b71c1c', px: 1, py: 0.5, borderRadius: 1 };
+      default: return { backgroundColor: '#e0e0e0', color: '#424242', px: 1, py: 0.5, borderRadius: 1 };
+    }
+  };
+
+  return (
+    <Box>
+      {currentLeads.length > 0 ? (
+        <TableContainer component={Paper} sx={{ mb: 3, border: '1px solid #ddd' }}>
+          <Table sx={{ minWidth: 650, borderCollapse: 'collapse' }} aria-label="leads table">
+            <TableHead>
+              <TableRow sx={{ backgroundColor: '#f4f4f4', height: 20 }}>
+                <TableCell><strong>Company Name</strong></TableCell>
+                <TableCell><strong>Product</strong></TableCell>
+                <TableCell><strong>Industry Type</strong></TableCell>
+                <TableCell><strong>Status</strong></TableCell>
+                <TableCell><strong>Latest Comment</strong></TableCell>
+                <TableCell><strong>Latest Comment Date</strong></TableCell>
+                <TableCell><strong>Actions</strong></TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody >
+              {currentLeads.map((lead, index) => (
+                <TableRow key={lead.id || index} sx={{
+                  '& td': {
+                    paddingTop: '4px',
+                    paddingBottom: '4px',
+                    lineHeight: '1.2',
+                  },
+                  height: '32px',
+                }}>
+                  <TableCell>{highlightSearchTerm(lead.company_name, searchTerm)}</TableCell>
+                  <TableCell>{lead.product}</TableCell>
+                  <TableCell>{lead.industry_type}</TableCell>
+                  <TableCell>
+                    <Box component="span" sx={getStatusStyle(lead.status)}>{lead.status}</Box>
+                  </TableCell>
+                  <TableCell>{lead.latest_comment}</TableCell>
+                  <TableCell>{lead.latest_comment_date}</TableCell>
+                  <TableCell>
+                    <Button variant="contained" color="success" size="small" sx={{ mr: 1 }} onClick={() => handleUpdateLead(lead.lead_id)}>
+                      Update Lead
+                    </Button>
+                    <Button variant="outlined" color="info" size="small" onClick={() => handleViewLogs(lead.lead_id)}>
+                      View Logs
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      ) : (
+        <Typography align="center" sx={{ mt: 3 }}>No leads found.</Typography>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <Box display="flex" justifyContent="center" alignItems="center" flexWrap="wrap" gap={1} mt={3}>
+          <Button onClick={goToPreviousPage} disabled={currentPage === 1} variant="outlined">Previous</Button>
+          {getPageNumbers().map((page, index) => (
+            <Box key={index}>
+              {page === '...' ? (
+                <Typography sx={{ px: 1 }}>...</Typography>
+              ) : (
+                <Button
+                  variant={currentPage === page ? 'contained' : 'outlined'}
+                  onClick={() => goToPage(page)}
+                  sx={{ fontWeight: currentPage === page ? 'bold' : 'normal' }}
+                >
+                  {page}
+                </Button>
+              )}
+            </Box>
+          ))}
+          <Button onClick={goToNextPage} disabled={currentPage === totalPages} variant="outlined">Next</Button>
+          <Typography sx={{ ml: 2, fontSize: 14, color: 'text.secondary' }}>
+            Page {currentPage} of {totalPages} ({leads.length} total leads)
+          </Typography>
+        </Box>
+      )}
+    </Box>
+  );
 }
