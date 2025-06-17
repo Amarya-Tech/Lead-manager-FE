@@ -1,4 +1,3 @@
-
 import "./css/LeadDetail.css";
 import { useState, useEffect, useCallback } from "react";
 import apiClient from "../apicaller/APIClient.js";
@@ -15,18 +14,66 @@ import {
   Divider,
   FormControl,
   InputLabel,
+  Card,
+  CardHeader,
+  CardContent,
+  Tooltip,
+  Chip,
+  Grid
 } from "@mui/material";
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import WarningIcon from '@mui/icons-material/Warning';
+import EditIcon from '@mui/icons-material/Edit'; 
+
+const cleanPayload = (obj) => {
+    if (Array.isArray(obj)) {
+        return obj.map(item => cleanPayload(item));
+    }
+    
+    if (obj && typeof obj === 'object') {
+        const cleaned = {};
+        for (const [key, value] of Object.entries(obj)) {
+            if (value !== '' && value !== null && value !== undefined) {
+                if (Array.isArray(value)) {
+                    if (value.length > 0) {
+                        cleaned[key] = cleanPayload(value);
+                    }
+                } else if (typeof value === 'object') {
+                    const cleanedValue = cleanPayload(value);
+                    if (Object.keys(cleanedValue).length > 0) {
+                        cleaned[key] = cleanedValue;
+                    }
+                } else {
+                    if (typeof value === 'string' && value.trim() === '') {
+                    } else {
+                        cleaned[key] = value;
+                    }
+                }
+            }
+        }
+        return cleaned;
+    }
+    
+    return obj;
+};
 
 export default function LeadDetailsPage({ leadId, onBack }) {
     
     const userId = Cookies.get("user_id") 
+    const userRole = Cookies.get("role") 
     const [leadDetails, setLeadDetails] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [editingSection, setEditingSection] = useState(null);
     const [saving, setSaving] = useState(false);
+    const [users, setUsers] = useState([]);
+    const [selectedAssignee, setSelectedAssignee] = useState('');
+    const [description, setDescription] = useState('');
+    const [assigneeSaved, setAssigneeSaved] = useState(false);
+    const [assigneeSkipped, setAssigneeSkipped] = useState(false);
+    const [loadingUsers, setLoadingUsers] = useState(false);
 
     const fetchLeadDetails = useCallback(async () => {
         if (!leadId) {
@@ -54,6 +101,80 @@ export default function LeadDetailsPage({ leadId, onBack }) {
         }
     }, [leadId]);
 
+    const fetchUsers = useCallback(async () => {
+    try {
+        setLoadingUsers(true);
+        const response = await apiClient.get('/user/fetch-active-user-list');
+        if (response.data.success) {
+            setUsers(response.data.data);
+        } else {
+            console.error('Failed to fetch users:', response.data);
+            toast.error('Failed to load sales representatives');
+        }
+    } catch (error) {
+        console.error('Failed to fetch users:', error);
+        toast.error('Failed to load sales representatives');
+    } finally {
+        setLoadingUsers(false);
+    }
+}, []);
+
+const assignSalesRep = async () => {
+    if (!leadId) {
+        toast.error('Please save company information first');
+        return;
+    }
+
+    if (assigneeSaved || assigneeSkipped) {
+        toast.info('Sales representative assignment already processed');
+        return;
+    }
+
+    if (!selectedAssignee) {
+        toast.error('Please select a sales representative');
+        return;
+    }
+
+    try {
+        const requestBody = {
+            lead_id: leadId,
+            assignee_id: selectedAssignee,
+            ...(description && { description: description }),
+        };
+
+        const response = await apiClient.post('/lead-com/add-assignee', requestBody);
+
+        if (response.data.success) {
+            setAssigneeSaved(true);
+            toast.success('Sales representative assigned successfully');
+        } else {
+            console.error('Invalid assign response:', response.data);
+            toast.error('Failed to assign sales representative');
+        }
+    } catch (error) {
+        const backendMessage = error.response?.data?.message || 'Failed to assign sales representative';
+        toast.error(backendMessage);
+        console.error('Failed to assign sales rep:', error);
+    }
+};
+
+  const skipAssignment = () => {
+      setAssigneeSkipped(true);
+      toast.info('Sales representative assignment skipped');
+  };
+
+  useEffect(() => {
+      fetchUsers();
+      
+      if (leadDetails?.assignee_id) {
+          setSelectedAssignee(leadDetails.assignee_id);
+          setAssigneeSaved(true);
+      }
+      if (leadDetails?.assignment_description) {
+          setDescription(leadDetails.assignment_description);
+      }
+  }, [fetchUsers, leadDetails]);
+
     useEffect(() => {
         fetchLeadDetails();
     }, [fetchLeadDetails]);
@@ -74,7 +195,8 @@ export default function LeadDetailsPage({ leadId, onBack }) {
             
             switch (section) {
                 case 'company':
-                    response = await apiClient.put(`/lead/update-lead/${leadId}`, updatedData);
+                    const cleanedCompanyData = cleanPayload(updatedData);
+                    response = await apiClient.put(`/lead/update-lead/${leadId}`, cleanedCompanyData);
                     break;
                     
                 case 'contact':
@@ -82,9 +204,11 @@ export default function LeadDetailsPage({ leadId, onBack }) {
                         const contactPromises = updatedData.contact_details.map(async (contact) => {
                             if (contact.contact_id) {
                                 const { contact_id, ...contactPayload } = contact;
-                                return await apiClient.put(`/lead/update-lead-contact/${leadId}/${contact.contact_id}`, contactPayload);
+                                const cleanedContactPayload = cleanPayload(contactPayload);
+                                return await apiClient.put(`/lead/update-lead-contact/${leadId}/${contact.contact_id}`, cleanedContactPayload);
                             } else {
-                                return await apiClient.post(`/lead/add-lead-contact/${userId}`, contact);
+                                const cleanedContact = cleanPayload(contact);
+                                return await apiClient.post(`/lead/add-lead-contact/${userId}`, cleanedContact);
                             }
                         });
                         await Promise.all(contactPromises);
@@ -96,9 +220,11 @@ export default function LeadDetailsPage({ leadId, onBack }) {
                         const officePromises = updatedData.office_details.map(async (office) => {
                             if (office.office_id) {
                                 const { office_id, ...officePayload } = office;
-                                return await apiClient.put(`/lead/update-lead-office/${leadId}/${office.office_id}`, officePayload);
+                                const cleanedOfficePayload = cleanPayload(officePayload);
+                                return await apiClient.put(`/lead/update-lead-office/${leadId}/${office.office_id}`, cleanedOfficePayload);
                             } else {
-                                return await apiClient.post(`/lead/add-lead-office/`, office);
+                                const cleanedOffice = cleanPayload(office);
+                                return await apiClient.post(`/lead/add-lead-office/`, cleanedOffice);
                             }
                         });
                         await Promise.all(officePromises);
@@ -177,6 +303,27 @@ export default function LeadDetailsPage({ leadId, onBack }) {
                     saving={saving}
                 />
 
+                <SalesAssignmentSection
+                  leadId={leadId}
+                  leadDetails={leadDetails}
+                  isEditing={editingSection === 'sales'}
+                  onEdit={() => handleEditSection('sales')}
+                  onCancel={handleCancelEdit}
+                  onSave={() => {}}
+                  saving={saving}
+                  users={users}
+                  loadingUsers={loadingUsers}
+                  selectedAssignee={selectedAssignee}
+                  setSelectedAssignee={setSelectedAssignee}
+                  description={description}
+                  setDescription={setDescription}
+                  assigneeSaved={assigneeSaved}
+                  assigneeSkipped={assigneeSkipped}
+                  assignSalesRep={assignSalesRep}
+                  skipAssignment={skipAssignment}
+                  userRole={userRole}
+                />
+
                 <ContactSection
                     leadDetails={leadDetails}
                     leadId={leadId}
@@ -211,6 +358,9 @@ function CompanySection({ leadDetails, isEditing, onEdit, onCancel, onSave, savi
         status: ''
     });
 
+    const [industryTypes, setIndustryTypes] = useState([]);
+    const [loadingIndustryTypes, setLoadingIndustryTypes] = useState(false);
+
     useEffect(() => {
         setFormData({
             company_name: leadDetails.company_name || '',
@@ -221,6 +371,31 @@ function CompanySection({ leadDetails, isEditing, onEdit, onCancel, onSave, savi
             status: leadDetails.status || ''
         });
     }, [leadDetails]);
+
+    useEffect(() => {
+        if (isEditing) {
+            fetchIndustryTypes();
+        }
+    }, [isEditing]);
+
+    const fetchIndustryTypes = async () => {
+        setLoadingIndustryTypes(true);
+        try {
+            const response = await apiClient.get('/lead/fetch-industry-type');
+            console.log('Industry types response:', response.data);
+            if (response.data && response.data.success && response.data.data) {
+                setIndustryTypes(response.data.data);
+            } else {
+                console.error('Failed to fetch industry types:', response.data);
+                toast.error('Failed to fetch industry types');
+            }
+        } catch (error) {
+            console.error('Error fetching industry types:', error);
+            toast.error('Failed to fetch industry types');
+        } finally {
+            setLoadingIndustryTypes(false);
+        }
+    };
 
     const handleInputChange = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
@@ -267,12 +442,27 @@ function CompanySection({ leadDetails, isEditing, onEdit, onCancel, onSave, savi
             fullWidth
           />
 
-          <TextField
-            label="Industry Type"
-            value={formData.industry_type}
-            onChange={(e) => handleInputChange('industry_type', e.target.value)}
-            fullWidth
-          />
+          <FormControl fullWidth>
+            <InputLabel>Industry Type</InputLabel>
+            <Select
+              value={formData.industry_type}
+              onChange={(e) => handleInputChange('industry_type', e.target.value)}
+              label="Industry Type"
+              disabled={loadingIndustryTypes}
+            >
+              <MenuItem value="">
+                {loadingIndustryTypes ? 'Loading...' : 'Select Industry Type'}
+              </MenuItem>
+              {industryTypes.map((industry) => (
+                <MenuItem 
+                  key={industry.id || industry.industry_name} 
+                  value={industry.industry_name}
+                >
+                  {industry.industry_name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
           <TextField
             label="Insured Amount"
@@ -313,7 +503,7 @@ function CompanySection({ leadDetails, isEditing, onEdit, onCancel, onSave, savi
             <Button
               variant="contained"
               onClick={handleSave}
-              disabled={saving}
+              disabled={saving || loadingIndustryTypes}
               className="save-button"
             >
               {saving ? 'Saving...' : 'Save'}
@@ -346,7 +536,6 @@ function CompanySection({ leadDetails, isEditing, onEdit, onCancel, onSave, savi
 // Contact Section Component
 function ContactSection({ leadDetails, leadId, isEditing, onEdit, onCancel, onSave, saving }) {
     const [contacts, setContacts] = useState([]);
-
 
     useEffect(() => {
         const initialContacts = leadDetails.contact_details || [];
@@ -569,6 +758,7 @@ function OfficeSection({ leadDetails, leadId, isEditing, onEdit, onCancel, onSav
 
     const handleSave = () => {
         if (!validateOffices()) return;
+        // The cleanPayload function will be applied in handleSaveSection
         onSave({ office_details: offices });
     };
 
@@ -697,4 +887,153 @@ function OfficeSection({ leadDetails, leadId, isEditing, onEdit, onCancel, onSav
       )}
     </Box>
   ); 
+}
+
+function SalesAssignmentSection({
+  leadDetails,
+  isEditing,
+  onEdit,
+  onCancel,
+  assignSalesRep,
+  saving,
+  users,
+  loadingUsers,
+  selectedAssignee,
+  setSelectedAssignee,
+  description,
+  setDescription,
+  assigneeSaved,
+  assigneeSkipped,
+  userRole
+}) {
+  const hasAssignment = assigneeSaved || (leadDetails?.assignee_id && !assigneeSkipped);
+
+  return (
+    <Box className="details-section" mt={3}>
+      <Box className="section-header" display="flex" justifyContent="space-between" alignItems="center">
+        <Typography variant="h6">Sales Representative Assignment</Typography>
+
+        {userRole === 'admin' && !isEditing && !hasAssignment && (
+              <Button
+                variant="outlined"
+                onClick={onEdit}
+                disabled={saving}
+              >
+                Assign Representative
+              </Button>
+            )}
+        {userRole === 'admin' && !isEditing && hasAssignment && (
+          <Tooltip title="Edit Assignment">
+            <IconButton onClick={onEdit}>
+              <EditIcon />
+            </IconButton>
+          </Tooltip>
+        )}
+      </Box>
+
+      {isEditing ? (
+        <Box mt={2} display="flex" flexDirection="column" gap={3}>
+          <Box p={2} border="1px solid #ddd" borderRadius={2}>
+            <Typography variant="subtitle1" mb={2}>Assign Sales Representative</Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Sales Representative *</InputLabel>
+                  <Select
+                    value={selectedAssignee}
+                    label="Sales Representative *"
+                    onChange={(e) => setSelectedAssignee(e.target.value)}
+                    disabled={loadingUsers}
+                  >
+                    <MenuItem value="">Select a representative...</MenuItem>
+                    {users.map(user => (
+                      <MenuItem key={user.id} value={user.id}>
+                        {user.first_name} {user.last_name} - {user.role}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Description"
+                  placeholder="Enter assignment notes..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  multiline
+                  rows={3}
+                />
+              </Grid>
+            </Grid>
+          </Box>
+
+          <Box display="flex" gap={2}>
+            <Button
+              variant="contained"
+              onClick={assignSalesRep}
+              disabled={!selectedAssignee || loadingUsers}
+            >
+              Save Assignment
+            </Button>
+            <Button variant="outlined" onClick={onCancel}>
+              Cancel
+            </Button>
+          </Box>
+        </Box>
+      ) : (
+        <Box className="view-content" mt={2}>
+          {hasAssignment ? (
+            <>
+              <Typography className="detail-item">
+                <strong>Assigned Representative:</strong> {leadDetails?.assigned_person || 'N/A'}
+              </Typography>
+              <Typography className="detail-item">
+                <strong>Assignment Notes:</strong> {leadDetails?.assigned_description || 'N/A'}
+              </Typography>
+              <Typography className="detail-item" display="flex" alignItems="center" gap={1}>
+                <strong>Status:</strong>
+                <Chip
+                  icon={<CheckCircleIcon />}
+                  label="Assigned"
+                  color="success"
+                  size="small"
+                />
+              </Typography>
+            </>
+          ) : assigneeSkipped ? (
+            <>
+              <Typography className="detail-item" display="flex" alignItems="center" gap={1}>
+                <strong>Status:</strong>
+                <Chip
+                  icon={<WarningIcon />}
+                  label="Skipped"
+                  color="warning"
+                  size="small"
+                />
+              </Typography>
+              <Typography variant="body2" color="text.secondary" mt={1}>
+                Sales representative assignment was skipped.
+              </Typography>
+              {userRole === 'admin' && (
+                <Button
+                  variant="outlined"
+                  onClick={onEdit}
+                  sx={{ mt: 2 }}
+                >
+                  Assign Representative Now
+                </Button>
+              )}
+            </>
+          ) : (
+            <>
+              <Typography variant="body2" color="text.secondary">
+                No sales representative has been assigned yet.
+              </Typography>
+            </>
+          )}
+        </Box>
+      )}
+    </Box>
+  );
 }

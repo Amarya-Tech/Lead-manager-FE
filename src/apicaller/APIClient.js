@@ -1,4 +1,4 @@
-// apiClient.js
+
 import axios from 'axios';
 import { useEncryptionKeyStore } from './EncryptionKeyStore.js';
 

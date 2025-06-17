@@ -157,7 +157,7 @@ export default function LeadsLogTable({ searchTerm = "", statusFilter = "", onUp
                   <TableCell>{lead.latest_comment}</TableCell>
                   <TableCell>{lead.latest_comment_date}</TableCell>
                   <TableCell>
-                    <Button variant="contained" color="success" size="small" sx={{ mr: 1 }} onClick={() => handleUpdateLead(lead.lead_id)}>
+                    <Button variant="contained" color="success" size="small" sx={{ mr: 1 }} onClick={(e) => handleUpdateLead(lead.lead_id, e)}>
                       Update Lead
                     </Button>
                     <Button variant="outlined" color="info" size="small" onClick={() => handleViewLogs(lead.lead_id)}>
