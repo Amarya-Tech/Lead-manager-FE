@@ -30,7 +30,6 @@ import {
   Pending as PendingIcon,
   Celebration as CelebrationIcon
 } from '@mui/icons-material';
-import Navbar from './NavBar.js';
 
 const LeadsNewPage = () => {
   const navigate = useNavigate();
@@ -68,7 +67,7 @@ const LeadsNewPage = () => {
   const [officeForm, setOfficeForm] = useState({
     address: '',
     city: '',
-    district: '',
+    state: '',
     country: '',
     postal_code: '',
   });
@@ -89,7 +88,7 @@ const LeadsNewPage = () => {
   const validateOfficeForm = () => {
     return officeForm.address.trim() !== '' &&
       officeForm.city.trim() !== '' &&
-      officeForm.district.trim() !== '' &&
+      officeForm.state.trim() !== '' &&
       officeForm.country.trim() !== '' &&
       officeForm.postal_code.trim() !== '';
   };
@@ -106,7 +105,6 @@ const LeadsNewPage = () => {
   const fetchUsers = async () => {
     try {
       const response = await apiClient.get('/user/fetch-active-user-list');
-      console.log(response.data);
 
       if (response.data && response.data.success && response.data.data) {
         setUsers(response.data.data);
@@ -122,7 +120,6 @@ const LeadsNewPage = () => {
   const fetchIndustryTypes = async () => {
     try {
       const response = await apiClient.get('/lead/fetch-industry-type');
-      console.log('Industry types response:', response.data);
       if (response.data && response.data.success && response.data.data) {
         setIndustryTypes(response.data.data);
       } else {
@@ -349,8 +346,6 @@ const LeadsNewPage = () => {
   };
 
   return (
-    <>
-      <Navbar />
       <Box display="flex" sx={{
         fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif`
       }}>
@@ -459,7 +454,7 @@ const LeadsNewPage = () => {
                       >
                         <MenuItem value="">Select industry</MenuItem>
                         {industryTypes.map((industry) => (
-                          <MenuItem key={industry.id} value={industry.id}>
+                          <MenuItem key={industry.id} value={industry.industry_name}>
                             {industry.industry_name}
                           </MenuItem>
                         ))}
@@ -582,13 +577,13 @@ const LeadsNewPage = () => {
                   <Grid item xs={12} md={3}>
                     <TextField
                       fullWidth
-                      label="District"
-                      placeholder="Enter district"
-                      value={officeForm.district}
+                      label="State"
+                      placeholder="Enter state"
+                      value={officeForm.state}
                       onChange={(e) =>
-                        setOfficeForm({ ...officeForm, district: e.target.value })
+                        setOfficeForm({ ...officeForm, state: e.target.value })
                       }
-                      error={showOfficeErrors && !officeForm.district}
+                      error={showOfficeErrors && !officeForm.state}
                       disabled={officeSaved || officeSkipped}
                       required
                     />
@@ -889,7 +884,6 @@ const LeadsNewPage = () => {
           </Container>
         </Box>
       </Box>
-    </>
   );
 };
 

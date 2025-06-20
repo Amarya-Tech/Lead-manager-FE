@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useParams } from "react-router-dom"; 
 import Sidebar from "../components/SideBar.js";
 import LeadsManager from "../components/LeadManager.js";
-import Navbar from "../components/NavBar.js";
 import { Box, Typography, TextField, IconButton, Paper, InputAdornment } from "@mui/material";
 import ClearIcon from '@mui/icons-material/Clear';
 
@@ -19,8 +18,6 @@ export default function Leads() {
   };
 
   return (
-    <Box>
-      <Navbar />
       <Box display="flex">
         <Sidebar />
         <Box component="main"
@@ -87,6 +84,5 @@ export default function Leads() {
           </Box>
         </Box>
       </Box>
-    </Box>
   );
 }

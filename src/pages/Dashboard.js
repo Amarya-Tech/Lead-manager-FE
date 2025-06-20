@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import Sidebar from "../components/SideBar.js";
 import LeadsTable from "../components/LeadsTable.js";
-import Navbar from "../components/NavBar.js";
 import "./css/Leads.css";
 
 import {
@@ -25,8 +24,6 @@ export default function Dashboard() {
   const clearSearch = () => setSearchTerm("");
 
   return (
-    <>
-      <Navbar />
       <Box display="flex" sx={{
         fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif`
       }}>
@@ -101,6 +98,5 @@ export default function Dashboard() {
           <LeadsTable searchTerm={searchTerm} />
         </Box>
       </Box>
-    </>
   );
 }
