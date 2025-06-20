@@ -34,8 +34,8 @@ export default function Sidebar() {
       { text: 'Expired Lead', path: '/leads/status/expired lead' }
     ]
   },
-    ...(isAdmin ? [{ text: 'Users', path: '/users' }] : []),
-    { text: 'User Profile', path: '/user-profile' },
+    ...(isAdmin ? [{ text: 'User Management', path: '/users' }] : []),
+    { text: 'My Profile', path: '/user-profile' },
   ];
 
   const drawerContent = (
