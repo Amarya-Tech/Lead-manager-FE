@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate  } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import {
   Drawer,
@@ -8,18 +8,55 @@ import {
   ListItemText,
   Typography,
   IconButton,
+  Button,
   useMediaQuery,
+  Box,
+  Divider,
+  Avatar,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import { useState } from 'react';
+import { useState, useEffect  } from 'react';
+import apiClient from '../apicaller/APIClient';
 
 export default function Sidebar() {
+  
+  const userId = Cookies.get('user_id');
   const userRole = Cookies.get('role');
   const isAdmin = userRole === 'admin';
   const isMobile = useMediaQuery('(max-width:900px)');
-
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [userName, setUserName] = useState('');
   const toggleDrawer = () => setMobileOpen(!mobileOpen);
+
+ useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await apiClient.get(`/user/fetch-user-detail/${userId}`);
+        const user = Array.isArray(res.data.data) ? res.data.data[0] : res.data.data;
+        if (user?.first_name) {
+          setUserName(`${user.first_name} ${user.last_name || ''}`);
+        }
+      } catch (error) {
+        console.error('Error fetching user info:', error);
+      }
+    };
+    fetchUser();
+  }, [userId]);
+
+  const handleLogout = async () => {
+    try {
+      await apiClient.get(`/user/logout/${userId}`);
+      Cookies.remove('user_id');
+      Cookies.remove('jwt');
+      Cookies.remove('role');
+      localStorage.clear();
+      sessionStorage.clear();
+      navigate('/login');
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
 
   const menuItems = [
     { text: 'Dashboard', path: '/dashboard' },
@@ -39,7 +76,7 @@ export default function Sidebar() {
   ];
 
   const drawerContent = (
-    <div>
+    <Box>
       <Typography
         variant="h6"
         sx={{
@@ -54,7 +91,7 @@ export default function Sidebar() {
 
       <List sx={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
        {menuItems.map((item) => (
-          <div key={item.text}>
+          <Box key={item.text}>
             <ListItem disablePadding>
               <ListItemButton
                 component={Link}
@@ -112,10 +149,67 @@ export default function Sidebar() {
                   ))}
                 </List>
               )}
-          </div>
+          </Box>
         ))}
       </List>
-    </div>
+
+      <Divider sx={{ my: 3 }} />
+
+      {/* User Info & Logout */}
+      <Box
+          sx={{
+            mt: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 1.5,
+            paddingTop: 2,
+          }}
+        >
+          <Avatar
+            sx={{
+              width: 64,
+              height: 64,
+              bgcolor: "#3b82f6",
+              fontSize: 24,
+              fontWeight: 600,
+              color: "white",
+            }}
+          >
+            {userName?.charAt(0)}
+          </Avatar>
+
+          <Typography
+            variant="subtitle1"
+            sx={{
+              fontWeight: 500,
+              color: '#1a202c',
+              fontSize: '15px',
+            }}
+          >
+            {userName}
+          </Typography>
+
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handleLogout}
+            fullWidth
+            sx={{
+              color: '#fff',
+              textTransform: 'none',
+              fontWeight: 500,
+              fontSize: '14px',
+              borderRadius: '8px',
+              '&:hover': {
+                backgroundColor: '#A2120B',
+              },
+            }}
+          >
+            Logout
+          </Button>
+      </Box>
+    </Box>
   );
 
   return (

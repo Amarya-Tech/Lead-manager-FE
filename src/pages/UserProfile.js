@@ -4,7 +4,6 @@ import Sidebar from "../components/SideBar.js";
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import './css/UserProfile.css';
-import Navbar from '../components/NavBar.js';
 import {
   Avatar,
   Box,
@@ -101,8 +100,6 @@ const UserProfilePage = () => {
     if (!userProfile) return <div>Unable to load profile</div>;
 
     return (
-    <>
-      <Navbar />
       <Box display="flex" sx={{
         fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif`
       }}>
@@ -303,7 +300,6 @@ const UserProfilePage = () => {
           </Container>
         </Box>
       </Box>
-    </>
   );
 };
 

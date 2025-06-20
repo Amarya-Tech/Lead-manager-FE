@@ -24,6 +24,12 @@
     font-size: 2rem;
 }
 
+.action-buttons {
+    display: flex;
+    margin-left: auto;
+    gap: 10px;
+}
+
 .back-button {
     padding: 10px 20px;
     background-color: #6c757d;

@@ -20,7 +20,7 @@ export default function LeadsLogTable({ searchTerm = "", statusFilter = "", onUp
   const userId = Cookies.get("user_id");
   const [leads, setLeads] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const leadsPerPage = 25;
+  const leadsPerPage = 18;
 
   useEffect(() => {
     const fetchLeads = async () => {

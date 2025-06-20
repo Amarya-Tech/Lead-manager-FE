@@ -25,391 +25,444 @@ import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import WarningIcon from '@mui/icons-material/Warning';
-import EditIcon from '@mui/icons-material/Edit'; 
-
-const cleanPayload = (obj) => {
-    if (Array.isArray(obj)) {
-        return obj.map(item => cleanPayload(item));
-    }
-    
-    if (obj && typeof obj === 'object') {
-        const cleaned = {};
-        for (const [key, value] of Object.entries(obj)) {
-            if (value !== '' && value !== null && value !== undefined) {
-                if (Array.isArray(value)) {
-                    if (value.length > 0) {
-                        cleaned[key] = cleanPayload(value);
-                    }
-                } else if (typeof value === 'object') {
-                    const cleanedValue = cleanPayload(value);
-                    if (Object.keys(cleanedValue).length > 0) {
-                        cleaned[key] = cleanedValue;
-                    }
-                } else {
-                    if (typeof value === 'string' && value.trim() === '') {
-                    } else {
-                        cleaned[key] = value;
-                    }
-                }
-            }
-        }
-        return cleaned;
-    }
-    
-    return obj;
-};
+import EditIcon from '@mui/icons-material/Edit';
+import ExpireLeadDialog from "../components/ExpireLeadComponent.js"; 
+import ConvertLeadDialog from "../components/ConvertLeadComponent.js";
+import { cleanPayload } from "../utils/functions.js";
 
 export default function LeadDetailsPage({ leadId, onBack }) {
-    
-    const userId = Cookies.get("user_id") 
-    const userRole = Cookies.get("role") 
-    const [leadDetails, setLeadDetails] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [editingSection, setEditingSection] = useState(null);
-    const [saving, setSaving] = useState(false);
-    const [users, setUsers] = useState([]);
-    const [selectedAssignee, setSelectedAssignee] = useState('');
-    const [description, setDescription] = useState('');
-    const [assigneeSaved, setAssigneeSaved] = useState(false);
-    const [assigneeSkipped, setAssigneeSkipped] = useState(false);
-    const [loadingUsers, setLoadingUsers] = useState(false);
 
-    const fetchLeadDetails = useCallback(async () => {
-        if (!leadId) {
-            setError("Invalid lead ID");
-            setLoading(false);
-            return;
-        }
+  const userId = Cookies.get("user_id")
+  const userRole = Cookies.get("role")
+  const [leadDetails, setLeadDetails] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [editingSection, setEditingSection] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [selectedAssignee, setSelectedAssignee] = useState('');
+  const [description, setDescription] = useState('');
+  const [assigneeSaved, setAssigneeSaved] = useState(false);
+  const [assigneeSkipped, setAssigneeSkipped] = useState(false);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [openExpireDialog, setOpenExpireDialog] = useState(false);
+  const [openConvertDialog, setOpenConvertDialog] = useState(false);
+  const [leadLogs, setLeadLogs] = useState([]);
 
-        setLoading(true);
-        setError(null);
-        
-        try {
-            const response = await apiClient.get(`/lead/get-lead-detail/${leadId}`);
-            console.log(response.data)
-            const leadData = Array.isArray(response.data.data)
-                ? response.data.data[0]
-                : response.data.data;
-            
-            setLeadDetails(leadData || null);
-        } catch (error) {
-            console.error("Failed to fetch lead details:", error);
-            setError("Failed to load lead details. Please try again.");
-        } finally {
-            setLoading(false);
-        }
-    }, [leadId]);
-
-    const fetchUsers = useCallback(async () => {
-    try {
-        setLoadingUsers(true);
-        const response = await apiClient.get('/user/fetch-active-user-list');
-        if (response.data.success) {
-            setUsers(response.data.data);
-        } else {
-            console.error('Failed to fetch users:', response.data);
-            toast.error('Failed to load sales representatives');
-        }
-    } catch (error) {
-        console.error('Failed to fetch users:', error);
-        toast.error('Failed to load sales representatives');
-    } finally {
-        setLoadingUsers(false);
-    }
-}, []);
-
-const assignSalesRep = async () => {
+  const fetchLeadDetails = useCallback(async () => {
     if (!leadId) {
-        toast.error('Please save company information first');
-        return;
+      setError("Invalid lead ID");
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await apiClient.get(`/lead/get-lead-detail/${leadId}`);
+      const leadData = Array.isArray(response.data.data)
+        ? response.data.data[0]
+        : response.data.data;
+
+      setLeadDetails(leadData || null);
+    } catch (error) {
+      console.error("Failed to fetch lead details:", error);
+      setError("Failed to load lead details. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, [leadId]);
+
+  const fetchUsers = useCallback(async () => {
+    try {
+      setLoadingUsers(true);
+      const response = await apiClient.get('/user/fetch-active-user-list');
+      if (response.data.success) {
+        setUsers(response.data.data);
+      } else {
+        console.error('Failed to fetch users:', response.data);
+        toast.error('Failed to load sales representatives');
+      }
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+      toast.error('Failed to load sales representatives');
+    } finally {
+      setLoadingUsers(false);
+    }
+  }, []);
+
+  const assignSalesRep = async () => {
+    if (!leadId) {
+      toast.error('Please save company information first');
+      return;
     }
 
     if (assigneeSaved || assigneeSkipped) {
-        toast.info('Sales representative assignment already processed');
-        return;
+      toast.info('Sales representative assignment already processed');
+      return;
     }
 
     if (!selectedAssignee) {
-        toast.error('Please select a sales representative');
-        return;
+      toast.error('Please select a sales representative');
+      return;
     }
 
     try {
-        const requestBody = {
-            lead_id: leadId,
-            assignee_id: selectedAssignee,
-            ...(description && { description: description }),
-        };
+      const requestBody = {
+        lead_id: leadId,
+        assignee_id: selectedAssignee,
+        ...(description && { description: description }),
+      };
 
-        const response = await apiClient.post('/lead-com/add-assignee', requestBody);
+      const response = await apiClient.post('/lead-com/add-assignee', requestBody);
 
-        if (response.data.success) {
-            setAssigneeSaved(true);
-            toast.success('Sales representative assigned successfully');
-        } else {
-            console.error('Invalid assign response:', response.data);
-            toast.error('Failed to assign sales representative');
-        }
+      if (response.data.success) {
+        setAssigneeSaved(true);
+        toast.success('Sales representative assigned successfully');
+      } else {
+        console.error('Invalid assign response:', response.data);
+        toast.error('Failed to assign sales representative');
+      }
     } catch (error) {
-        const backendMessage = error.response?.data?.message || 'Failed to assign sales representative';
-        toast.error(backendMessage);
-        console.error('Failed to assign sales rep:', error);
+      const backendMessage = error.response?.data?.message || 'Failed to assign sales representative';
+      toast.error(backendMessage);
+      console.error('Failed to assign sales rep:', error);
     }
-};
+  };
 
   const skipAssignment = () => {
-      setAssigneeSkipped(true);
-      toast.info('Sales representative assignment skipped');
+    setAssigneeSkipped(true);
+    toast.info('Sales representative assignment skipped');
   };
 
   useEffect(() => {
-      fetchUsers();
-      
-      if (leadDetails?.assignee_id) {
-          setSelectedAssignee(leadDetails.assignee_id);
-          setAssigneeSaved(true);
-      }
-      if (leadDetails?.assignment_description) {
-          setDescription(leadDetails.assignment_description);
-      }
+    fetchUsers();
+
+    if (leadDetails?.assignee_id) {
+      setSelectedAssignee(leadDetails.assignee_id);
+      setAssigneeSaved(true);
+    }
+    if (leadDetails?.assignment_description) {
+      setDescription(leadDetails.assignment_description);
+    }
   }, [fetchUsers, leadDetails]);
 
-    useEffect(() => {
-        fetchLeadDetails();
-    }, [fetchLeadDetails]);
+  useEffect(() => {
+    fetchLeadDetails();
+  }, [fetchLeadDetails]);
 
-    const handleEditSection = (section) => {
-        setEditingSection(section);
-    };
+  const handleEditSection = (section) => {
+    setEditingSection(section);
+  };
 
-    const handleCancelEdit = () => {
-        setEditingSection(null);
-    };
+  const handleCancelEdit = () => {
+    setEditingSection(null);
+  };
 
-    const handleSaveSection = async (section, updatedData) => {
-        if (saving) return; 
-        setSaving(true);
-        try {
-            let response;
-            
-            switch (section) {
-                case 'company':
-                    const cleanedCompanyData = cleanPayload(updatedData);
-                    response = await apiClient.put(`/lead/update-lead/${leadId}`, cleanedCompanyData);
-                    break;
-                    
-                case 'contact':
-                    if (updatedData.contact_details && Array.isArray(updatedData.contact_details)) {
-                        const contactPromises = updatedData.contact_details.map(async (contact) => {
-                            if (contact.contact_id) {
-                                const { contact_id, ...contactPayload } = contact;
-                                const cleanedContactPayload = cleanPayload(contactPayload);
-                                return await apiClient.put(`/lead/update-lead-contact/${leadId}/${contact.contact_id}`, cleanedContactPayload);
-                            } else {
-                                const cleanedContact = cleanPayload(contact);
-                                return await apiClient.post(`/lead/add-lead-contact/${userId}`, cleanedContact);
-                            }
-                        });
-                        await Promise.all(contactPromises);
-                    }
-                    break;
-                    
-                case 'office':
-                    if (updatedData.office_details && Array.isArray(updatedData.office_details)) {
-                        const officePromises = updatedData.office_details.map(async (office) => {
-                            if (office.office_id) {
-                                const { office_id, ...officePayload } = office;
-                                const cleanedOfficePayload = cleanPayload(officePayload);
-                                return await apiClient.put(`/lead/update-lead-office/${leadId}/${office.office_id}`, cleanedOfficePayload);
-                            } else {
-                                const cleanedOffice = cleanPayload(office);
-                                return await apiClient.post(`/lead/add-lead-office/`, cleanedOffice);
-                            }
-                        });
-                        await Promise.all(officePromises);
-                    }
-                    break;
-                    
-                default:
-                    throw new Error(`Unknown section: ${section}`);
-            }
-            
-            setEditingSection(null);
+  const handleSaveSection = async (section, updatedData) => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      let response;
 
-            await fetchLeadDetails();
-            toast.success('Updated successfully');
-            
-        } catch (error) {
-            console.error(`Failed to update ${section}:`, error);
-            toast.error('Failed to update');
-        } finally {
-            setSaving(false);
-        }
-    };
+      switch (section) {
+        case 'company':
+          const cleanedCompanyData = cleanPayload(updatedData);
+          response = await apiClient.put(`/lead/update-lead/${leadId}`, cleanedCompanyData);
+          break;
 
-    if (loading) {
-        return (
-            <div className="lead-details-page">
-                <div className="loading-container">
-                    <p>Loading lead details...</p>
-                </div>
-            </div>
-        );
+        case 'contact':
+          if (updatedData.contact_details && Array.isArray(updatedData.contact_details)) {
+            const contactPromises = updatedData.contact_details.map(async (contact) => {
+              if (contact.contact_id) {
+                const { contact_id, ...contactPayload } = contact;
+                const cleanedContactPayload = cleanPayload(contactPayload);
+                return await apiClient.put(`/lead/update-lead-contact/${leadId}/${contact.contact_id}`, cleanedContactPayload);
+              } else {
+                const cleanedContact = cleanPayload(contact);
+                return await apiClient.post(`/lead/add-lead-contact/${userId}`, cleanedContact);
+              }
+            });
+            await Promise.all(contactPromises);
+          }
+          break;
+
+        case 'office':
+          if (updatedData.office_details && Array.isArray(updatedData.office_details)) {
+            const officePromises = updatedData.office_details.map(async (office) => {
+              if (office.office_id) {
+                const { office_id, ...officePayload } = office;
+                const cleanedOfficePayload = cleanPayload(officePayload);
+                return await apiClient.put(`/lead/update-lead-office/${leadId}/${office.office_id}`, cleanedOfficePayload);
+              } else {
+                const cleanedOffice = cleanPayload(office);
+                return await apiClient.post(`/lead/add-lead-office/`, cleanedOffice);
+              }
+            });
+            await Promise.all(officePromises);
+          }
+          break;
+
+        default:
+          throw new Error(`Unknown section: ${section}`);
+      }
+
+      setEditingSection(null);
+
+      await fetchLeadDetails();
+      toast.success('Updated successfully');
+
+    } catch (error) {
+      console.error(`Failed to update ${section}:`, error);
+      toast.error('Failed to update');
+    } finally {
+      setSaving(false);
     }
+  };
 
-    if (error) {
-        return (
-            <div className="lead-details-page">
-                <div className="error-container">
-                    <p className="error-message">{error}</p>
-                    <button onClick={onBack} className="back-button">
-                        Back to Leads
-                    </button>
-                </div>
-            </div>
-        );
+  const handleExpire = () => {
+   setOpenExpireDialog(true);
+  };
+
+    const handleConvertSubmit = async ({ product, comment }) => {
+    try {
+      const commentRes = await apiClient.post(`/lead-com/add-comments/${userId}/${leadId}`, {
+        comment,
+      });
+
+      if (!commentRes.data.success) {
+        console.error("Failed to add comment");
+        return;
+      }
+
+      // Prepare payload based on current status
+      let nextStatus = "";
+      if (leadDetails.status === "lead") nextStatus = "prospect";
+      else if (leadDetails.status === "prospect") nextStatus = "active prospect";
+      else if (leadDetails.status === "active prospect") nextStatus = "customer";
+
+      const payload = cleanPayload({
+        status: nextStatus,
+        suitable_product: product,
+      });
+
+      const updateRes = await apiClient.put(`/lead/update-lead/${leadId}`, payload);
+
+      if (updateRes.data.success) {
+        fetchLeadDetails(); 
+      } else {
+        console.error("Failed to update lead status");
+      }
+    } catch (error) {
+      console.error("Error in status conversion:", error);
     }
+  };
 
-    if (!leadDetails) {
-        return (
-            <div className="lead-details-page">
-                <div className="error-container">
-                    <p>Lead details not found.</p>
-                    <button onClick={onBack} className="back-button">
-                        Back to Leads
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
+  if (loading) {
     return (
-        <div className="lead-details-page">
-            <div className="lead-details-header">
-                <button onClick={onBack} className="back-button">
-                    ← Back to Leads
-                </button>
-                <h1>Lead Details</h1>
-            </div>
-
-            <div className="lead-details-container">
-                <CompanySection
-                    leadDetails={leadDetails}
-                    isEditing={editingSection === 'company'}
-                    onEdit={() => handleEditSection('company')}
-                    onCancel={handleCancelEdit}
-                    onSave={(data) => handleSaveSection('company', data)}
-                    saving={saving}
-                />
-
-                <SalesAssignmentSection
-                  leadId={leadId}
-                  leadDetails={leadDetails}
-                  isEditing={editingSection === 'sales'}
-                  onEdit={() => handleEditSection('sales')}
-                  onCancel={handleCancelEdit}
-                  onSave={() => {}}
-                  saving={saving}
-                  users={users}
-                  loadingUsers={loadingUsers}
-                  selectedAssignee={selectedAssignee}
-                  setSelectedAssignee={setSelectedAssignee}
-                  description={description}
-                  setDescription={setDescription}
-                  assigneeSaved={assigneeSaved}
-                  assigneeSkipped={assigneeSkipped}
-                  assignSalesRep={assignSalesRep}
-                  skipAssignment={skipAssignment}
-                  userRole={userRole}
-                />
-
-                <ContactSection
-                    leadDetails={leadDetails}
-                    leadId={leadId}
-                    isEditing={editingSection === 'contact'}
-                    onEdit={() => handleEditSection('contact')}
-                    onCancel={handleCancelEdit}
-                    onSave={(data) => handleSaveSection('contact', data)}
-                    saving={saving}
-                />
-
-                <OfficeSection
-                    leadDetails={leadDetails}
-                    leadId={leadId}
-                    isEditing={editingSection === 'office'}
-                    onEdit={() => handleEditSection('office')}
-                    onCancel={handleCancelEdit}
-                    onSave={(data) => handleSaveSection('office', data)}
-                    saving={saving}
-                />
-            </div>
+      <div className="lead-details-page">
+        <div className="loading-container">
+          <p>Loading lead details...</p>
         </div>
+      </div>
     );
+  }
+
+  if (error) {
+    return (
+      <div className="lead-details-page">
+        <div className="error-container">
+          <p className="error-message">{error}</p>
+          <button onClick={onBack} className="back-button">
+            Back to Leads
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!leadDetails) {
+    return (
+      <div className="lead-details-page">
+        <div className="error-container">
+          <p>Lead details not found.</p>
+          <button onClick={onBack} className="back-button">
+            Back to Leads
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="lead-details-page">
+      <div className="lead-details-header">
+        <button onClick={onBack} className="back-button">
+          ← Back to Leads
+        </button>
+        
+          <h1>Lead Details</h1>
+          {leadDetails.status !== "expired lead" && (
+            <div className="action-buttons">
+              <Button
+                variant="outlined"
+                className="convert-button"
+                 onClick={() => setOpenConvertDialog(true)}
+              >
+                {leadDetails.status === "lead"
+                  ? "Convert to Prospect"
+                  : leadDetails.status === "prospect"
+                  ? "Convert to Active Prospect"
+                  : leadDetails.status === "active prospect"
+                  ? "Convert to Customer"
+                  : "Convert"} 
+              </Button>
+
+              <Button
+                variant="outlined"
+                color="error"
+                className="expire-button"
+                onClick={handleExpire}
+              >
+                Expire Lead
+              </Button>
+            </div>
+          )} 
+      </div>
+      <ExpireLeadDialog
+        open={openExpireDialog}
+        onClose={() => setOpenExpireDialog(false)}
+        leadId={leadId}
+        userId={userId}
+        onSuccess={(newLog) => {
+          setLeadLogs((prev) => [newLog, ...prev]);
+        }}
+      />
+      <ConvertLeadDialog
+        open={openConvertDialog}
+        onClose={() => setOpenConvertDialog(false)}
+        onSubmit={handleConvertSubmit}
+        status={leadDetails.status}
+      />
+
+      <div className="lead-details-container">
+        <CompanySection
+          leadDetails={leadDetails}
+          isEditing={editingSection === 'company'}
+          onEdit={() => handleEditSection('company')}
+          onCancel={handleCancelEdit}
+          onSave={(data) => handleSaveSection('company', data)}
+          saving={saving}
+        />
+
+        <SalesAssignmentSection
+          leadId={leadId}
+          leadDetails={leadDetails}
+          isEditing={editingSection === 'sales'}
+          onEdit={() => handleEditSection('sales')}
+          onCancel={handleCancelEdit}
+          onSave={() => { }}
+          saving={saving}
+          users={users}
+          loadingUsers={loadingUsers}
+          selectedAssignee={selectedAssignee}
+          setSelectedAssignee={setSelectedAssignee}
+          description={description}
+          setDescription={setDescription}
+          assigneeSaved={assigneeSaved}
+          assigneeSkipped={assigneeSkipped}
+          assignSalesRep={assignSalesRep}
+          skipAssignment={skipAssignment}
+          userRole={userRole}
+        />
+
+        <ContactSection
+          leadDetails={leadDetails}
+          leadId={leadId}
+          isEditing={editingSection === 'contact'}
+          onEdit={() => handleEditSection('contact')}
+          onCancel={handleCancelEdit}
+          onSave={(data) => handleSaveSection('contact', data)}
+          saving={saving}
+        />
+
+        <OfficeSection
+          leadDetails={leadDetails}
+          leadId={leadId}
+          isEditing={editingSection === 'office'}
+          onEdit={() => handleEditSection('office')}
+          onCancel={handleCancelEdit}
+          onSave={(data) => handleSaveSection('office', data)}
+          saving={saving}
+        />
+      </div>
+    </div>
+  );
 }
 
 function CompanySection({ leadDetails, isEditing, onEdit, onCancel, onSave, saving }) {
-    const [formData, setFormData] = useState({
-        company_name: '',
-        product: '',
-        industry_type: '',
-        insured_amount: '',
-        export_value: '',
-        status: ''
+  const [formData, setFormData] = useState({
+    company_name: '',
+    product: '',
+    industry_type: '',
+    insured_amount: '',
+    export_value: '',
+    status: ''
+  });
+
+  const [industryTypes, setIndustryTypes] = useState([]);
+  const [loadingIndustryTypes, setLoadingIndustryTypes] = useState(false);
+
+  useEffect(() => {
+    setFormData({
+      company_name: leadDetails.company_name || '',
+      product: leadDetails.product || '',
+      industry_type: leadDetails.industry_type || '',
+      insured_amount: leadDetails.insured_amount || '',
+      export_value: leadDetails.export_value || '',
+      status: leadDetails.status || ''
     });
+  }, [leadDetails]);
 
-    const [industryTypes, setIndustryTypes] = useState([]);
-    const [loadingIndustryTypes, setLoadingIndustryTypes] = useState(false);
+  useEffect(() => {
+    if (isEditing) {
+      fetchIndustryTypes();
+    }
+  }, [isEditing]);
 
-    useEffect(() => {
-        setFormData({
-            company_name: leadDetails.company_name || '',
-            product: leadDetails.product || '',
-            industry_type: leadDetails.industry_type || '',
-            insured_amount: leadDetails.insured_amount || '',
-            export_value: leadDetails.export_value || '',
-            status: leadDetails.status || ''
-        });
-    }, [leadDetails]);
+  const fetchIndustryTypes = async () => {
+    setLoadingIndustryTypes(true);
+    try {
+      const response = await apiClient.get('/lead/fetch-industry-type');
+      console.log('Industry types response:', response.data);
+      if (response.data && response.data.success && response.data.data) {
+        setIndustryTypes(response.data.data);
+      } else {
+        console.error('Failed to fetch industry types:', response.data);
+        toast.error('Failed to fetch industry types');
+      }
+    } catch (error) {
+      console.error('Error fetching industry types:', error);
+      toast.error('Failed to fetch industry types');
+    } finally {
+      setLoadingIndustryTypes(false);
+    }
+  };
 
-    useEffect(() => {
-        if (isEditing) {
-            fetchIndustryTypes();
-        }
-    }, [isEditing]);
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
 
-    const fetchIndustryTypes = async () => {
-        setLoadingIndustryTypes(true);
-        try {
-            const response = await apiClient.get('/lead/fetch-industry-type');
-            console.log('Industry types response:', response.data);
-            if (response.data && response.data.success && response.data.data) {
-                setIndustryTypes(response.data.data);
-            } else {
-                console.error('Failed to fetch industry types:', response.data);
-                toast.error('Failed to fetch industry types');
-            }
-        } catch (error) {
-            console.error('Error fetching industry types:', error);
-            toast.error('Failed to fetch industry types');
-        } finally {
-            setLoadingIndustryTypes(false);
-        }
-    };
+  const handleSave = () => {
+    if (!formData.company_name.trim()) {
+      toast.error('Company name is required');
+      return;
+    }
+    onSave(formData);
+  };
 
-    const handleInputChange = (field, value) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
-    };
-
-    const handleSave = () => {
-        if (!formData.company_name.trim()) {
-            toast.error('Company name is required');
-            return;
-        }
-        onSave(formData);
-    };
-
-    return (
+  return (
     <Box className="details-section">
       <Box className="section-header" display="flex" justifyContent="space-between" alignItems="center">
         <Typography variant="h6">Company & Product Information</Typography>
@@ -454,8 +507,8 @@ function CompanySection({ leadDetails, isEditing, onEdit, onCancel, onSave, savi
                 {loadingIndustryTypes ? 'Loading...' : 'Select Industry Type'}
               </MenuItem>
               {industryTypes.map((industry) => (
-                <MenuItem 
-                  key={industry.id || industry.industry_name} 
+                <MenuItem
+                  key={industry.id || industry.industry_name}
                   value={industry.industry_name}
                 >
                   {industry.industry_name}
@@ -482,22 +535,13 @@ function CompanySection({ leadDetails, isEditing, onEdit, onCancel, onSave, savi
             fullWidth
           />
 
-          <FormControl fullWidth>
-            <InputLabel>Status</InputLabel>
-            <Select
-              value={formData.status}
-              onChange={(e) => handleInputChange('status', e.target.value)}
-              label="Status"
-            >
-              <MenuItem value="">Select Status</MenuItem>
-              <MenuItem value="lead">Lead</MenuItem>
-              <MenuItem value="prospect">Prospect</MenuItem>
-              <MenuItem value="active prospect">Active Prospect</MenuItem>
-              <MenuItem value="customer">Customer</MenuItem>
-              <MenuItem value="expired lead">Expired Lead</MenuItem>
-              <MenuItem value="expired prospect">Expired Prospect</MenuItem>
-            </Select>
-          </FormControl>
+          <TextField
+            label="Status"
+            type="string"
+            value={formData.status}
+            InputProps={{ readOnly: true }}
+            fullWidth
+          />
 
           <Box className="form-actions" display="flex" gap={2} mt={2}>
             <Button
@@ -535,65 +579,94 @@ function CompanySection({ leadDetails, isEditing, onEdit, onCancel, onSave, savi
 
 // Contact Section Component
 function ContactSection({ leadDetails, leadId, isEditing, onEdit, onCancel, onSave, saving }) {
-    const [contacts, setContacts] = useState([]);
+  const [contacts, setContacts] = useState([]);
 
-    useEffect(() => {
-        const initialContacts = leadDetails.contact_details || [];
-        setContacts(initialContacts.length > 0 ? initialContacts : [{
-            name: '',
-            email: '',
-            phone: '',
-            alt_phone: ''
-        }]);
-    }, [leadDetails.contact_details]);
+  useEffect(() => {
+    const initialContacts = leadDetails.contact_details || [];
 
-    const handleContactChange = (index, field, value) => {
-        const updatedContacts = [...contacts];
-        updatedContacts[index] = { ...updatedContacts[index], [field]: value };
-        setContacts(updatedContacts);
-    };
+    const isBlankContact = (contact) =>
+      !contact.name?.trim() &&
+      !contact.designation?.trim() &&
+      !contact.email?.trim() &&
+      !contact.phone?.trim() &&
+      !contact.alt_phone?.trim();
 
-    const addNewContact = () => {
-        setContacts([...contacts, {
-            lead_id: leadId,
-            name: '',
-            email: '',
-            phone: '',
-            alt_phone: ''
-        }]);
-    };
+    if (
+      initialContacts.length === 0 ||
+      (initialContacts.length === 1 && isBlankContact(initialContacts[0]))
+    ) {
+      setContacts([{
+        lead_id: leadId,
+        name: '',
+        designation: '',
+        email: '',
+        phone: '',
+        alt_phone: ''
+      }]);
+    } else {
+      setContacts(initialContacts);
+    }
+  }, [leadDetails.contact_details, leadId]);
 
-    const removeContact = (index) => {
-        if (contacts.length <= 1) {
-            alert('At least one contact is required');
-            return;
-        }
-        const updatedContacts = contacts.filter((_, i) => i !== index);
-        setContacts(updatedContacts);
-    };
+  // useEffect(() => {
+  //     const initialContacts = leadDetails.contact_details || [];
+  //     setContacts(initialContacts.length > 0 ? initialContacts : [{
+  //         name: '',
+  //         designation: '',
+  //         email: '',
+  //         phone: '',
+  //         alt_phone: ''
+  //     }]);
+  // }, [leadDetails.contact_details]);
 
-    const validateContacts = () => {
-        for (let i = 0; i < contacts.length; i++) {
-            const contact = contacts[i];
-            if (!contact.name?.trim()) {
-                alert(`Contact ${i + 1}: Name is required`);
-                return false;
-            }
-            if (contact.email && !/\S+@\S+\.\S+/.test(contact.email)) {
-                alert(`Contact ${i + 1}: Please enter a valid email address`);
-                return false;
-            }
-        }
-        return true;
-    };
+  const handleContactChange = (index, field, value) => {
+    const updatedContacts = [...contacts];
+    updatedContacts[index] = { ...updatedContacts[index], [field]: value };
+    setContacts(updatedContacts);
+  };
 
-    const handleSave = () => {
-        if (!validateContacts()) return;
-        onSave({ contact_details: contacts });
-    };
+  const addNewContact = () => {
+    setContacts([...contacts, {
+      lead_id: leadId,
+      name: '',
+      designation: '',
+      email: '',
+      phone: '',
+      alt_phone: ''
+    }]);
+  };
 
-    return (
-        <Box className="details-section" mt={2}>
+  const removeContact = (index) => {
+    if (contacts.length <= 1) {
+      alert('At least one contact is required');
+      return;
+    }
+    const updatedContacts = contacts.filter((_, i) => i !== index);
+    setContacts(updatedContacts);
+  };
+
+  const validateContacts = () => {
+    for (let i = 0; i < contacts.length; i++) {
+      const contact = contacts[i];
+      if (!contact.name?.trim()) {
+        alert(`Contact ${i + 1}: Name is required`);
+        return false;
+      }
+      if (contact.email && !/\S+@\S+\.\S+/.test(contact.email)) {
+        alert(`Contact ${i + 1}: Please enter a valid email address`);
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleSave = () => {
+    if (!validateContacts()) return;
+    onSave({ contact_details: contacts });
+  };
+
+  return (
+    <Box className="details-section" mt={2}>
       <Box className="section-header" display="flex" justifyContent="space-between" alignItems="center">
         <Typography variant="h6">Contact Details</Typography>
         {!isEditing && (
@@ -625,9 +698,16 @@ function ContactSection({ leadDetails, leadId, isEditing, onEdit, onCancel, onSa
               </Box>
               <Box mt={2} display="grid" gridTemplateColumns="repeat(auto-fit, minmax(250px, 1fr))" gap={2}>
                 <TextField
-                  label="Name *"
+                  label="Name"
                   value={contact.name || ''}
                   onChange={(e) => handleContactChange(index, 'name', e.target.value)}
+                  required
+                  fullWidth
+                />
+                <TextField
+                  label="Designation"
+                  value={contact.designation || ''}
+                  onChange={(e) => handleContactChange(index, 'designation', e.target.value)}
                   required
                   fullWidth
                 />
@@ -690,6 +770,7 @@ function ContactSection({ leadDetails, leadId, isEditing, onEdit, onCancel, onSa
                 <Typography variant="subtitle1">Contact {index + 1}</Typography>
                 <Divider sx={{ my: 1 }} />
                 <Typography className="detail-item"><strong>Name:</strong> {contact.name || 'N/A'}</Typography>
+                <Typography className="detail-item"><strong>Designation:</strong> {contact.designation || 'N/A'}</Typography>
                 <Typography className="detail-item"><strong>Email:</strong> {contact.email || 'N/A'}</Typography>
                 <Typography className="detail-item"><strong>Phone:</strong> {contact.phone || 'N/A'}</Typography>
                 <Typography className="detail-item"><strong>Alt Phone:</strong> {contact.alt_phone || 'N/A'}</Typography>
@@ -706,64 +787,63 @@ function ContactSection({ leadDetails, leadId, isEditing, onEdit, onCancel, onSa
 
 // Office Section Component
 function OfficeSection({ leadDetails, leadId, isEditing, onEdit, onCancel, onSave, saving }) {
-    const [offices, setOffices] = useState([]);
+  const [offices, setOffices] = useState([]);
 
-    useEffect(() => {
-        const initialOffices = leadDetails.office_details || [];
-        setOffices(initialOffices.length > 0 ? initialOffices : [{
-            address: '',
-            city: '',
-            district: '',
-            country: '',
-            postal_code: ''
-        }]);
-    }, [leadDetails.office_details]);
+  useEffect(() => {
+    const initialOffices = leadDetails.office_details || [];
+    setOffices(initialOffices.length > 0 ? initialOffices : [{
+      address: '',
+      city: '',
+      state: '',
+      country: '',
+      postal_code: ''
+    }]);
+  }, [leadDetails.office_details]);
 
-    const handleOfficeChange = (index, field, value) => {
-        const updatedOffices = [...offices];
-        updatedOffices[index] = { ...updatedOffices[index], [field]: value };
-        setOffices(updatedOffices);
-    };
+  const handleOfficeChange = (index, field, value) => {
+    const updatedOffices = [...offices];
+    updatedOffices[index] = { ...updatedOffices[index], [field]: value };
+    setOffices(updatedOffices);
+  };
 
-    const addNewOffice = () => {
-        setOffices([...offices, {
-            lead_id: leadId,
-            address: '',
-            city: '',
-            district: '',
-            country: '',
-            postal_code: ''
-        }]);
-    };
+  const addNewOffice = () => {
+    setOffices([...offices, {
+      lead_id: leadId,
+      address: '',
+      city: '',
+      state: '',
+      country: '',
+      postal_code: ''
+    }]);
+  };
 
-    const removeOffice = (index) => {
-        if (offices.length <= 1) {
-            alert('At least one office is required');
-            return;
-        }
-        const updatedOffices = offices.filter((_, i) => i !== index);
-        setOffices(updatedOffices);
-    };
+  const removeOffice = (index) => {
+    if (offices.length <= 1) {
+      alert('At least one office is required');
+      return;
+    }
+    const updatedOffices = offices.filter((_, i) => i !== index);
+    setOffices(updatedOffices);
+  };
 
-    const validateOffices = () => {
-        for (let i = 0; i < offices.length; i++) {
-            const office = offices[i];
-            if (!office.address?.trim()) {
-                alert(`Office ${i + 1}: Address is required`);
-                return false;
-            }
-        }
-        return true;
-    };
+  const validateOffices = () => {
+    for (let i = 0; i < offices.length; i++) {
+      const office = offices[i];
+      if (!office.address?.trim()) {
+        alert(`Office ${i + 1}: Address is required`);
+        return false;
+      }
+    }
+    return true;
+  };
 
-    const handleSave = () => {
-        if (!validateOffices()) return;
-        // The cleanPayload function will be applied in handleSaveSection
-        onSave({ office_details: offices });
-    };
+  const handleSave = () => {
+    if (!validateOffices()) return;
+    onSave({ office_details: offices });
+  };
 
-    return (
-       <Box className="details-section" mt={3}>
+  return (
+    <Box className="details-section" mt={3}>
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Typography variant="h6">Office Details</Typography>
         {!isEditing && (
@@ -817,9 +897,9 @@ function OfficeSection({ leadDetails, leadId, isEditing, onEdit, onCancel, onSav
                   fullWidth
                 />
                 <TextField
-                  label="District"
-                  value={office.district || ''}
-                  onChange={(e) => handleOfficeChange(index, 'district', e.target.value)}
+                  label="State"
+                  value={office.state || ''}
+                  onChange={(e) => handleOfficeChange(index, 'state', e.target.value)}
                   fullWidth
                 />
                 <TextField
@@ -875,7 +955,7 @@ function OfficeSection({ leadDetails, leadId, isEditing, onEdit, onCancel, onSav
                 <Divider sx={{ my: 1 }} />
                 <Typography><strong>Address:</strong> {office.address || 'N/A'}</Typography>
                 <Typography><strong>City:</strong> {office.city || 'N/A'}</Typography>
-                <Typography><strong>District:</strong> {office.district || 'N/A'}</Typography>
+                <Typography><strong>State:</strong> {office.state || 'N/A'}</Typography>
                 <Typography><strong>Country:</strong> {office.country || 'N/A'}</Typography>
                 <Typography><strong>Postal Code:</strong> {office.postal_code || 'N/A'}</Typography>
               </Box>
@@ -886,9 +966,10 @@ function OfficeSection({ leadDetails, leadId, isEditing, onEdit, onCancel, onSav
         </Box>
       )}
     </Box>
-  ); 
+  );
 }
 
+// Sales Assignement Component
 function SalesAssignmentSection({
   leadDetails,
   isEditing,
@@ -914,14 +995,14 @@ function SalesAssignmentSection({
         <Typography variant="h6">Sales Representative Assignment</Typography>
 
         {userRole === 'admin' && !isEditing && !hasAssignment && (
-              <Button
-                variant="outlined"
-                onClick={onEdit}
-                disabled={saving}
-              >
-                Assign Representative
-              </Button>
-            )}
+          <Button
+            variant="outlined"
+            onClick={onEdit}
+            disabled={saving}
+          >
+            Assign Representative
+          </Button>
+        )}
         {userRole === 'admin' && !isEditing && hasAssignment && (
           <Tooltip title="Edit Assignment">
             <IconButton onClick={onEdit}>

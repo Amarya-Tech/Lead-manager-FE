@@ -2,13 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from "../apicaller/APIClient.js";
 import Sidebar from "../components/SideBar.js";
-import Navbar from '../components/NavBar.js';
 import { toast } from 'react-toastify';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import Cookies from 'js-cookie';
 import {
     Box, Typography, Button, CircularProgress, Table, TableBody, TableCell, TableContainer,
     TableHead, TableRow, Paper, Select, MenuItem, Dialog, DialogTitle, DialogContent,
-    DialogActions, TextField, InputLabel, FormControl
+    DialogActions, TextField, InputLabel, FormControl,  InputAdornment,IconButton
 } from '@mui/material';
 
 const UserPage = () => {
@@ -23,12 +23,13 @@ const UserPage = () => {
     const [editedStatus, setEditedStatus] = useState(false);
 
     const [firstName, setFirstName] = useState("");
-    const [lastName, setLastName] = useState("");
+    const [lastName, setLastName] = useState(""); 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("Test@34@56");
     const [phone, setPhone] = useState("");
     const [role, setRole] = useState("user");
     const [showErrors, setShowErrors] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     const [editedData, setEditedData] = useState({
         first_name: '', last_name: '', phone: '', password: '', role: ''
@@ -135,144 +136,159 @@ const UserPage = () => {
         }
     };
     return (
-        <>
-            <Navbar />
-            <Box display="flex">
-                <Sidebar />
-                <Box component="main"
-                    sx={{
-                    flexGrow: 1,
-                    p: 3,
-                    ml: '24px',  
-                    width: 'calc(100% - 240px)',      
-                    }}>
-                    <Box display="flex" justifyContent="space-between" alignItems="center" sx={{mb:'20px', mt:'10px'}}>
-                        <Typography variant="h5" sx={{
-                            fontSize: '28px',
-                            fontWeight: 'bold',
-                            color: '#000000',
-                            fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif`
-                            }}>Users List</Typography>
-                        <Button variant="contained" color="primary" className="primary-button" onClick={handleAddUser}>+ Add New User</Button>
-                    </Box>
-                    {loading ? <CircularProgress /> : (
-                        <TableContainer component={Paper} sx={{ mb: 3, border: '1px solid #ddd' }}>
-                            <Table>
-                                <TableHead>
-                                    <TableRow sx={{ backgroundColor: '#f4f4f4', height: 20, '& th': { fontWeight: 'bold' } }}>
-                                        <TableCell>Name</TableCell>
-                                        <TableCell>Email</TableCell>
-                                        <TableCell>Phone</TableCell>
-                                        <TableCell>Role</TableCell>
-                                        <TableCell>Status</TableCell>
-                                        <TableCell>Actions</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {userList.map((user) => (
-                                        <TableRow key={user.id} sx={{
-                                            '& td': {
-                                                paddingTop: '4px',
-                                                paddingBottom: '4px',
-                                                lineHeight: '1.2',
-                                            },
-                                            height: '32px',
-                                            }}>
-                                            <TableCell>{user.first_name} {user.last_name}</TableCell>
-                                            <TableCell>{user.email}</TableCell>
-                                            <TableCell>{user.phone}</TableCell>
-                                            <TableCell>{user.role}</TableCell>
-                                            <TableCell>
-                                                {isEditingStatus && selectedUserId === user.id ? (
-                                                    <Select
-                                                        value={editedStatus ? 'true' : 'false'}
-                                                        onChange={(e) => setEditedStatus(e.target.value === 'true')}
-                                                        size="small"
-                                                    >
-                                                        <MenuItem value="true">Active</MenuItem>
-                                                        <MenuItem value="false">Inactive</MenuItem>
-                                                    </Select>
-                                                ) : (
-                                                    <Typography
-                                                    sx={{
-                                                        color: user.is_active ? 'green' : 'red',
-                                                        fontWeight: 500,
-                                                    }}
-                                                    >
-                                                    {user.is_active ? 'Active' : 'Inactive'}
-                                                    </Typography>
-                                                )}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Button onClick={() => handleUpdateUser(user)} variant="contained" sx={{ fontSize: '13px', mr: '10px', backgroundColor: '#007BFF', '&:hover': { backgroundColor: '#0056b3' }, textTransform: 'none'  }}>Update User</Button>
-                                                <Button onClick={() => {
-                                                    setIsEditingStatus(true);
-                                                    setSelectedUserId(user.id);
-                                                    setEditedStatus(user.is_active);
-                                                    setSelectedUser(user);
-                                                }} variant="contained" sx={{ fontSize: '13px', backgroundColor: '#007BFF', '&:hover': { backgroundColor: '#0056b3' }, textTransform: 'none'  }}>Update Status</Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    )}
-
-                    {isEditingStatus && (
-                        <Box display="flex" gap={2} mt={2}>
-                            <Button variant="contained" onClick={handleUpdateStatus}>Save Status</Button>
-                            <Button variant="outlined" onClick={() => { setIsEditingStatus(false); setSelectedUserId(null); }}>Cancel</Button>
-                        </Box>
-                    )}
-
-                    {/* Add User Modal */}
-                    <Dialog open={showAddUserModal} onClose={handleCloseModal} fullWidth>
-                        <DialogTitle>Add New User</DialogTitle>
-                        <DialogContent>
-                            <TextField label="First Name" fullWidth margin="dense" value={firstName} onChange={e => setFirstName(e.target.value)} error={showErrors && !firstName} />
-                            <TextField label="Last Name" fullWidth margin="dense" value={lastName} onChange={e => setLastName(e.target.value)} error={showErrors && !lastName} />
-                            <TextField label="Email" fullWidth margin="dense" type="email" value={email} onChange={e => setEmail(e.target.value)} error={showErrors && !email} />
-                            <TextField label="Password" fullWidth margin="dense" type="password" value={password} InputProps={{ readOnly: true }} />
-                            <TextField label="Phone" fullWidth margin="dense" value={phone} onChange={e => setPhone(e.target.value)} />
-                            <FormControl fullWidth margin="dense">
-                                <InputLabel>Role</InputLabel>
-                                <Select value={role} onChange={e => setRole(e.target.value)} required label="Role">
-                                    <MenuItem value="admin">Admin</MenuItem>
-                                    <MenuItem value="user">User</MenuItem>
-                                </Select>
-                            </FormControl>
-                        </DialogContent>
-                        <DialogActions>
-                            <Button onClick={handleCloseModal}>Cancel</Button>
-                            <Button onClick={handleSubmit} disabled={isSubmitting}>{isSubmitting ? 'Adding...' : 'Add User'}</Button>
-                        </DialogActions>
-                    </Dialog>
-
-                    {/* Update User Modal */}
-                    <Dialog open={showUpdateUserModal} onClose={handleCloseUpdateModal} fullWidth>
-                        <DialogTitle>Update User</DialogTitle>
-                        <DialogContent>
-                            <TextField fullWidth margin="dense" label="First Name" name="first_name" value={editedData.first_name} onChange={handleUpdateChange} />
-                            <TextField fullWidth margin="dense" label="Last Name" name="last_name" value={editedData.last_name} onChange={handleUpdateChange} />
-                            <TextField fullWidth margin="dense" label="Phone" name="phone" value={editedData.phone} onChange={handleUpdateChange} />
-                            <FormControl fullWidth margin="dense">
-                                <InputLabel>Role</InputLabel>
-                                <Select name="role" value={editedData.role} onChange={handleUpdateChange} label="Role">
-                                    <MenuItem value="admin">Admin</MenuItem>
-                                    <MenuItem value="user">User</MenuItem>
-                                </Select>
-                            </FormControl>
-                            <TextField fullWidth margin="dense" label="New Password (optional)" name="password" value={editedData.password} onChange={handleUpdateChange} />
-                        </DialogContent>
-                        <DialogActions>
-                            <Button onClick={handleCloseUpdateModal}>Cancel</Button>
-                            <Button onClick={handleSaveUpdate} disabled={isSubmitting}>{isSubmitting ? 'Updating...' : 'Update User'}</Button>
-                        </DialogActions>
-                    </Dialog>
+        <Box display="flex">
+            <Sidebar />
+            <Box component="main"
+                sx={{
+                flexGrow: 1,
+                p: 3,
+                ml: '24px',  
+                width: 'calc(100% - 240px)',      
+                }}>
+                <Box display="flex" justifyContent="space-between" alignItems="center" sx={{mb:'20px', mt:'10px'}}>
+                    <Typography variant="h5" sx={{
+                        fontSize: '28px',
+                        fontWeight: 'bold',
+                        color: '#000000',
+                        fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif`
+                        }}>Users List</Typography>
+                    <Button variant="contained" color="primary" className="primary-button" onClick={handleAddUser}>+ Add New User</Button>
                 </Box>
+                {loading ? <CircularProgress /> : (
+                    <TableContainer component={Paper} sx={{ mb: 3, border: '1px solid #ddd' }}>
+                        <Table>
+                            <TableHead>
+                                <TableRow sx={{ backgroundColor: '#f4f4f4', height: 20, '& th': { fontWeight: 'bold' } }}>
+                                    <TableCell>Name</TableCell>
+                                    <TableCell>Email</TableCell>
+                                    <TableCell>Phone</TableCell>
+                                    <TableCell>Role</TableCell>
+                                    <TableCell>Status</TableCell>
+                                    <TableCell>Actions</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {userList.map((user) => (
+                                    <TableRow key={user.id} sx={{
+                                        '& td': {
+                                            paddingTop: '4px',
+                                            paddingBottom: '4px',
+                                            lineHeight: '1.2',
+                                        },
+                                        height: '32px',
+                                        }}>
+                                        <TableCell>{user.first_name} {user.last_name}</TableCell>
+                                        <TableCell>{user.email}</TableCell>
+                                        <TableCell>{user.phone}</TableCell>
+                                        <TableCell>{user.role}</TableCell>
+                                        <TableCell>
+                                            {isEditingStatus && selectedUserId === user.id ? (
+                                                <Select
+                                                    value={editedStatus ? 'true' : 'false'}
+                                                    onChange={(e) => setEditedStatus(e.target.value === 'true')}
+                                                    size="small"
+                                                >
+                                                    <MenuItem value="true">Active</MenuItem>
+                                                    <MenuItem value="false">Inactive</MenuItem>
+                                                </Select>
+                                            ) : (
+                                                <Typography
+                                                sx={{
+                                                    color: user.is_active ? 'green' : 'red',
+                                                    fontWeight: 500,
+                                                }}
+                                                >
+                                                {user.is_active ? 'Active' : 'Inactive'}
+                                                </Typography>
+                                            )}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Button onClick={() => handleUpdateUser(user)} variant="contained" sx={{ fontSize: '13px', mr: '10px', backgroundColor: '#007BFF', '&:hover': { backgroundColor: '#0056b3' }, textTransform: 'none'  }}>Update User</Button>
+                                            <Button onClick={() => {
+                                                setIsEditingStatus(true);
+                                                setSelectedUserId(user.id);
+                                                setEditedStatus(user.is_active);
+                                                setSelectedUser(user);
+                                            }} variant="contained" sx={{ fontSize: '13px', backgroundColor: '#007BFF', '&:hover': { backgroundColor: '#0056b3' }, textTransform: 'none'  }}>Update Status</Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                )}
+
+                {isEditingStatus && (
+                    <Box display="flex" gap={2} mt={2}>
+                        <Button variant="contained" onClick={handleUpdateStatus}>Save Status</Button>
+                        <Button variant="outlined" onClick={() => { setIsEditingStatus(false); setSelectedUserId(null); }}>Cancel</Button>
+                    </Box>
+                )}
+
+                {/* Add User Modal */}
+                <Dialog open={showAddUserModal} onClose={handleCloseModal} fullWidth>
+                    <DialogTitle>Add New User</DialogTitle>
+                    <DialogContent>
+                        <TextField label="First Name" fullWidth margin="dense" value={firstName} onChange={e => setFirstName(e.target.value)} error={showErrors && !firstName} />
+                        <TextField label="Last Name" fullWidth margin="dense" value={lastName} onChange={e => setLastName(e.target.value)} error={showErrors && !lastName} />
+                        <TextField label="Email" fullWidth margin="dense" type="email" value={email} onChange={e => setEmail(e.target.value)} error={showErrors && !email} />
+                        <TextField label="Password" fullWidth margin="dense" type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} 
+                            InputProps={{
+                                          endAdornment: (
+                                            <InputAdornment position="end">
+                                              <IconButton onClick={() => setShowPassword((prev) => !prev)} edge="end">
+                                                {showPassword ? <FaEyeSlash /> : <FaEye />}
+                                              </IconButton>
+                                            </InputAdornment>
+                                          ),
+                                        }}/>
+                        <TextField label="Phone" fullWidth margin="dense" value={phone} onChange={e => setPhone(e.target.value)} />
+                        <FormControl fullWidth margin="dense">
+                            <InputLabel>Role</InputLabel>
+                            <Select value={role} onChange={e => setRole(e.target.value)} required label="Role">
+                                <MenuItem value="admin">Admin</MenuItem>
+                                <MenuItem value="user">User</MenuItem>
+                            </Select>
+                        </FormControl>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleCloseModal}>Cancel</Button>
+                        <Button onClick={handleSubmit} disabled={isSubmitting}>{isSubmitting ? 'Adding...' : 'Add User'}</Button>
+                    </DialogActions>
+                </Dialog>
+
+                {/* Update User Modal */}
+                <Dialog open={showUpdateUserModal} onClose={handleCloseUpdateModal} fullWidth>
+                    <DialogTitle>Update User</DialogTitle>
+                    <DialogContent>
+                        <TextField fullWidth margin="dense" label="First Name" name="first_name" value={editedData.first_name} onChange={handleUpdateChange} />
+                        <TextField fullWidth margin="dense" label="Last Name" name="last_name" value={editedData.last_name} onChange={handleUpdateChange} />
+                        <TextField fullWidth margin="dense" label="Phone" name="phone" value={editedData.phone} onChange={handleUpdateChange} />
+                        <FormControl fullWidth margin="dense">
+                            <InputLabel>Role</InputLabel>
+                            <Select name="role" value={editedData.role} onChange={handleUpdateChange} label="Role">
+                                <MenuItem value="admin">Admin</MenuItem>
+                                <MenuItem value="user">User</MenuItem>
+                            </Select>
+                        </FormControl>
+                        <TextField fullWidth margin="dense" label="New Password (optional)" name="password" type={showPassword ? 'text' : 'password'} value={editedData.password} onChange={handleUpdateChange}
+                         InputProps={{
+                                          endAdornment: (
+                                            <InputAdornment position="end">
+                                              <IconButton onClick={() => setShowPassword((prev) => !prev)} edge="end">
+                                                {showPassword ? <FaEyeSlash /> : <FaEye />}
+                                              </IconButton>
+                                            </InputAdornment>
+                                          ),
+                                        }} />
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleCloseUpdateModal}>Cancel</Button>
+                        <Button onClick={handleSaveUpdate} disabled={isSubmitting}>{isSubmitting ? 'Updating...' : 'Update User'}</Button>
+                    </DialogActions>
+                </Dialog>
             </Box>
-        </>
+        </Box>
     );
 };
 
