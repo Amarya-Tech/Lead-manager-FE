@@ -535,13 +535,13 @@ function CompanySection({ leadDetails, isEditing, onEdit, onCancel, onSave, savi
             fullWidth
           />
 
-          <TextField
+          {/* <TextField
             label="Status"
             type="string"
             value={formData.status}
             InputProps={{ readOnly: true }}
             fullWidth
-          />
+          /> */}
 
           <Box className="form-actions" display="flex" gap={2} mt={2}>
             <Button
@@ -569,6 +569,7 @@ function CompanySection({ leadDetails, isEditing, onEdit, onCancel, onSave, savi
           <Typography className="detail-item"><strong>Industry Type:</strong> {leadDetails.industry_type || 'N/A'}</Typography>
           <Typography className="detail-item"><strong>Insured Amount:</strong> {leadDetails.insured_amount || 'N/A'}</Typography>
           <Typography className="detail-item"><strong>Export Value:</strong> {leadDetails.export_value || 'N/A'}</Typography>
+          <Typography className="detail-item"><strong>Suitable Product:</strong> {leadDetails.suitable_product || 'N/A'}</Typography>
           <Typography className="detail-item"><strong>Status:</strong> {leadDetails.status || 'N/A'}</Typography>
           <Typography className="detail-item"><strong>Created Date:</strong> {leadDetails.created_date || 'N/A'}</Typography>
         </Box>

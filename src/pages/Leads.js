@@ -41,7 +41,7 @@ export default function Leads() {
                 <TextField
                   fullWidth
                   variant="outlined"
-                  placeholder="Search leads by company name..."
+                  placeholder="Search leads by company name and industry type..."
                   value={searchTerm}
                   onChange={handleSearchChange}
                   className="search-input"
@@ -80,7 +80,7 @@ export default function Leads() {
               </Paper>
             )}
 
-            <LeadsManager searchTerm={searchTerm} statusFilter={status}/>
+            <LeadsManager searchTerm={searchTerm}/>
           </Box>
         </Box>
       </Box>

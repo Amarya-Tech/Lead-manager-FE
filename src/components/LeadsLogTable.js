@@ -16,7 +16,7 @@ import {
   CircularProgress
 } from "@mui/material";
 
-export default function LeadsLogTable({ searchTerm = "", statusFilter = "", onUpdateLead, onViewLogs }) {
+export default function LeadsLogTable({ searchTerm = "", onUpdateLead, onViewLogs }) {
   const userId = Cookies.get("user_id");
   const [leads, setLeads] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -25,7 +25,16 @@ export default function LeadsLogTable({ searchTerm = "", statusFilter = "", onUp
   useEffect(() => {
     const fetchLeads = async () => {
       try {
-        const response = await apiClient.get(`/lead/fetch-lead-log-list/${userId}`);
+        let response;
+
+        if (searchTerm.trim()) {
+          response = await apiClient.get(`/lead/search-term/${userId}`, {
+                  params: { term: searchTerm.trim() }
+          });
+        } else {
+          response = await apiClient.get(`/lead/fetch-lead-log-list/${userId}`);
+        }
+
         if (Array.isArray(response.data.data)) {
           setLeads(response.data.data);
         } else {
@@ -39,7 +48,8 @@ export default function LeadsLogTable({ searchTerm = "", statusFilter = "", onUp
     };
 
     fetchLeads();
-  }, []);
+    setCurrentPage(1);
+  }, [searchTerm, userId]);
 
   const handleUpdateLead = (leadId) => {
     if (onUpdateLead) onUpdateLead(leadId);
@@ -49,28 +59,11 @@ export default function LeadsLogTable({ searchTerm = "", statusFilter = "", onUp
     if (onViewLogs) onViewLogs(leadId);
   };
 
-  const filteredLeads = useMemo(() => {
-    let result = leads;
-
-    if (statusFilter) {
-      result = result.filter((lead) =>
-        lead.status?.toLowerCase() === statusFilter.toLowerCase()
-      );
-    }
-
-    if (searchTerm.trim()) {
-      result = result.filter((lead) =>
-        lead.company_name?.toLowerCase().includes(searchTerm.trim().toLowerCase())
-      );
-    }
-
-    return result;
-  }, [leads, searchTerm, statusFilter]);
-
-  const totalPages = Math.ceil(filteredLeads.length / leadsPerPage);
+  const totalPages = Math.ceil(leads.length / leadsPerPage);
   const startIndex = (currentPage - 1) * leadsPerPage;
   const endIndex = startIndex + leadsPerPage;
-  const currentLeads = useMemo(() => filteredLeads.slice(startIndex, endIndex), [filteredLeads, startIndex, endIndex]);
+  const currentLeads = useMemo(() => leads.slice(startIndex, endIndex), [leads, startIndex, endIndex]);
+  console.log("currentLeads", currentLeads)
 
   const goToPage = (page) => setCurrentPage(page);
   const goToPreviousPage = () => currentPage > 1 && goToPage(currentPage - 1);
@@ -150,17 +143,17 @@ export default function LeadsLogTable({ searchTerm = "", statusFilter = "", onUp
                 }}>
                   <TableCell>{highlightSearchTerm(lead.company_name, searchTerm)}</TableCell>
                   <TableCell>{lead.product}</TableCell>
-                  <TableCell>{lead.industry_type}</TableCell>
+                  <TableCell>{highlightSearchTerm(lead.industry_type, searchTerm)}</TableCell>
                   <TableCell>
                     <Box component="span" sx={getStatusStyle(lead.status)}>{lead.status}</Box>
                   </TableCell>
                   <TableCell>{lead.latest_comment}</TableCell>
                   <TableCell>{lead.latest_comment_date}</TableCell>
                   <TableCell>
-                    <Button variant="contained" color="success" size="small" sx={{ mr: 1 }} onClick={(e) => handleUpdateLead(lead.lead_id, e)}>
+                    <Button variant="contained" color="success" size="small" sx={{ mr: 1 }} onClick={(e) => handleUpdateLead(lead.id, e)}>
                       Update Lead
                     </Button>
-                    <Button variant="outlined" color="info" size="small" onClick={() => handleViewLogs(lead.lead_id)}>
+                    <Button variant="outlined" color="info" size="small" onClick={() => handleViewLogs(lead.id)}>
                       View Logs
                     </Button>
                   </TableCell>
