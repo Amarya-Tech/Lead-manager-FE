@@ -56,7 +56,7 @@ export default function Dashboard() {
             <TextField
               fullWidth
               variant="outlined"
-              placeholder="Search leads by company name..."
+              placeholder="Search leads by company name and industry type..."
               value={searchTerm}
               onChange={handleSearchChange}
               className="search-input"

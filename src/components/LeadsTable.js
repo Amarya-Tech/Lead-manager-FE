@@ -28,7 +28,16 @@ export default function LeadsTable({ searchTerm = "" }) {
   useEffect(() => {
     const fetchLeads = async () => {
       try {
-        const response = await apiClient.get(`/lead/fetch-lead-table-detail/${userId}`);
+        let response;
+
+        if (searchTerm.trim()) {
+          response = await apiClient.get(`/lead/search`, {
+            params: { term: searchTerm.trim() }
+          });
+        } else {
+          response = await apiClient.get(`/lead/fetch-lead-table-detail/${userId}`);
+        }
+
         if (Array.isArray(response.data.data)) {
           setLeads(response.data.data);
         } else {
@@ -40,25 +49,15 @@ export default function LeadsTable({ searchTerm = "" }) {
         setLeads([]);
       }
     };
+
     fetchLeads();
-  }, []);
-
-  const filteredLeads = useMemo(() => {
-    return searchTerm.trim()
-      ? leads.filter((lead) =>
-          lead.company_name?.toLowerCase().includes(searchTerm.toLowerCase().trim())
-        )
-      : leads;
-  }, [leads, searchTerm]);
-
-  useEffect(() => {
     setCurrentPage(1);
     setSelectedLeadDetails(null);
-  }, [searchTerm]);
+  }, [searchTerm, userId]);
 
-  const totalPages = Math.ceil(filteredLeads.length / leadsPerPage);
+  const totalPages = Math.ceil(leads.length / leadsPerPage);
   const startIndex = (currentPage - 1) * leadsPerPage;
-  const currentLeads = useMemo(() => filteredLeads.slice(startIndex, startIndex + leadsPerPage), [filteredLeads, startIndex]);
+  const currentLeads = useMemo(() => leads.slice(startIndex, startIndex + leadsPerPage), [leads, startIndex]);
 
   const handleViewDetails = async (leadId) => {
     setLoadingDetails(true);
@@ -100,17 +99,17 @@ export default function LeadsTable({ searchTerm = "" }) {
 
   return (
     <Box>
-      {searchTerm && filteredLeads.length === 0 && (
+      {searchTerm && leads.length === 0 && (
         <Box textAlign="center" mt={2}>
           <Typography variant="h6">No leads found</Typography>
           <Typography variant="body2">No companies match "{searchTerm}". Try adjusting your search.</Typography>
         </Box>
       )}
 
-      {searchTerm && filteredLeads.length > 0 && (
+      {searchTerm && leads.length > 0 && (
         <Box textAlign="center" mb={2}>
           <Typography variant="subtitle1">
-            Found {filteredLeads.length} lead{filteredLeads.length !== 1 ? "s" : ""} matching "{searchTerm}"
+            Found {leads.length} lead{leads.length !== 1 ? "s" : ""} matching "{searchTerm}"
           </Typography>
         </Box>
       )}
@@ -140,7 +139,7 @@ export default function LeadsTable({ searchTerm = "" }) {
                     }}>
                   <TableCell>{highlightSearchTerm(lead.company_name, searchTerm)}</TableCell>
                   <TableCell>{lead.product}</TableCell>
-                  <TableCell>{lead.industry_type}</TableCell>
+                  <TableCell>{highlightSearchTerm(lead.industry_type, searchTerm)}</TableCell>
                   <TableCell><Box
                     component="span"
                     sx={{
@@ -203,6 +202,7 @@ export default function LeadsTable({ searchTerm = "" }) {
               <Typography><strong>Industry Type:</strong> {selectedLeadDetails.industry_type}</Typography>
               <Typography><strong>Insured Amount:</strong> {selectedLeadDetails.insured_amount || "N/A"}</Typography>
               <Typography><strong>Export Value:</strong> {selectedLeadDetails.export_value || "N/A"}</Typography>
+              <Typography><strong>Suitable Product:</strong> {selectedLeadDetails.suitable_product || "N/A"}</Typography>
               <Typography><strong>Status:</strong> {selectedLeadDetails.status}</Typography>
               <Typography><strong>Created Date:</strong> {selectedLeadDetails.created_date}</Typography>
             </Box>
