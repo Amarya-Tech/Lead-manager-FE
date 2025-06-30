@@ -28,7 +28,9 @@ const ExpireLeadDialog = ({ open, onClose, leadId, userId, onSuccess }) => {
 
         const commentRes = await apiClient.post(
             `/lead-com/add-comments/${userId}/${leadId}`,
-            { comment: comment.trim() }
+            { comment: comment.trim(),
+              action: 'TO_EXPIRE'
+             }
         );
 
         if (!commentRes.data.success) {

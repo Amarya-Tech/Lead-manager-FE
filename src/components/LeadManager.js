@@ -1,52 +1,34 @@
-
-import { useState } from "react";
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import LeadsLogTable from "./LeadsLogTable.js";
 import LeadDetailsPage from "./LeadDetail.js";
 import LeadLogsPage from "./LeadsLogs.js";
 
-export default function LeadsManager({ searchTerm = "" , statusFilter = ""}) {
-    const [currentView, setCurrentView] = useState('table');
-    const [selectedLeadId, setSelectedLeadId] = useState(null);
+export default function LeadsManager({ searchTerm = "", statusFilter = "" }) {
+  const navigate = useNavigate();
 
-    const handleUpdateLead = (leadId) => {
-        setSelectedLeadId(leadId);
-        setCurrentView('details');
-    };
+  const handleUpdateLead = (leadId) => {
+    navigate(`update-lead/${leadId}`);
+  };
 
-    const handleViewLogs = (leadId) => {
-        setSelectedLeadId(leadId);
-        setCurrentView('logs');
-    };
+  const handleViewLogs = (leadId) => {
+    navigate(`view-lead-logs/${leadId}`);
+  };
 
-    const handleBackToTable = () => {
-        setCurrentView('table');
-        setSelectedLeadId(null);
-    };
-
-    return (
-        <div>
-            {currentView === 'table' && (
-                <LeadsLogTable 
-                    searchTerm={searchTerm}
-                    statusFilter={statusFilter}
-                    onUpdateLead={handleUpdateLead}
-                    onViewLogs={handleViewLogs}
-                />
-            )}
-            
-            {currentView === 'details' && (
-                <LeadDetailsPage 
-                    leadId={selectedLeadId}
-                    onBack={handleBackToTable}
-                />
-            )}
-            
-            {currentView === 'logs' && (
-                <LeadLogsPage 
-                    leadId={selectedLeadId}
-                    onBack={handleBackToTable}
-                />
-            )}
-        </div>
-    );
+  return (
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <LeadsLogTable
+            searchTerm={searchTerm}
+            statusFilter={statusFilter}
+            onUpdateLead={handleUpdateLead}
+            onViewLogs={handleViewLogs}
+          />
+        }
+      />
+      <Route path="update-lead/:leadId" element={<LeadDetailsPage />} />
+      <Route path="view-lead-logs/:leadId" element={<LeadLogsPage />} />
+    </Routes>
+  );
 }
