@@ -67,7 +67,7 @@ function App() {
 
         {/* Authenticated routes */}
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="/leads" element={<ProtectedRoute><Leads /></ProtectedRoute>} />
+        <Route path="/leads/*" element={<ProtectedRoute><Leads /></ProtectedRoute>} /> 
         <Route path="/leads/status/:status" element={<ProtectedRoute><Leads /></ProtectedRoute>} />
         <Route path="/leads/new" element={<ProtectedRoute><LeadsNewPage /></ProtectedRoute>} />
         <Route path="/user-profile" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />

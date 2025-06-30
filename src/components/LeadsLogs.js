@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Cookies from 'js-cookie';
+import { useParams, useNavigate } from 'react-router-dom';
 import apiClient from "../apicaller/APIClient.js";
 import {
     Box,
@@ -13,8 +14,10 @@ import {
     Stack
 } from '@mui/material';
 
-export default function LeadLogsPage({ leadId, onBack }) {
+export default function LeadLogsPage() {
     const userId = Cookies.get("user_id");
+    const { leadId } = useParams();
+    const navigate = useNavigate();
     const [leadLogs, setLeadLogs] = useState([]);
     const [leadInfo, setLeadInfo] = useState(null);
     const [newComment, setNewComment] = useState("");
@@ -143,7 +146,7 @@ export default function LeadLogsPage({ leadId, onBack }) {
                     </Typography>
                 </Box>
                 <Button
-                    onClick={onBack}
+                    onClick={() => navigate(-1)}
                     sx={{
                         padding: '10px 20px',
                         backgroundColor: '#6c757d',
@@ -186,34 +189,57 @@ export default function LeadLogsPage({ leadId, onBack }) {
             {leadLogs.length > 0 ? (
                 Object.entries(groupLogsByDate(leadLogs)).map(([dateGroup, logs]) => (
                     <Box key={dateGroup} mb={4}>
-                        <Typography variant="subtitle1" color="text.secondary" gutterBottom>{dateGroup}</Typography>
-                        {logs.map((log, idx) => (
-                            <Paper key={log.id || idx} sx={{ p: 2, mb: 2 }}>
-                                <Stack direction="row" spacing={2} alignItems="flex-start">
-                                    <Avatar>{getInitials(log.created_by_name || 'You')}</Avatar>
-                                    <Box>
-                                       <Box display="flex" justifyContent="space-between" alignItems="center" width="100%">
-                                            <Box sx={{ flexGrow: 1 }}>
-                                                <Typography fontWeight="bold" noWrap>
-                                                {log.created_by_name || 'You'}
-                                                </Typography>
-                                            </Box>
-                                            <Box sx={{ textAlign: 'right', minWidth: 70 }}>
-                                                <Typography variant="caption" color="text.secondary" noWrap>
-                                                {formatTime(log.created_date)}
-                                                </Typography>
-                                            </Box>
-                                        </Box>
-                                        <Typography variant="body1">{log.comment}</Typography>
-                                    </Box>
-                                </Stack>
-                            </Paper>
-                        ))}
+                    <Typography variant="subtitle1" color="text.secondary" gutterBottom>{dateGroup}</Typography>
+                    {logs.map((log, idx) => {
+                        const isActionLog = log.action && log.action.toUpperCase() !== 'COMMENT';
+
+                        return (
+                        <Paper
+                            key={log.id || idx}
+                            sx={{
+                            p: 2,
+                            mb: 2,
+                            backgroundColor: isActionLog ? '#f0f9ff' : '#ffffff',
+                            borderLeft: isActionLog ? '4px solid #2196f3' : 'none', 
+                            }}
+                        >
+                            <Stack direction="row" spacing={2} alignItems="flex-start">
+                            <Avatar>{getInitials(log.created_by_name || 'You')}</Avatar>
+                            <Box sx={{ width: '100%' }}>
+                                <Box display="flex" justifyContent="space-between" alignItems="center">
+                                <Typography fontWeight="bold" noWrap>
+                                    {log.created_by_name || 'You'}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary" noWrap>
+                                    {formatTime(log.created_date)}
+                                </Typography>
+                                </Box>
+
+                                {isActionLog && (
+                                <Typography
+                                    variant="subtitle2"
+                                    fontWeight="bold"
+                                    sx={{ mt: 1, color: '#0d47a1' }}
+                                >
+                                    ACTION: {log.action}
+                                </Typography>
+                                )}
+
+                                {/* Comment always displayed */}
+                                <Typography variant="body1" sx={{ mt: 0.5 }}>
+                                {log.comment}
+                                </Typography>
+                            </Box>
+                            </Stack>
+                        </Paper>
+                        );
+                    })}
                     </Box>
                 ))
-            ) : (
+                ) : (
                 <Typography variant="body2">No comments found for this lead. Add the first comment above.</Typography>
-            )}
+                )}
+
         </Box>
     );
 }

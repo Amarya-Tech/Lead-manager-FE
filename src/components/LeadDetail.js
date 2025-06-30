@@ -1,5 +1,6 @@
 import "./css/LeadDetail.css";
 import { useState, useEffect, useCallback } from "react";
+import { useParams, useNavigate } from 'react-router-dom';
 import apiClient from "../apicaller/APIClient.js";
 import { toast } from 'react-toastify';
 import Cookies from 'js-cookie';
@@ -26,14 +27,16 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import WarningIcon from '@mui/icons-material/Warning';
 import EditIcon from '@mui/icons-material/Edit';
-import ExpireLeadDialog from "../components/ExpireLeadComponent.js"; 
+import ExpireLeadDialog from "../components/ExpireLeadComponent.js";
 import ConvertLeadDialog from "../components/ConvertLeadComponent.js";
 import { cleanPayload } from "../utils/functions.js";
 
-export default function LeadDetailsPage({ leadId, onBack }) {
+export default function LeadDetailsPage() {
 
   const userId = Cookies.get("user_id")
   const userRole = Cookies.get("role")
+  const { leadId } = useParams();
+  const navigate = useNavigate();
   const [leadDetails, setLeadDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -98,11 +101,6 @@ export default function LeadDetailsPage({ leadId, onBack }) {
       return;
     }
 
-    if (assigneeSaved || assigneeSkipped) {
-      toast.info('Sales representative assignment already processed');
-      return;
-    }
-
     if (!selectedAssignee) {
       toast.error('Please select a sales representative');
       return;
@@ -115,7 +113,7 @@ export default function LeadDetailsPage({ leadId, onBack }) {
         ...(description && { description: description }),
       };
 
-      const response = await apiClient.post('/lead-com/add-assignee', requestBody);
+      const response = await apiClient.post('/lead-com/update-assignee', requestBody);
 
       if (response.data.success) {
         setAssigneeSaved(true);
@@ -222,13 +220,22 @@ export default function LeadDetailsPage({ leadId, onBack }) {
   };
 
   const handleExpire = () => {
-   setOpenExpireDialog(true);
+    setOpenExpireDialog(true);
   };
 
-    const handleConvertSubmit = async ({ product, comment }) => {
+  const handleConvertSubmit = async ({ product, comment }) => {
+    const action =
+      leadDetails.status === "lead"
+        ? "TO_PROSPECT"
+        : leadDetails.status === "prospect"
+          ? "TO_ACTIVE_PROSPECT"
+          : leadDetails.status === "active prospect"
+            ? "TO_CUSTOMER"
+            : "";
+            
     try {
       const commentRes = await apiClient.post(`/lead-com/add-comments/${userId}/${leadId}`, {
-        comment,
+        comment, action
       });
 
       if (!commentRes.data.success) {
@@ -236,13 +243,12 @@ export default function LeadDetailsPage({ leadId, onBack }) {
         return;
       }
 
-      // Prepare payload based on current status
       let nextStatus = "";
       if (leadDetails.status === "lead") nextStatus = "prospect";
       else if (leadDetails.status === "prospect") nextStatus = "active prospect";
       else if (leadDetails.status === "active prospect") nextStatus = "customer";
 
-      const payload = cleanPayload({
+      const payload = cleanPayload({ 
         status: nextStatus,
         suitable_product: product,
       });
@@ -250,7 +256,7 @@ export default function LeadDetailsPage({ leadId, onBack }) {
       const updateRes = await apiClient.put(`/lead/update-lead/${leadId}`, payload);
 
       if (updateRes.data.success) {
-        fetchLeadDetails(); 
+        fetchLeadDetails();
       } else {
         console.error("Failed to update lead status");
       }
@@ -274,7 +280,7 @@ export default function LeadDetailsPage({ leadId, onBack }) {
       <div className="lead-details-page">
         <div className="error-container">
           <p className="error-message">{error}</p>
-          <button onClick={onBack} className="back-button">
+          <button onClick={() => navigate(-1)} className="back-button">
             Back to Leads
           </button>
         </div>
@@ -287,7 +293,7 @@ export default function LeadDetailsPage({ leadId, onBack }) {
       <div className="lead-details-page">
         <div className="error-container">
           <p>Lead details not found.</p>
-          <button onClick={onBack} className="back-button">
+          <button onClick={() => navigate(-1)} className="back-button">
             Back to Leads
           </button>
         </div>
@@ -298,37 +304,37 @@ export default function LeadDetailsPage({ leadId, onBack }) {
   return (
     <div className="lead-details-page">
       <div className="lead-details-header">
-        <button onClick={onBack} className="back-button">
+        <button onClick={() => navigate(-1)} className="back-button">
           ← Back to Leads
         </button>
-        
-          <h1>Lead Details</h1>
-          {leadDetails.status !== "expired lead" && (
-            <div className="action-buttons">
-              <Button
-                variant="outlined"
-                className="convert-button"
-                 onClick={() => setOpenConvertDialog(true)}
-              >
-                {leadDetails.status === "lead"
-                  ? "Convert to Prospect"
-                  : leadDetails.status === "prospect"
+
+        <h1>Lead Details</h1>
+        {!["expired lead", "customer"].includes(leadDetails.status?.toLowerCase()) && (
+          <div className="action-buttons">
+            <Button
+              variant="outlined"
+              className="convert-button"
+              onClick={() => setOpenConvertDialog(true)}
+            >
+              {leadDetails.status === "lead"
+                ? "Convert to Prospect"
+                : leadDetails.status === "prospect"
                   ? "Convert to Active Prospect"
                   : leadDetails.status === "active prospect"
-                  ? "Convert to Customer"
-                  : "Convert"} 
-              </Button>
+                    ? "Convert to Customer"
+                    : "Convert"}
+            </Button>
 
-              <Button
-                variant="outlined"
-                color="error"
-                className="expire-button"
-                onClick={handleExpire}
-              >
-                Expire Lead
-              </Button>
-            </div>
-          )} 
+            <Button
+              variant="outlined"
+              color="error"
+              className="expire-button"
+              onClick={handleExpire}
+            >
+              Expire Lead
+            </Button>
+          </div>
+        )}
       </div>
       <ExpireLeadDialog
         open={openExpireDialog}
@@ -337,6 +343,7 @@ export default function LeadDetailsPage({ leadId, onBack }) {
         userId={userId}
         onSuccess={(newLog) => {
           setLeadLogs((prev) => [newLog, ...prev]);
+          fetchLeadDetails()
         }}
       />
       <ConvertLeadDialog
@@ -792,14 +799,30 @@ function OfficeSection({ leadDetails, leadId, isEditing, onEdit, onCancel, onSav
 
   useEffect(() => {
     const initialOffices = leadDetails.office_details || [];
-    setOffices(initialOffices.length > 0 ? initialOffices : [{
-      address: '',
-      city: '',
-      state: '',
-      country: '',
-      postal_code: ''
-    }]);
-  }, [leadDetails.office_details]);
+
+    const isBlankOffice = (office) =>
+      !office.address?.trim() &&
+      !office.city?.trim() &&
+      !office.state?.trim() &&
+      !office.country?.trim() &&
+      !office.postal_code?.trim();
+
+    if (
+      initialOffices.length === 0 ||
+      (initialOffices.length === 1 && isBlankOffice(initialOffices[0]))
+    ) {
+      setOffices([{
+        lead_id: leadId,
+        address: '',
+        city: '',
+        state: '',
+        country: '',
+        postal_code: ''
+      }]);
+    } else {
+      setOffices(initialOffices);
+    }
+  }, [leadDetails.office_details, leadId]);
 
   const handleOfficeChange = (index, field, value) => {
     const updatedOffices = [...offices];
