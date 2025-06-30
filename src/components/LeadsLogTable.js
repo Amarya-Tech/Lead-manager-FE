@@ -16,7 +16,7 @@ import {
   CircularProgress
 } from "@mui/material";
 
-export default function LeadsLogTable({ searchTerm = "", onUpdateLead, onViewLogs }) {
+export default function LeadsLogTable({ searchTerm = "", statusFilter = "", onUpdateLead, onViewLogs }) {
   const userId = Cookies.get("user_id");
   const [leads, setLeads] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -27,16 +27,24 @@ export default function LeadsLogTable({ searchTerm = "", onUpdateLead, onViewLog
       try {
         let response;
 
-        if (searchTerm.trim()) {
+          if (searchTerm.trim()) {
           response = await apiClient.get(`/lead/search-term/${userId}`, {
-                  params: { term: searchTerm.trim() }
+            params: { term: searchTerm.trim() }
           });
         } else {
           response = await apiClient.get(`/lead/fetch-lead-log-list/${userId}`);
         }
 
         if (Array.isArray(response.data.data)) {
-          setLeads(response.data.data);
+          let result = response.data.data;
+
+          if (statusFilter.trim()) {
+            result = result.filter((lead) =>
+              lead.status?.toLowerCase() === statusFilter.trim().toLowerCase()
+            );
+          }
+
+          setLeads(result);
         } else {
           console.error("Invalid data format:", response.data);
           setLeads([]);
@@ -49,7 +57,7 @@ export default function LeadsLogTable({ searchTerm = "", onUpdateLead, onViewLog
 
     fetchLeads();
     setCurrentPage(1);
-  }, [searchTerm, userId]);
+  }, [searchTerm, statusFilter, userId]);
 
   const handleUpdateLead = (leadId) => {
     if (onUpdateLead) onUpdateLead(leadId);
@@ -63,7 +71,6 @@ export default function LeadsLogTable({ searchTerm = "", onUpdateLead, onViewLog
   const startIndex = (currentPage - 1) * leadsPerPage;
   const endIndex = startIndex + leadsPerPage;
   const currentLeads = useMemo(() => leads.slice(startIndex, endIndex), [leads, startIndex, endIndex]);
-  console.log("currentLeads", currentLeads)
 
   const goToPage = (page) => setCurrentPage(page);
   const goToPreviousPage = () => currentPage > 1 && goToPage(currentPage - 1);

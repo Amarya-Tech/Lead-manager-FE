@@ -80,7 +80,7 @@ export default function Leads() {
               </Paper>
             )}
 
-            <LeadsManager searchTerm={searchTerm}/>
+            <LeadsManager searchTerm={searchTerm} statusFilter={status}/>
           </Box>
         </Box>
       </Box>
