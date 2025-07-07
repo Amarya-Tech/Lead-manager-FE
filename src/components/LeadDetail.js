@@ -265,6 +265,10 @@ export default function LeadDetailsPage() {
     }
   };
 
+  const handleViewLogs = (leadId) => {
+    navigate(`/leads/view-lead-logs/${leadId}`);
+  };
+
   if (loading) {
     return (
       <div className="lead-details-page">
@@ -354,7 +358,10 @@ export default function LeadDetailsPage() {
       />
 
       <div className="lead-details-container">
-        <CompanySection
+         <Button variant="contained" color="primary" size="small" onClick={() => handleViewLogs(leadId)} sx ={{alignItems: "right", ml: "auto" }}>
+          View Logs
+        </Button>
+        <CompanySection 
           leadDetails={leadDetails}
           isEditing={editingSection === 'company'}
           onEdit={() => handleEditSection('company')}

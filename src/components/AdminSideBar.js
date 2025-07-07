@@ -18,12 +18,11 @@ import MenuIcon from '@mui/icons-material/Menu';
 import { useState, useEffect  } from 'react';
 import apiClient from '../apicaller/APIClient';
 
-export default function Sidebar() {
+export default function AdminSidebar() {
   
   const userId = Cookies.get('user_id');
   const userRole = Cookies.get('role');
-  const isAdmin = userRole === 'admin';
-  const isSuperAdmin = userRole === 'super_admin';
+  const isAdmin = userRole === 'super_admin';
   const isMobile = useMediaQuery('(max-width:900px)');
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -34,6 +33,7 @@ export default function Sidebar() {
     const fetchUser = async () => {
       try {
         const res = await apiClient.get(`/user/fetch-user-detail/${userId}`);
+        console.log("response", res)
         const user = Array.isArray(res.data.data) ? res.data.data[0] : res.data.data;
         if (user?.first_name) {
           setUserName(`${user.first_name} ${user.last_name || ''}`);
@@ -60,21 +60,7 @@ export default function Sidebar() {
   };
 
   const menuItems = [
-    { text: 'Dashboard', path: '/dashboard' },
-    {
-    text: 'Leads',
-    path: '/leads',
-    subItems: [
-      { text: 'New Lead', path: '/leads/status/lead' },
-      { text: 'Prospect', path: '/leads/status/prospect' },
-      { text: 'Active Prospect', path: '/leads/status/active prospect' },
-      { text: 'Customer', path: '/leads/status/customer' },
-      { text: 'Expired Lead', path: '/leads/status/expired lead' }
-    ]
-  },
-    ...(isAdmin || isSuperAdmin ? [{ text: 'User Management', path: '/users' }] : []),
-    ...(isSuperAdmin ? [{ text: 'Upload Sheet', path: '/upload-sheet' }] : []),
-    { text: 'My Profile', path: '/user-profile' },
+    { text: 'Upload Sheet', path: '/upload-sheet' },
   ];
 
   const drawerContent = (
