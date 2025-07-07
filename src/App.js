@@ -11,9 +11,8 @@ import LeadsNewPage from "./components/LeadsCreateNew.js";
 import UserProfilePage from "./pages/UserProfile.js";
 import Leads from "./pages/Leads.js";
 import UserPage from "./pages/Users.js";
-
-// Get user role from cookies
-const getUserRole = () => Cookies.get('role');
+import HomePage from "./pages/AdminHome.js";
+import CsvUploadPage from "./components/ImportExcel.js";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -24,10 +23,10 @@ const ProtectedRoute = ({ children }) => {
 // Role-based Protected Route Component
 const RoleProtectedRoute = ({ children, allowedRoles = [] }) => {
   const token = Cookies.get('jwt');
-  const userRole = getUserRole();
+  const userRole = Cookies.get('role')?.toLowerCase();
 
   if (!token) return <Navigate to="/login" replace />;
-  if (allowedRoles.length && !allowedRoles.includes(userRole)) {
+  if (allowedRoles.length &&  !allowedRoles.map(r => r.toLowerCase()).includes(userRole)) {
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -76,6 +75,13 @@ function App() {
         <Route path="/users" element={
           <RoleProtectedRoute allowedRoles={['admin']}>
             <UserPage />
+          </RoleProtectedRoute>
+        } />
+
+         {/* Super Admin-only route */}
+        <Route path="/admin-dashboard" element={
+          <RoleProtectedRoute allowedRoles={['super_admin']}>
+            <HomePage />
           </RoleProtectedRoute>
         } />
 

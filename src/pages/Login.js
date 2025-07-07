@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import Cookies from 'js-cookie';
 import { toast } from 'react-toastify';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useEncryptionKeyStore } from '../apicaller/EncryptionKeyStore.js';
@@ -49,9 +50,15 @@ export default function Login() {
       setEncryptionKey(encryptionKeyFromHeader);
       toast.success(response.data.message || 'Login successful!');
 
+      const userRole = response.data.data[0].role;
       setTimeout(() => {
-        navigate('/dashboard');
+        if(userRole == 'super_admin'){
+             navigate('/admin-dashboard');
+        }else{
+            navigate('/dashboard');
+        }
       }, 1000);
+
     } catch (error) {
       const backendMessage = error?.response?.data?.message || 'An unexpected error occurred';
       toast.error(backendMessage);
