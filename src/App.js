@@ -15,9 +15,9 @@ import HomePage from "./pages/AdminHome.js";
 import CsvUploadPage from "./components/ImportExcel.js";
 
 // Protected Route Component
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children , isAuthenticated}) => {
   const token = Cookies.get('jwt');
-  return token ? children : <Navigate to="/login" replace />;
+  return isAuthenticated ? children : <Navigate to="/login" replace />;
 };
 
 // Role-based Protected Route Component
@@ -37,11 +37,13 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
+
   useEffect(() => {
     const token = Cookies.get('jwt');
     if (token) setIsAuthenticated(true);
     setLoading(false);
   }, []);
+
 
   if (loading) {
     return (
@@ -62,10 +64,10 @@ function App() {
         />
         
         {/* Public route */}
-        <Route path="/login" element={<Login />} />
+        <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
 
         {/* Authenticated routes */}
-        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute isAuthenticated = {isAuthenticated}><Dashboard /></ProtectedRoute>} />
         <Route path="/leads/*" element={<ProtectedRoute><Leads /></ProtectedRoute>} /> 
         <Route path="/leads/status/:status" element={<ProtectedRoute><Leads /></ProtectedRoute>} />
         <Route path="/leads/new" element={<ProtectedRoute><LeadsNewPage /></ProtectedRoute>} />

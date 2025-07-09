@@ -17,7 +17,7 @@ import {
   Paper,
 } from '@mui/material';
 
-export default function Login() {
+export default function Login({setIsAuthenticated}) {
   const { setEncryptionKey } = useEncryptionKeyStore();
   const navigate = useNavigate();
 
@@ -49,6 +49,9 @@ export default function Login() {
       const encryptionKeyFromHeader = response.headers['x-encryption-key'] || '';
       setEncryptionKey(encryptionKeyFromHeader);
       toast.success(response.data.message || 'Login successful!');
+      if(response.data.success){
+        setIsAuthenticated(true);
+      }
 
       const userRole = response.data.data[0].role;
       setTimeout(() => {
