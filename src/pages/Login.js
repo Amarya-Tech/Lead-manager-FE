@@ -51,13 +51,13 @@ export default function Login() {
       toast.success(response.data.message || 'Login successful!');
 
       const userRole = response.data.data[0].role;
-      setTimeout(() => {
-        if(userRole == 'super_admin'){
-             navigate('/admin-dashboard');
-        }else{
-            navigate('/dashboard');
-        }
-      }, 1000);
+    
+      if(userRole == 'super_admin'){
+            navigate('/admin-dashboard');
+      }else{
+          navigate('/dashboard');
+      }
+    
 
     } catch (error) {
       const backendMessage = error?.response?.data?.message || 'An unexpected error occurred';
