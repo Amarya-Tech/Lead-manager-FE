@@ -9,10 +9,14 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   (config) => {
-    const { encryptionKey } = useAuthStore.getState();
+    const { encryptionKey, jwt } = useAuthStore.getState();
 
     if (encryptionKey) {
       config.headers['x-encryption-key'] = encryptionKey;
+    }
+
+    if (jwt) {
+      config.headers['x-access-token'] = jwt;
     }
 
     return config;
