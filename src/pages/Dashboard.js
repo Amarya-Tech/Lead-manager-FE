@@ -28,31 +28,35 @@ export default function Dashboard() {
         fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif`
       }}>
         <Sidebar />
-        <Box  component="main"
+        <Box component="main"
             sx={{
               flexGrow: 1,
               p: 3,
-              ml: '24px',  
-              width: 'calc(100% - 240px)',      
+              ml: '6px',  
+              width: 'calc(100% - 180px)',      
             }}>
           <Box display="flex" justifyContent="space-between" alignItems="center" sx={{mb:'20px', mt:'10px'}}>
             <Typography variant="h5" sx={{
-              fontSize: '28px',
+              fontSize: '22px',
               fontWeight: 'bold',
               color: '#000000',
               fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif`
-            }}>Dashboard</Typography>
+            }}>Dashboard
+            </Typography>
             <Button
               variant="contained"
               color="primary"
               className="primary-button"
               onClick={handleNewLead}
+              sx={{
+              fontSize: '11px',
+              }}
             >
               New Lead
             </Button>
           </Box>
 
-          <Box position="relative" mt={3} mb={2}>
+          <Box position="relative" mb={1}>
             <TextField
               fullWidth
               variant="outlined"
@@ -64,14 +68,18 @@ export default function Dashboard() {
                 endAdornment: searchTerm && (
                   <InputAdornment position="end">
                     <IconButton onClick={clearSearch} title="Clear search">
-                      <ClearIcon sx={{ color: '#666' }} />
+                      <ClearIcon sx={{ color: '#666'}} />
                     </IconButton>
                   </InputAdornment>
                 )
               }}
               sx={{
                 '& input': {
-                  paddingRight: searchTerm ? '40px' : '10px'
+                  paddingRight: searchTerm ? '40px' : '10px',
+                  paddingLeft: '10px',
+                  paddingTop: '10px',
+                  paddingBottom: '10px',
+                  fontSize: '12px',
                 }
               }}
             />
@@ -81,7 +89,7 @@ export default function Dashboard() {
             <Paper
               elevation={0}
               sx={{
-                mb: 2,
+                mb: 1,
                 px: 2,
                 py: 1,
                 backgroundColor: '#e7f3ff',

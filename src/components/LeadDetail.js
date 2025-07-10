@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from 'react-router-dom';
 import apiClient from "../apicaller/APIClient.js";
 import { toast } from 'react-toastify';
-import Cookies from 'js-cookie';
 import {
   Box,
   Typography,
@@ -30,11 +29,12 @@ import EditIcon from '@mui/icons-material/Edit';
 import ExpireLeadDialog from "../components/ExpireLeadComponent.js";
 import ConvertLeadDialog from "../components/ConvertLeadComponent.js";
 import { cleanPayload } from "../utils/functions.js";
+import { useAuthStore } from "../apicaller/AuthStore.js";
 
 export default function LeadDetailsPage() {
 
-  const userId = Cookies.get("user_id")
-  const userRole = Cookies.get("role")
+  const { userId, role} = useAuthStore();
+  const userRole = role;
   const { leadId } = useParams();
   const navigate = useNavigate();
   const [leadDetails, setLeadDetails] = useState(null);

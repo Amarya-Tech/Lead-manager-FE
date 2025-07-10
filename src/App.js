@@ -13,17 +13,20 @@ import Leads from "./pages/Leads.js";
 import UserPage from "./pages/Users.js";
 import HomePage from "./pages/AdminHome.js";
 import CsvUploadPage from "./components/ImportExcel.js";
+import { useAuthStore } from "./apicaller/AuthStore.js";
 
 // Protected Route Component
-const ProtectedRoute = ({ children , isAuthenticated}) => {
-  const token = Cookies.get('jwt');
-  return isAuthenticated ? children : <Navigate to="/login" replace />;
+const ProtectedRoute = ({ children }) => {
+  const { jwt } = useAuthStore();
+  console.log("token", jwt)
+  return jwt ? children : <Navigate to="/login" replace />;
 };
 
 // Role-based Protected Route Component
 const RoleProtectedRoute = ({ children, allowedRoles = [] }) => {
-  const token = Cookies.get('jwt');
-  const userRole = Cookies.get('role')?.toLowerCase();
+  const { role, jwt } = useAuthStore();
+  const token = jwt;
+  const userRole = role.toLowerCase();
 
   if (!token) return <Navigate to="/login" replace />;
   if (allowedRoles.length &&  !allowedRoles.map(r => r.toLowerCase()).includes(userRole)) {
@@ -36,11 +39,10 @@ const RoleProtectedRoute = ({ children, allowedRoles = [] }) => {
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
-
+  const { jwt } = useAuthStore();
 
   useEffect(() => {
-    const token = Cookies.get('jwt');
-    if (token) setIsAuthenticated(true);
+    if (jwt) setIsAuthenticated(true);
     setLoading(false);
   }, []);
 
@@ -67,7 +69,7 @@ function App() {
         <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
 
         {/* Authenticated routes */}
-        <Route path="/dashboard" element={<ProtectedRoute isAuthenticated = {isAuthenticated}><Dashboard /></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute ><Dashboard /></ProtectedRoute>} />
         <Route path="/leads/*" element={<ProtectedRoute><Leads /></ProtectedRoute>} /> 
         <Route path="/leads/status/:status" element={<ProtectedRoute><Leads /></ProtectedRoute>} />
         <Route path="/leads/new" element={<ProtectedRoute><LeadsNewPage /></ProtectedRoute>} />

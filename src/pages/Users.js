@@ -4,7 +4,6 @@ import apiClient from "../apicaller/APIClient.js";
 import Sidebar from "../components/SideBar.js";
 import { toast } from 'react-toastify';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import Cookies from 'js-cookie';
 import {
     Box, Typography, Button, CircularProgress, Table, TableBody, TableCell, TableContainer,
     TableHead, TableRow, Paper, Select, MenuItem, Dialog, DialogTitle, DialogContent,
@@ -143,28 +142,28 @@ const UserPage = () => {
                 flexGrow: 1,
                 p: 3,
                 ml: '24px',  
-                width: 'calc(100% - 240px)',      
+                width: 'calc(100% - 240px)',
                 }}>
                 <Box display="flex" justifyContent="space-between" alignItems="center" sx={{mb:'20px', mt:'10px'}}>
                     <Typography variant="h5" sx={{
-                        fontSize: '28px',
+                        fontSize: '22px',
                         fontWeight: 'bold',
                         color: '#000000',
                         fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif`
                         }}>Users List</Typography>
-                    <Button variant="contained" color="primary" className="primary-button" onClick={handleAddUser}>+ Add New User</Button>
+                    <Button variant="contained" color="primary" className="primary-button" onClick={handleAddUser} sx={{ fontSize:'12px'}}>+ Add New User</Button>
                 </Box>
                 {loading ? <CircularProgress /> : (
                     <TableContainer component={Paper} sx={{ mb: 3, border: '1px solid #ddd' }}>
                         <Table>
                             <TableHead>
-                                <TableRow sx={{ backgroundColor: '#f4f4f4', height: 20, '& th': { fontWeight: 'bold' } }}>
-                                    <TableCell>Name</TableCell>
-                                    <TableCell>Email</TableCell>
-                                    <TableCell>Phone</TableCell>
-                                    <TableCell>Role</TableCell>
-                                    <TableCell>Status</TableCell>
-                                    <TableCell>Actions</TableCell>
+                                <TableRow sx={{ backgroundColor: '#f4f4f4', height: 18, '& th': { fontWeight: 'bold' } }}>
+                                    <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}><strong>Name</strong></TableCell>
+                                    <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}} ><strong>Email</strong></TableCell>
+                                    <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}><strong>Phone</strong></TableCell>
+                                    <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}><strong>Role</strong></TableCell>
+                                    <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}><strong>Status</strong></TableCell>
+                                    <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}><strong>Actions</strong></TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
@@ -175,12 +174,12 @@ const UserPage = () => {
                                             paddingBottom: '4px',
                                             lineHeight: '1.2',
                                         },
-                                        height: '32px',
+                                        height: 18
                                         }}>
-                                        <TableCell>{user.first_name} {user.last_name}</TableCell>
-                                        <TableCell>{user.email}</TableCell>
-                                        <TableCell>{user.phone}</TableCell>
-                                        <TableCell>{user.role}</TableCell>
+                                        <TableCell sx={{ fontSize:'12px'}}>{user.first_name} {user.last_name}</TableCell>
+                                        <TableCell sx={{ fontSize:'12px'}}>{user.email}</TableCell>
+                                        <TableCell sx={{ fontSize:'12px'}}>{user.phone}</TableCell>
+                                        <TableCell sx={{ fontSize:'12px'}}>{user.role}</TableCell>
                                         <TableCell>
                                             {isEditingStatus && selectedUserId === user.id ? (
                                                 <Select
@@ -203,13 +202,13 @@ const UserPage = () => {
                                             )}
                                         </TableCell>
                                         <TableCell>
-                                            <Button onClick={() => handleUpdateUser(user)} variant="contained" sx={{ fontSize: '13px', mr: '10px', backgroundColor: '#007BFF', '&:hover': { backgroundColor: '#0056b3' }, textTransform: 'none'  }}>Update User</Button>
+                                            <Button onClick={() => handleUpdateUser(user)} variant="contained" sx={{ fontSize: '12px', mr: '10px', backgroundColor: '#007BFF', '&:hover': { backgroundColor: '#0056b3' }, textTransform: 'none'  }}>Update User</Button>
                                             <Button onClick={() => {
                                                 setIsEditingStatus(true);
                                                 setSelectedUserId(user.id);
                                                 setEditedStatus(user.is_active);
                                                 setSelectedUser(user);
-                                            }} variant="contained" sx={{ fontSize: '13px', backgroundColor: '#007BFF', '&:hover': { backgroundColor: '#0056b3' }, textTransform: 'none'  }}>Update Status</Button>
+                                            }} variant="contained" sx={{ fontSize: '12px', backgroundColor: '#007BFF', '&:hover': { backgroundColor: '#0056b3' }, textTransform: 'none'  }}>Update Status</Button>
                                         </TableCell>
                                     </TableRow>
                                 ))}

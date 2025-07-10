@@ -13,9 +13,10 @@ import {
     Divider,
     Stack
 } from '@mui/material';
+import { useAuthStore } from "../apicaller/AuthStore.js";
 
 export default function LeadLogsPage() {
-    const userId = Cookies.get("user_id");
+    const { userId } = useAuthStore();
     const { leadId } = useParams();
     const navigate = useNavigate();
     const [leadLogs, setLeadLogs] = useState([]);

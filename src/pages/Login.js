@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import Cookies from 'js-cookie';
 import { toast } from 'react-toastify';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import { useEncryptionKeyStore } from '../apicaller/EncryptionKeyStore.js';
+import { useAuthStore } from '../apicaller/AuthStore.js';
 
 import {
   Box,
@@ -18,7 +17,7 @@ import {
 } from '@mui/material';
 
 export default function Login({setIsAuthenticated}) {
-  const { setEncryptionKey } = useEncryptionKeyStore();
+  const { setEncryptionKey, setUserId, setRole, setJwt } = useAuthStore();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
@@ -46,8 +45,13 @@ export default function Login({setIsAuthenticated}) {
         { withCredentials: true }
       );
 
-      const encryptionKeyFromHeader = response.headers['x-encryption-key'] || '';
+     const encryptionKeyFromHeader = response.headers['x-encryption-key'] || '';
+      const { user_id, role, jwt } = response.data.data[0];
+
       setEncryptionKey(encryptionKeyFromHeader);
+      setUserId(user_id);
+      setRole(role);
+      setJwt(jwt);
       toast.success(response.data.message || 'Login successful!');
       if(response.data.success){
         setIsAuthenticated(true);
@@ -68,7 +72,7 @@ export default function Login({setIsAuthenticated}) {
 
   return (
     <Container maxWidth="xs">
-      <Paper elevation={4} sx={{ padding: 4, mt: 40, borderRadius: 3 }}>
+      <Paper elevation={4} sx={{ padding: 4, mt: 22, borderRadius: 3 }}>
         <Typography
           variant="h4"
           align="center"

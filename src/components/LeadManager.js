@@ -7,11 +7,11 @@ export default function LeadsManager({ searchTerm = "", statusFilter = "" }) {
   const navigate = useNavigate();
 
   const handleUpdateLead = (leadId) => {
-    navigate(`update-lead/${leadId}`);
+    navigate(`/leads/update-lead/${leadId}`);
   };
 
   const handleViewLogs = (leadId) => {
-    navigate(`view-lead-logs/${leadId}`);
+    navigate(`/leads/view-lead-logs/${leadId}`);
   };
 
   return (

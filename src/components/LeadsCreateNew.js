@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Cookies from 'js-cookie';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import apiClient from "../apicaller/APIClient.js";
@@ -20,7 +19,6 @@ import {
   Card,
   CardContent,
   CardHeader,
-  Divider,
   Alert,
   Container
 } from '@mui/material';
@@ -30,11 +28,12 @@ import {
   Pending as PendingIcon,
   Celebration as CelebrationIcon
 } from '@mui/icons-material';
+import { useAuthStore } from '../apicaller/AuthStore.js';
 
 const LeadsNewPage = () => {
   const navigate = useNavigate();
-  const userId = Cookies.get("user_id");
-  const userRole = Cookies.get("role")
+  const { userId, role} = useAuthStore();
+  const userRole = role;
 
   const [leadId, setLeadId] = useState(null);
   const [users, setUsers] = useState([]);
@@ -353,8 +352,8 @@ const LeadsNewPage = () => {
         <Box component="main" sx={{
           flexGrow: 1,
           p: 3,
-          ml: '24px',
-          width: 'calc(100% - 240px)',
+          ml: '6px',
+          width: 'calc(100% - 180px)',
         }}>
           <Container maxWidth="lg">
             <Typography variant="h5" sx={{
@@ -423,10 +422,12 @@ const LeadsNewPage = () => {
                     />
                   )
                 }
+                titleTypographyProps={{variant:'h6', fontWeight: 'bold'}}
+                sx={{mb:-2}}
               />
               <CardContent>
-                <Grid container spacing={3}>
-                  <Grid item xs={12} md={6}>
+                <Grid container columnSpacing={3} rowSpacing={2}>
+                  <Grid item xs={12} sm={6} md={2.4} >
                     <TextField
                       fullWidth
                       label="Company Name"
@@ -441,8 +442,8 @@ const LeadsNewPage = () => {
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={6}>
-                    <FormControl fullWidth required error={showCompanyErrors && !companyForm.industry_type} sx={{ minWidth: 300 }}>
+                  <Grid item xs={12} sm={6} md={2.4}>
+                    <FormControl fullWidth required error={showCompanyErrors && !companyForm.industry_type} sx={{ minWidth: 220 }}>
                       <InputLabel>Industry Type</InputLabel>
                       <Select
                         value={companyForm.industry_type}
@@ -462,7 +463,7 @@ const LeadsNewPage = () => {
                     </FormControl>
                   </Grid>
 
-                  <Grid item xs={12} md={4}>
+                  <Grid item xs={12} sm={6} md={2.4}>
                     <TextField
                       fullWidth
                       label="Product"
@@ -475,7 +476,7 @@ const LeadsNewPage = () => {
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={4}>
+                  <Grid item xs={12} sm={6} md={2.4}>
                     <TextField
                       fullWidth
                       type="number"
@@ -489,7 +490,7 @@ const LeadsNewPage = () => {
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={4}>
+                  <Grid item xs={12} sm={6} md={2.4}>
                     <TextField
                       fullWidth
                       type="number"
@@ -504,12 +505,12 @@ const LeadsNewPage = () => {
                   </Grid>
                 </Grid>
 
-                <Box sx={{ mt: 3 }}>
+                <Box sx={{ mt: 2 }}>
                   <Button
                     variant="contained"
                     onClick={saveCompanyInfo}
                     disabled={companySaved}
-                    size="large"
+                    size="small"
                   >
                     {companySaved ? 'Saved' : 'Save Company Info'}
                   </Button>
@@ -518,9 +519,11 @@ const LeadsNewPage = () => {
             </Card>
 
             {/* OFFICE DETAILS SECTION */}
-            <Card sx={{ mb: 3 }}>
+            <Card sx={{ mb: 2 }}>
               <CardHeader
                 title="Office Details"
+                titleTypographyProps={{variant:'h6', fontWeight: 'bold'}}
+                sx={{mb:-2}}
                 action={
                   <>
                     {officeSaved && (
@@ -543,8 +546,8 @@ const LeadsNewPage = () => {
                 }
               />
               <CardContent>
-                <Grid container spacing={3}>
-                  <Grid item xs={12}>
+                <Grid container columnSpacing={3} rowSpacing={2}>
+                  <Grid item xs={12} sm={6} md={2.4}>
                     <TextField
                       fullWidth
                       label="Address"
@@ -559,7 +562,7 @@ const LeadsNewPage = () => {
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={3}>
+                  <Grid item xs={12} sm={6} md={2.4}>
                     <TextField
                       fullWidth
                       label="City"
@@ -574,7 +577,7 @@ const LeadsNewPage = () => {
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={3}>
+                  <Grid item xs={12} sm={6} md={2.4}>
                     <TextField
                       fullWidth
                       label="State"
@@ -589,7 +592,7 @@ const LeadsNewPage = () => {
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={3}>
+                  <Grid item xs={12} sm={6} md={2.4}>
                     <TextField
                       fullWidth
                       label="Country"
@@ -604,7 +607,7 @@ const LeadsNewPage = () => {
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={3}>
+                  <Grid item xs={12} sm={6} md={2.4}>
                     <TextField
                       fullWidth
                       label="Postal Code"
@@ -625,7 +628,7 @@ const LeadsNewPage = () => {
                     variant="contained"
                     onClick={saveOfficeInfo}
                     disabled={officeSaved || officeSkipped}
-                    size="large"
+                    size="small"
                   >
                     Save Office Info
                   </Button>
@@ -633,7 +636,7 @@ const LeadsNewPage = () => {
                     variant="outlined"
                     onClick={skipOfficeInfo}
                     disabled={officeSaved || officeSkipped}
-                    size="large"
+                    size="small"
                   >
                     Skip for Now
                   </Button>
@@ -642,9 +645,11 @@ const LeadsNewPage = () => {
             </Card>
 
             {/* CONTACT DETAILS SECTION */}
-            <Card sx={{ mb: 3 }}>
+            <Card sx={{ mb: 2 }}>
               <CardHeader
                 title="Contact Details"
+                titleTypographyProps={{variant:'h6', fontWeight: 'bold'}}
+                sx={{mb:-2}}
                 action={
                   <>
                     {contactSaved && (
@@ -667,8 +672,8 @@ const LeadsNewPage = () => {
                 }
               />
               <CardContent>
-                <Grid container spacing={3}>
-                  <Grid item xs={12} md={6}>
+                <Grid container columnSpacing={3} rowSpacing={2}>
+                  <Grid item xs={12} sm={6} md={2.4}>
                     <TextField
                       fullWidth
                       label="Name"
@@ -683,7 +688,7 @@ const LeadsNewPage = () => {
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={6}>
+                  <Grid item xs={12} sm={6} md={2.4}>
                     <TextField
                       fullWidth
                       label="Designation"
@@ -698,7 +703,7 @@ const LeadsNewPage = () => {
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={4}>
+                  <Grid item xs={12} sm={6} md={2.4}>
                     <TextField
                       fullWidth
                       type="tel"
@@ -712,7 +717,7 @@ const LeadsNewPage = () => {
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={4}>
+                  <Grid item xs={12} sm={6} md={2.4}>
                     <TextField
                       fullWidth
                       type="tel"
@@ -726,7 +731,7 @@ const LeadsNewPage = () => {
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={4}>
+                  <Grid item xs={12} sm={6} md={2.4}>
                     <TextField
                       fullWidth
                       type="email"
@@ -741,12 +746,12 @@ const LeadsNewPage = () => {
                   </Grid>
                 </Grid>
 
-                <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
+                <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
                   <Button
                     variant="contained"
                     onClick={saveContactInfo}
                     disabled={contactSaved || contactSkipped}
-                    size="large"
+                    size="small"
                   >
                     Save Contact Info
                   </Button>
@@ -754,7 +759,7 @@ const LeadsNewPage = () => {
                     variant="outlined"
                     onClick={skipContactInfo}
                     disabled={contactSaved || contactSkipped}
-                    size="large"
+                    size="small"
                   >
                     Skip for Now
                   </Button>
@@ -764,9 +769,11 @@ const LeadsNewPage = () => {
 
             {/* SALES ASSIGNMENT SECTION */}
             {userRole === 'admin' && (
-              <Card sx={{ mb: 3 }}>
+              <Card sx={{ mb: 2 }}>
                 <CardHeader
                   title="Sales Representative Assignment"
+                  titleTypographyProps={{variant:'h6', fontWeight: 'bold'}}
+                  sx={{mb:-2}}
                   action={
                     <>
                       {assigneeSaved && (
@@ -794,7 +801,7 @@ const LeadsNewPage = () => {
                   </Typography>
 
                   <Grid container spacing={3}>
-                    <Grid item xs={12} md={6}>
+                    <Grid item xs={12} sm={6} md={2.4}>
                       <FormControl fullWidth sx={{ minWidth: 300 }}>
                         <InputLabel>Select Sales Representative</InputLabel>
                         <Select
@@ -813,7 +820,7 @@ const LeadsNewPage = () => {
                       </FormControl>
                     </Grid>
 
-                    <Grid item xs={12} md={6}>
+                    <Grid item xs={12} sm={6} md={2.4}>
                       <TextField
                         fullWidth
                         label="Description"
@@ -830,7 +837,7 @@ const LeadsNewPage = () => {
                       variant="contained"
                       onClick={assignSalesRep}
                       disabled={assigneeSaved || assigneeSkipped}
-                      size="large"
+                      size="small"
                     >
                       Assign Sales Rep
                     </Button>
@@ -838,7 +845,7 @@ const LeadsNewPage = () => {
                       variant="outlined"
                       onClick={skipAssignee}
                       disabled={assigneeSaved || assigneeSkipped}
-                      size="large"
+                      size="small"
                     >
                       Skip for Now
                     </Button>

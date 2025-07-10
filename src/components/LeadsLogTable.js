@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from "react";
-import Cookies from 'js-cookie';
 import apiClient from "../apicaller/APIClient.js";
 import {
   Box,
@@ -11,13 +10,12 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Button,
-  Pagination,
-  CircularProgress
+  Button
 } from "@mui/material";
+import { useAuthStore } from "../apicaller/AuthStore.js";
 
 export default function LeadsLogTable({ searchTerm = "", statusFilter = "", onUpdateLead, onViewLogs }) {
-  const userId = Cookies.get("user_id");
+  const { userId, role} = useAuthStore();
   const [leads, setLeads] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const leadsPerPage = 18;
@@ -129,13 +127,13 @@ export default function LeadsLogTable({ searchTerm = "", statusFilter = "", onUp
           <Table sx={{ minWidth: 650, borderCollapse: 'collapse' }} aria-label="leads table">
             <TableHead>
               <TableRow sx={{ backgroundColor: '#f4f4f4', height: 20 }}>
-                <TableCell><strong>Company Name</strong></TableCell>
-                <TableCell><strong>Product</strong></TableCell>
-                <TableCell><strong>Industry Type</strong></TableCell>
-                <TableCell><strong>Status</strong></TableCell>
-                <TableCell><strong>Latest Comment</strong></TableCell>
-                <TableCell><strong>Latest Comment Date</strong></TableCell>
-                <TableCell><strong>Actions</strong></TableCell>
+                <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}><strong>Company Name</strong></TableCell>
+                <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}><strong>Product</strong></TableCell>
+                <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}><strong>Industry Type</strong></TableCell>
+                <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}><strong>Status</strong></TableCell>
+                <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}><strong>Latest Comment</strong></TableCell>
+                <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}><strong>Latest Comment Date</strong></TableCell>
+                <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}><strong>Actions</strong></TableCell>
               </TableRow>
             </TableHead>
             <TableBody >
@@ -146,21 +144,20 @@ export default function LeadsLogTable({ searchTerm = "", statusFilter = "", onUp
                     paddingBottom: '4px',
                     lineHeight: '1.2',
                   },
-                  height: '32px',
                 }}>
-                  <TableCell>{highlightSearchTerm(lead.company_name, searchTerm)}</TableCell>
-                  <TableCell>{lead.product}</TableCell>
-                  <TableCell>{highlightSearchTerm(lead.industry_type, searchTerm)}</TableCell>
-                  <TableCell>
+                  <TableCell sx={{ fontSize:'12px'}}>{highlightSearchTerm(lead.company_name, searchTerm)}</TableCell>
+                  <TableCell sx={{ fontSize:'12px'}}>{lead.product}</TableCell>
+                  <TableCell sx={{ fontSize:'12px'}}>{highlightSearchTerm(lead.industry_type, searchTerm)}</TableCell>
+                  <TableCell sx={{ fontSize:'12px'}}>
                     <Box component="span" sx={getStatusStyle(lead.status)}>{lead.status}</Box>
                   </TableCell>
-                  <TableCell>{lead.latest_comment}</TableCell>
-                  <TableCell>{lead.latest_comment_date}</TableCell>
-                  <TableCell>
-                    <Button variant="contained" color="success" size="small" sx={{ mr: 1 }} onClick={(e) => handleUpdateLead(lead.id, e)}>
+                  <TableCell sx={{ fontSize:'12px'}}>{lead.latest_comment}</TableCell>
+                  <TableCell sx={{ fontSize:'12px'}}>{lead.latest_comment_date}</TableCell>
+                  <TableCell sx={{ display: 'flex', justifyContent: 'flex-start', fontSize:'12px'}}>
+                    <Button variant="contained" color="success" sx={{ mr: 1 , fontSize:'10px'}} onClick={(e) => handleUpdateLead(lead.id, e)}>
                       Update Lead
                     </Button>
-                    <Button variant="outlined" color="info" size="small" onClick={() => handleViewLogs(lead.id)}>
+                    <Button variant="outlined" color="info" sx={{ fontSize:'10px'}} onClick={() => handleViewLogs(lead.id)}>
                       View Logs
                     </Button>
                   </TableCell>
@@ -170,30 +167,30 @@ export default function LeadsLogTable({ searchTerm = "", statusFilter = "", onUp
           </Table>
         </TableContainer>
       ) : (
-        <Typography align="center" sx={{ mt: 3 }}>No leads found.</Typography>
+        <Typography align="center" sx={{ mt: 3 }}>Loading....</Typography>
       )}
 
       {/* Pagination */}
       {totalPages > 1 && (
         <Box display="flex" justifyContent="center" alignItems="center" flexWrap="wrap" gap={1} mt={3}>
-          <Button onClick={goToPreviousPage} disabled={currentPage === 1} variant="outlined">Previous</Button>
+          <Button onClick={goToPreviousPage} disabled={currentPage === 1} variant="outlined" sx={{ fontSize: '12px' }}>Previous</Button>
           {getPageNumbers().map((page, index) => (
             <Box key={index}>
               {page === '...' ? (
-                <Typography sx={{ px: 1 }}>...</Typography>
+                <Typography sx={{ px: 1, fontSize: '12px' }}>...</Typography>
               ) : (
                 <Button
                   variant={currentPage === page ? 'contained' : 'outlined'}
                   onClick={() => goToPage(page)}
-                  sx={{ fontWeight: currentPage === page ? 'bold' : 'normal' }}
+                  sx={{ fontSize: '12px',fontWeight: currentPage === page ? 'bold' : 'normal' }}
                 >
                   {page}
                 </Button>
               )}
             </Box>
           ))}
-          <Button onClick={goToNextPage} disabled={currentPage === totalPages} variant="outlined">Next</Button>
-          <Typography sx={{ ml: 2, fontSize: 14, color: 'text.secondary' }}>
+          <Button onClick={goToNextPage} disabled={currentPage === totalPages} variant="outlined" sx={{ fontSize: '12px' }}>Next</Button>
+          <Typography sx={{ ml: 2, fontSize: 12, color: 'text.secondary' }}>
             Page {currentPage} of {totalPages} ({leads.length} total leads)
           </Typography>
         </Box>

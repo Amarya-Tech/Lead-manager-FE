@@ -17,11 +17,12 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import { useState, useEffect  } from 'react';
 import apiClient from '../apicaller/APIClient';
+import { useAuthStore } from '../apicaller/AuthStore';
 
 export default function Sidebar() {
   
-  const userId = Cookies.get('user_id');
-  const userRole = Cookies.get('role');
+  const { userId, role} = useAuthStore();
+  const userRole = role;
   const isAdmin = userRole === 'admin';
   const isSuperAdmin = userRole === 'super_admin';
   const isMobile = useMediaQuery('(max-width:900px)');
@@ -82,8 +83,8 @@ export default function Sidebar() {
       <Typography
         variant="h6"
         sx={{
-          fontSize: '2rem',
-          mb: 4,
+          fontSize: '24px',
+          mb: 2,
           fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif`,
           color: '#1a202c',
         }}
@@ -91,7 +92,7 @@ export default function Sidebar() {
         Lead Manager
       </Typography>
 
-      <List sx={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <List sx={{ display: 'flex', flexDirection: 'column', gap: '12px'}}>
        {menuItems.map((item) => (
           <Box key={item.text}>
             <ListItem disablePadding>
@@ -102,26 +103,26 @@ export default function Sidebar() {
                 sx={{
                   textDecoration: 'none',
                   color: '#2d3748',
-                  fontSize: '15px',
+                  fontSize: '12px',
                   fontWeight: 500,
                   padding: '10px 12px',
                   borderRadius: '6px',
-                  fontFamily: `'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`,
+                  fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif`,
                   transition: 'all 0.2s ease',
                   '&:hover': {
                     backgroundColor: '#f1f5f9',
                     color: '#1e40af',
                     fontWeight: 600,
-                    paddingLeft: '16px',
+                    paddingLeft: '8px',
                   },
                 }}
               >
-                <ListItemText primary={item.text} />
+                {item.text}
               </ListItemButton>
             </ListItem>
 
           {item.subItems && (
-                <List sx={{ pl: 3, gap: '2px', mt: 1, borderLeft: '2px solid #e2e8f0' }}>
+                <List sx={{ pl: 1, gap: '2px', mt: 1, borderLeft: '2px solid #e2e8f0', width: 150 }}>
                   {item.subItems.map((sub) => (
                     <ListItem key={sub.text} disablePadding>
                       <ListItemButton
@@ -131,11 +132,12 @@ export default function Sidebar() {
                         sx={{
                           textDecoration: 'none',
                           color: '#4a5568',
-                          fontSize: '13.5px',
-                          padding: '6px 12px',
+                          fontSize: '12px',
+                          padding: '12px 24px',
                           borderRadius: '6px',
                           marginLeft: '6px',
                           fontWeight: 400,
+                          fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif`,
                           backgroundColor: '#f9fafb',
                           '&:hover': {
                             backgroundColor: '#edf2f7',
@@ -145,7 +147,7 @@ export default function Sidebar() {
                           },
                         }}
                       >
-                        <ListItemText primary={sub.text} />
+                        {sub.text}
                       </ListItemButton>
                     </ListItem>
                   ))}
@@ -165,15 +167,15 @@ export default function Sidebar() {
             flexDirection: 'column',
             alignItems: 'center',
             gap: 1.5,
-            paddingTop: 2,
+            paddingTop: 1,
           }}
         >
           <Avatar
             sx={{
-              width: 64,
-              height: 64,
+              width: 48,
+              height: 48,
               bgcolor: "#3b82f6",
-              fontSize: 24,
+              fontSize: 16,
               fontWeight: 600,
               color: "white",
             }}
@@ -186,7 +188,7 @@ export default function Sidebar() {
             sx={{
               fontWeight: 500,
               color: '#1a202c',
-              fontSize: '15px',
+              fontSize: '12px',
             }}
           >
             {userName}
@@ -201,7 +203,7 @@ export default function Sidebar() {
               color: '#fff',
               textTransform: 'none',
               fontWeight: 500,
-              fontSize: '14px',
+              fontSize: '12px',
               borderRadius: '8px',
               '&:hover': {
                 backgroundColor: '#A2120B',
@@ -233,15 +235,15 @@ export default function Sidebar() {
         open={isMobile ? mobileOpen : true}
         onClose={toggleDrawer}
         sx={{
-          width: 240,
+          width: 180,
           flexShrink: 0,
           '& .MuiDrawer-paper': {
-            width: 240,
+            width: 180,
             height: '100vh',
             backgroundColor: '#ffffff',
             borderRight: '1px solid #e0e0e0',
             boxShadow: '2px 0 8px rgba(0, 0, 0, 0.03)',
-            padding: '24px 20px',
+            padding: '24px 12px',
           },
         }}
       >

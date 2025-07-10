@@ -1,7 +1,6 @@
 import React, { useRef, useState } from 'react';
 import apiClient from "../apicaller/APIClient.js";
 import { toast } from 'react-toastify';
-import Cookies from 'js-cookie';
 import {
   Box,
   Typography,
@@ -18,9 +17,10 @@ import {
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AdminSidebar from './AdminSideBar';
+import { useAuthStore } from '../apicaller/AuthStore.js';
 
 const CsvUploadPage = () => {
-  const userId = Cookies.get("user_id");
+  const { userId } = useAuthStore();
   const fileInputRef = useRef();
   const [file, setFile] = useState(null);
   const [errorData, setErrorData] = useState([]);
@@ -101,7 +101,7 @@ const CsvUploadPage = () => {
           flexGrow: 1,
           py: 6,
           px: 4,
-          minHeight: '100vh',
+          minHeight: '90vh',
           backgroundColor: '#f8f9fa',
         }}
       >
@@ -110,7 +110,7 @@ const CsvUploadPage = () => {
           sx={{
             p: 4,
             width: '100%',
-            maxWidth: 900,
+            maxWidth: 700,
             mx: 'auto',
             borderRadius: '16px',
             backgroundColor: '#ffffff',
@@ -135,17 +135,17 @@ const CsvUploadPage = () => {
               '&:hover': { backgroundColor: '#f1f5f9' },
             }}
           >
-            <Typography variant="subtitle1" fontWeight={600} mb={1}>
+            <Typography variant="subtitle1" fontWeight={600} mb={1} fontSize={14}>
               Drag and drop an Excel/CSV file here
             </Typography>
-            <Typography variant="body2" color="text.secondary" mb={2}>
+            <Typography variant="body2" color="text.secondary" mb={2} fontSize={14}>
               Or, click to select a file from your computer
             </Typography>
 
             <Button
               variant="outlined"
               component="label"
-              sx={{ textTransform: 'none', borderRadius: '8px', fontWeight: 500 }}
+              sx={{ textTransform: 'none', borderRadius: '8px', fontWeight: 400, fontSize: 12 }}
             >
               Select File
               <Input
@@ -158,14 +158,14 @@ const CsvUploadPage = () => {
             </Button>
 
             {file && (
-              <Typography variant="body2" mt={2} fontWeight={500}>
+              <Typography variant="body2" mt={2} fontWeight={500} fontSize={12}>
                 Selected: {file.name}
               </Typography>
             )}
           </Box>
 
           {file && (
-            <Box mt={4} textAlign="center">
+            <Box mt={3} textAlign="center">
               <Button
                 variant="contained"
                 color="primary"
@@ -178,10 +178,11 @@ const CsvUploadPage = () => {
           )}
            {/* Step Switch Buttons */}
 
-          <Box mt={4} display="flex" justifyContent="center" gap={2}>
+          <Box mt={4} display="flex" justifyContent="center" gap={2} >
             <Button
               variant={step === 1 ? "contained" : "outlined"}
               onClick={() => setStep(1)}
+              sx={{fontSize:'12px'}}
             >
               Step 1: Upload Company Details
             </Button>
@@ -189,6 +190,7 @@ const CsvUploadPage = () => {
             <Button
               variant={step === 2 ? "contained" : "outlined"}
               onClick={() => setStep(2)}
+              sx={{fontSize:'12px'}}
             >
               Step 2: Upload Company Comments
             </Button>

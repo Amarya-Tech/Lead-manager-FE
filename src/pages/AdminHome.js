@@ -19,16 +19,15 @@ export default function HomePage() {
       <AdminSidebar />
       <Box
         component="main"
-        sx={{
+        sx={{ 
               flexGrow: 1,
               p: 3,
-              ml: '24px',  
-              width: 'calc(100% - 240px)',      
+              width: 'calc(100% - 240px)',
             }}
       >
         <Box display="flex" justifyContent="space-between" alignItems="center" sx={{mb:'20px', mt:'10px'}}>
           <Typography variant="h5" sx={{
-              fontSize: '28px',
+              fontSize: '22px',
               fontWeight: 'bold',
               color: '#000000',
               fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif`
@@ -40,6 +39,7 @@ export default function HomePage() {
             color="primary"
             className="primary-button"
             onClick={handleToggleImport}
+            sx={{fontSize:'12px'}}
           >
             {showImport ? 'Hide Import' : 'Import Excel'}
           </Button>

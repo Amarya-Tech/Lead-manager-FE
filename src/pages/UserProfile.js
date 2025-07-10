@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from "../apicaller/APIClient.js";
 import Sidebar from "../components/SideBar.js";
-import { useNavigate } from 'react-router-dom';
-import Cookies from 'js-cookie';
 import './css/UserProfile.css';
 import {
   Avatar,
@@ -10,12 +8,13 @@ import {
   Button,
   Container,
   Divider,
-  Grid,
   TextField,
   Typography,
   Chip,
   Paper,
+  CircularProgress,
 } from "@mui/material";
+import { useAuthStore } from '../apicaller/AuthStore.js';
 
 const UserProfilePage = () => {
     const [userProfile, setUserProfile] = useState(null);
@@ -29,8 +28,7 @@ const UserProfilePage = () => {
         password: ''
     });
 
-    const userId = Cookies.get("user_id");
-    const navigate = useNavigate();
+    const { userId } = useAuthStore();
 
     useEffect(() => {
         fetchUserProfile();
@@ -96,9 +94,6 @@ const UserProfilePage = () => {
         }
     };
 
-    if (loading) return <div className="loading-spinner">Loading...</div>;
-    if (!userProfile) return <div>Unable to load profile</div>;
-
     return (
       <Box display="flex" sx={{
         fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif`
@@ -113,7 +108,7 @@ const UserProfilePage = () => {
           <Box
            display="flex" justifyContent="space-between" alignItems="center" sx={{mb:'20px', mt:'10px'}}>
             <Typography variant="h5" sx={{
-              fontSize: '28px',
+              fontSize: '22px',
               fontWeight: 'bold',
               color: '#000000',
               fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif`
@@ -122,7 +117,8 @@ const UserProfilePage = () => {
             </Typography>
           </Box>
 
-          <Container maxWidth="md">
+           {loading ? <CircularProgress /> : (
+            <Container maxWidth="md">
             <Paper elevation={1} sx={{ borderRadius: 2, overflow: "hidden" }}>
               <Box
                 sx={{
@@ -148,7 +144,7 @@ const UserProfilePage = () => {
                   {userProfile.last_name?.[0]}
                 </Avatar>
                 <Box sx={{ flex: 1 }}>
-                  <Typography variant="h5" fontWeight={600}>
+                  <Typography variant="h5" fontWeight={500}>
                     {userProfile.first_name} {userProfile.last_name}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -175,7 +171,7 @@ const UserProfilePage = () => {
                     px: 4,
                     pt: 3,
                     pb: 1,
-                    fontWeight: 600,
+                    fontWeight: 500,
                     bgcolor: "#fafbfc",
                     borderBottom: "1px solid #f1f5f9",
                   }}
@@ -199,7 +195,7 @@ const UserProfilePage = () => {
                       }}
                     >
                       <Typography
-                        sx={{ fontWeight: 500, color: "#64748b", fontSize: 14, mb: 0.5 }}
+                        sx={{ fontWeight: 500, color: "#64748b", fontSize: 12, mb: 0.5 }}
                       >
                         {label}
                       </Typography>
@@ -214,7 +210,7 @@ const UserProfilePage = () => {
                           size="small"
                         />
                       ) : (
-                        <Typography sx={{ fontWeight: 500, fontSize: 14 }}>
+                        <Typography sx={{ fontWeight: 500, fontSize: 12 }}>
                           {key === "password"
                             ? "******"
                             : userProfile[key] || "Not provided"}
@@ -223,7 +219,7 @@ const UserProfilePage = () => {
                     </Box>
                 ))}
                 <Box sx={{ mb: 2 }}>
-                    <Typography sx={{ fontWeight: 500, color: "#64748b", fontSize: 14, mb: 0.5 }}>
+                    <Typography sx={{ fontWeight: 500, color: "#64748b", fontSize: 12, mb: 0.5 }}>
                       Status
                     </Typography>
                     <Chip
@@ -239,18 +235,18 @@ const UserProfilePage = () => {
                     />
                   </Box>
                   <Box sx={{ mb: 2 }}>
-                    <Typography sx={{ fontWeight: 500, color: "#64748b", fontSize: 14, mb: 0.5 }}>
+                    <Typography sx={{ fontWeight: 500, color: "#64748b", fontSize: 12, mb: 0.5 }}>
                       User ID
                     </Typography>
-                    <Typography sx={{ fontWeight: 500, fontSize: 14 }}>
+                    <Typography sx={{ fontWeight: 500, fontSize: 12 }}>
                       {userProfile.id}
                     </Typography>
                   </Box>
                   <Box sx={{ mb: 2 }}>
-                    <Typography sx={{ fontWeight: 500, color: "#64748b", fontSize: 14, mb: 0.5 }}>
+                    <Typography sx={{ fontWeight: 500, color: "#64748b", fontSize: 12, mb: 0.5 }}>
                       Member Since
                     </Typography>
-                    <Typography sx={{ fontWeight: 500, fontSize: 14 }}>
+                    <Typography sx={{ fontWeight: 500, fontSize: 12 }}>
                       {new Date(userProfile.created_at).toLocaleDateString()}
                     </Typography>
                   </Box>
@@ -298,6 +294,7 @@ const UserProfilePage = () => {
               </Box>
             </Paper>
           </Container>
+           )}
         </Box>
       </Box>
   );
