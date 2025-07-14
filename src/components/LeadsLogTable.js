@@ -18,7 +18,7 @@ export default function LeadsLogTable({ searchTerm = "", statusFilter = "", onUp
   const { userId, role} = useAuthStore();
   const [leads, setLeads] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const leadsPerPage = 18;
+  const leadsPerPage = 10;
 
   useEffect(() => {
     const fetchLeads = async () => {
@@ -146,7 +146,7 @@ export default function LeadsLogTable({ searchTerm = "", statusFilter = "", onUp
                   },
                 }}>
                   <TableCell sx={{ fontSize:'12px'}}>{highlightSearchTerm(lead.company_name, searchTerm)}</TableCell>
-                  <TableCell sx={{ fontSize:'12px'}}>{lead.product}</TableCell>
+                  <TableCell sx={{ fontSize:'12px'}}>{highlightSearchTerm(lead.product, searchTerm)}</TableCell>
                   <TableCell sx={{ fontSize:'12px'}}>{highlightSearchTerm(lead.industry_type, searchTerm)}</TableCell>
                   <TableCell sx={{ fontSize:'12px'}}>
                     <Box component="span" sx={getStatusStyle(lead.status)}>{lead.status}</Box>
@@ -167,7 +167,7 @@ export default function LeadsLogTable({ searchTerm = "", statusFilter = "", onUp
           </Table>
         </TableContainer>
       ) : (
-        <Typography align="center" sx={{ mt: 3 }}>Loading....</Typography>
+        <Typography align="center" sx={{ mt: 3 }}>No leads Found</Typography>
       )}
 
       {/* Pagination */}

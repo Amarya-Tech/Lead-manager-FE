@@ -105,14 +105,6 @@ export default function LeadsTable({ searchTerm = "" }) {
         </Box>
       )}
 
-      {searchTerm && leads.length > 0 && (
-        <Box textAlign="center" mb={1}>
-          <Typography variant="subtitle1" sx={{ fontSize:'12px'}}>
-            Found {leads.length} lead{leads.length !== 1 ? "s" : ""} matching "{searchTerm}"
-          </Typography>
-        </Box>
-      )}
-
       {currentLeads.length > 0 && (
         <TableContainer component={Paper} sx={{ mb: 2, border: '1px solid #ddd' }}>
           <Table sx={{ minWidth: 650, borderCollapse: 'collapse' }} aria-label="leads table">
@@ -122,6 +114,7 @@ export default function LeadsTable({ searchTerm = "" }) {
                 <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}><strong>Product</strong></TableCell>
                 <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}><strong>Industry Type</strong></TableCell>
                 <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}><strong>Status</strong></TableCell>
+                <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}><strong>Assignee</strong></TableCell>
                 <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}><strong>Created Date</strong></TableCell>
                 <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}><strong>Action</strong></TableCell>
               </TableRow>
@@ -135,7 +128,7 @@ export default function LeadsTable({ searchTerm = "" }) {
                       },
                     }}>
                   <TableCell sx={{ fontSize:'12px'}}>{highlightSearchTerm(lead.company_name, searchTerm)}</TableCell>
-                  <TableCell sx={{ fontSize:'12px'}}>{lead.product}</TableCell>
+                  <TableCell sx={{ fontSize:'12px'}}>{highlightSearchTerm(lead.product, searchTerm)}</TableCell>
                   <TableCell sx={{ fontSize:'12px'}}>{highlightSearchTerm(lead.industry_type, searchTerm)}</TableCell>
                   <TableCell><Box
                     component="span"
@@ -151,6 +144,7 @@ export default function LeadsTable({ searchTerm = "" }) {
                   >
                     {lead.status}
                   </Box></TableCell>
+                  <TableCell sx={{ fontSize:'12px'}}>{lead.assigned_person}</TableCell>
                   <TableCell sx={{ fontSize:'12px'}}>{lead.created_date}</TableCell>
                   <TableCell>
                     <Button onClick={() => handleViewDetails(lead.id)} variant="contained" sx={{ fontSize: '10px', backgroundColor: '#007BFF', '&:hover': { backgroundColor: '#0056b3' }, textTransform: 'none'  }}>View Details</Button>
