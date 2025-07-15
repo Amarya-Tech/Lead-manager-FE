@@ -343,6 +343,47 @@ const LeadsNewPage = () => {
     if (skipped) return { text: 'Skipped', icon: <WarningIcon />, color: 'warning' };
     return { text: 'Pending', icon: <PendingIcon />, color: 'default' };
   };
+  
+    useEffect(() => {
+      if (
+        userRole === 'user' &&
+        companySaved &&
+        !assigneeSaved &&
+        !assigneeSkipped &&
+        !selectedAssignee
+      ) {
+        setSelectedAssignee(userId);
+        setDescription("Auto-assigned to self");
+      }
+    }, [
+      userRole,
+      companySaved,
+      assigneeSaved,
+      assigneeSkipped,
+      selectedAssignee,
+      userId,
+      setSelectedAssignee,
+      setDescription
+    ]);
+
+    useEffect(() => {
+      if (
+        userRole === 'user' &&
+        companySaved &&
+        !assigneeSaved &&
+        !assigneeSkipped &&
+        selectedAssignee === userId
+      ) {
+        assignSalesRep();
+      }
+    }, [
+      selectedAssignee,
+      userRole,
+      companySaved,
+      assigneeSaved,
+      assigneeSkipped,
+      userId
+    ]);
 
   return (
       <Box display="flex" sx={{
