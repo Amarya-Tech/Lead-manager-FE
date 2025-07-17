@@ -64,7 +64,8 @@ const CsvUploadPage = () => {
         }
       } catch (error) {
         console.error('Failed to upload file:', error);
-        toast.error('Something went wrong.');
+        const backendMessage = error.response?.data?.errors[0].msg || 'Something went wrong.';
+        toast.error(backendMessage);
       }
 
   };

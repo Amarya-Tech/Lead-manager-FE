@@ -155,10 +155,10 @@ export default function LeadsLogTable({ searchTerm = "", statusFilter = "", onUp
                   <TableCell sx={{ fontSize:'12px'}}>{lead.latest_comment_date}</TableCell>
                   <TableCell sx={{ display: 'flex', justifyContent: 'flex-start', fontSize:'12px'}}>
                     <Button variant="contained" color="success" sx={{ mr: 1 , fontSize:'10px'}} onClick={(e) => handleUpdateLead(lead.id, e)}>
-                      Update Lead
+                      Lead Details
                     </Button>
                     <Button variant="outlined" color="info" sx={{ fontSize:'10px'}} onClick={() => handleViewLogs(lead.id)}>
-                      View Logs
+                      Comments
                     </Button>
                   </TableCell>
                 </TableRow>

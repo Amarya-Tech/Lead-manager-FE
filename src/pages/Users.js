@@ -77,7 +77,8 @@ const UserPage = () => {
             toast.success(response.data.message || 'User added successfully');
             handleCloseModal(); fetchUserList();
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Unexpected error');
+            const backendMessage = error.response?.data?.errors[0].msg || 'Something went wrong.';
+            toast.error(backendMessage);
         } finally {
             setIsSubmitting(false);
         }
@@ -110,7 +111,8 @@ const UserPage = () => {
                 fetchUserList(); handleCloseUpdateModal();
             } else toast.error('Failed to update user');
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Error updating user');
+            const backendMessage = error.response?.data?.errors[0].msg || 'Error updating user';
+            toast.error(backendMessage);
         } finally {
             setIsSubmitting(false);
         }

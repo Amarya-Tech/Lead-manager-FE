@@ -40,6 +40,7 @@ const LeadsNewPage = () => {
   const [industryTypes, setIndustryTypes] = useState([]);
   const [selectedAssignee, setSelectedAssignee] = useState('');
   const [description, setDescription] = useState('');
+  const [matchingCompanies, setMatchingCompanies] = useState([])
 
   // Section completion states
   const [companySaved, setCompanySaved] = useState(false);
@@ -131,6 +132,25 @@ const LeadsNewPage = () => {
     }
   };
 
+    const fetchMatchingCompanies = async (searchTerm) => {
+    try {
+      let response;
+    
+        response = await apiClient.get(`/lead/matching-company-records`,  {
+            params: { company: searchTerm.trim() }
+          });
+      if (response.data && response.data.success && response.data.data) {
+        setMatchingCompanies(response.data.data);
+      } else {
+        setMatchingCompanies([])
+        console.error('Failed to fetch matching companies:', response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching matching companies:', error);
+      toast.error('Failed to matching companies list');
+    }
+  };
+
   const saveCompanyInfo = async () => {
     setShowCompanyErrors(true);
 
@@ -160,7 +180,7 @@ const LeadsNewPage = () => {
       toast.success('Company information saved successfully');
     } catch (error) {
       console.error('Failed to create lead:', error);
-      const backendMessage = error.response?.data?.message || 'Failed to create lead';
+      const backendMessage = error.response?.data?.errors[0].msg || 'Failed to create lead';
       toast.error(backendMessage);
     }
   };
@@ -197,7 +217,7 @@ const LeadsNewPage = () => {
         console.error('Invalid save office response:', response.data);
       }
     } catch (error) {
-      const backendMessage = error.response?.data?.message || 'Failed to save office';
+      const backendMessage = error.response?.data?.errors[0].msg || 'Failed to save office';
       toast.error(backendMessage);
       console.error('Failed to save office:', error);
     }
@@ -256,7 +276,7 @@ const LeadsNewPage = () => {
         console.error('Invalid save contact response:', response.data);
       }
     } catch (error) {
-      const backendMessage = error.response?.data?.message || 'Failed to save contact';
+      const backendMessage = error.response?.data?.errors[0].msg || 'Failed to save contact';
       toast.error(backendMessage);
       console.error('Failed to save contact:', error);
     }
@@ -310,7 +330,7 @@ const LeadsNewPage = () => {
         toast.error('Failed to assign sales representative');
       }
     } catch (error) {
-      const backendMessage = error.response?.data?.message || 'Failed to assign sales representative';
+      const backendMessage = error.response?.data?.errors[0].msg || 'Failed to assign sales representative';
       toast.error(backendMessage);
       console.error('Failed to assign sales rep:', error);
     }
@@ -474,14 +494,26 @@ const LeadsNewPage = () => {
                       label="Company Name"
                       placeholder="Enter company name"
                       value={companyForm.company_name}
-                      onChange={(e) =>
-                        setCompanyForm({ ...companyForm, company_name: e.target.value })
-                      }
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setCompanyForm({ ...companyForm, company_name: value });
+                        if (value.trim().length >= 3) {
+                          fetchMatchingCompanies(value);
+                        } else {
+                          setMatchingCompanies([]);
+                        }
+                      }}
                       error={showCompanyErrors && !companyForm.company_name}
                       disabled={companySaved}
                       required
                     />
-                  </Grid>
+                    {matchingCompanies?.company_names?.length > 0 && (
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1, ml: 1 }}>
+                        {`${matchingCompanies.companies_matched_count} matching record(s) found: `}
+                        {matchingCompanies.company_names.join(', ')}
+                      </Typography>
+                    )}
+                </Grid>
 
                   <Grid item xs={12} sm={6} md={2.4}>
                     <FormControl fullWidth required error={showCompanyErrors && !companyForm.industry_type} sx={{ minWidth: 220 }}>
@@ -606,13 +638,13 @@ const LeadsNewPage = () => {
                   <Grid item xs={12} sm={6} md={2.4}>
                     <TextField
                       fullWidth
-                      label="City"
-                      placeholder="Enter city"
-                      value={officeForm.city}
+                      label="Country"
+                      placeholder="Enter country"
+                      value={officeForm.country}
                       onChange={(e) =>
-                        setOfficeForm({ ...officeForm, city: e.target.value })
+                        setOfficeForm({ ...officeForm, country: e.target.value })
                       }
-                      error={showOfficeErrors && !officeForm.city}
+                      error={showOfficeErrors && !officeForm.country}
                       disabled={officeSaved || officeSkipped}
                       required
                     />
@@ -633,16 +665,16 @@ const LeadsNewPage = () => {
                     />
                   </Grid>
 
-                  <Grid item xs={12} sm={6} md={2.4}>
+                   <Grid item xs={12} sm={6} md={2.4}>
                     <TextField
                       fullWidth
-                      label="Country"
-                      placeholder="Enter country"
-                      value={officeForm.country}
+                      label="City"
+                      placeholder="Enter city"
+                      value={officeForm.city}
                       onChange={(e) =>
-                        setOfficeForm({ ...officeForm, country: e.target.value })
+                        setOfficeForm({ ...officeForm, city: e.target.value })
                       }
-                      error={showOfficeErrors && !officeForm.country}
+                      error={showOfficeErrors && !officeForm.city}
                       disabled={officeSaved || officeSkipped}
                       required
                     />
@@ -809,91 +841,99 @@ const LeadsNewPage = () => {
             </Card>
 
             {/* SALES ASSIGNMENT SECTION */}
-            {userRole === 'admin' && (
-              <Card sx={{ mb: 2 }}>
-                <CardHeader
-                  title="Sales Representative Assignment"
-                  titleTypographyProps={{variant:'h6', fontWeight: 'bold'}}
-                  sx={{mb:-2}}
-                  action={
-                    <>
-                      {assigneeSaved && (
-                        <Chip
-                          icon={<CheckCircleIcon />}
-                          label="Saved"
-                          color="success"
-                          size="small"
-                        />
-                      )}
-                      {assigneeSkipped && (
-                        <Chip
-                          icon={<WarningIcon />}
-                          label="Skipped"
-                          color="warning"
-                          size="small"
-                        />
-                      )}
-                    </>
-                  }
-                />
-                <CardContent>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                    You can assign a sales representative now or skip this step and assign later.
-                  </Typography>
-
-                  <Grid container spacing={3}>
-                    <Grid item xs={12} sm={6} md={2.4}>
-                      <FormControl fullWidth sx={{ minWidth: 300 }}>
-                        <InputLabel>Select Sales Representative</InputLabel>
-                        <Select
-                          value={selectedAssignee}
-                          label="Select Sales Representative"
-                          onChange={(e) => setSelectedAssignee(e.target.value)}
-                          disabled={assigneeSaved || assigneeSkipped}
-                        >
-                          <MenuItem value="">Choose a sales representative...</MenuItem>
-                          {users.map(user => (
-                            <MenuItem key={user.id} value={user.id}>
-                              {user.first_name} {user.last_name} - {user.role}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    </Grid>
-
-                    <Grid item xs={12} sm={6} md={2.4}>
-                      <TextField
-                        fullWidth
-                        label="Description"
-                        placeholder="Enter assignment description or notes..."
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        disabled={assigneeSaved || assigneeSkipped}
+            <Card sx={{ mb: 2 }}>
+              <CardHeader
+                title="Sales Representative Assignment"
+                titleTypographyProps={{variant:'h6', fontWeight: 'bold'}}
+                sx={{mb:-2}}
+                action={
+                  <>
+                    {assigneeSaved && (
+                      <Chip
+                        icon={<CheckCircleIcon />}
+                        label="Saved"
+                        color="success"
+                        size="small"
                       />
-                    </Grid>
+                    )}
+                    {assigneeSkipped && (
+                      <Chip
+                        icon={<WarningIcon />}
+                        label="Skipped"
+                        color="warning"
+                        size="small"
+                      />
+                    )}
+                  </>
+                }
+              />
+              <CardContent>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                  You can assign a sales representative now or skip this step and assign later.
+                </Typography>
+
+                <Grid container spacing={3}>
+                  <Grid item xs={12} sm={6} md={2.4}>
+                    <FormControl fullWidth sx={{ minWidth: 300 }}>
+                      <InputLabel>Select Sales Representative</InputLabel>
+                      <Select
+                        value={selectedAssignee}
+                        label="Select Sales Representative"
+                        onChange={(e) => setSelectedAssignee(e.target.value)}
+                        disabled={assigneeSaved || assigneeSkipped}
+                      >
+                        <MenuItem value="">Choose a sales representative...</MenuItem>
+                        {userRole === 'user' ? (
+                          users.filter((u) => u.id === userId)
+                            .map((u) => (
+                              <MenuItem key={u.id} value={u.id}>
+                                {u.first_name} {u.last_name} - {u.role}
+                              </MenuItem>
+                            ))
+                        ) : (
+                          users.map((u) => (
+                            <MenuItem key={u.id} value={u.id}>
+                              {u.first_name} {u.last_name} - {u.role}
+                            </MenuItem>
+                          ))
+                        )}
+
+                      </Select>
+                    </FormControl>
                   </Grid>
 
-                  <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
-                    <Button
-                      variant="contained"
-                      onClick={assignSalesRep}
+                  <Grid item xs={12} sm={6} md={2.4}>
+                    <TextField
+                      fullWidth
+                      label="Description"
+                      placeholder="Enter assignment description or notes..."
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
                       disabled={assigneeSaved || assigneeSkipped}
-                      size="small"
-                    >
-                      Assign Sales Rep
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      onClick={skipAssignee}
-                      disabled={assigneeSaved || assigneeSkipped}
-                      size="small"
-                    >
-                      Skip for Now
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Card>
-            )}
+                    />
+                  </Grid>
+                </Grid>
+
+                <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
+                  <Button
+                    variant="contained"
+                    onClick={assignSalesRep}
+                    disabled={assigneeSaved || assigneeSkipped}
+                    size="small"
+                  >
+                    Assign Sales Rep
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    onClick={skipAssignee}
+                    disabled={assigneeSaved || assigneeSkipped}
+                    size="small"
+                  >
+                    Skip for Now
+                  </Button>
+                </Box>
+              </CardContent>
+            </Card>
 
             {/* COMPLETION SECTION */}
             {isFormComplete() && (

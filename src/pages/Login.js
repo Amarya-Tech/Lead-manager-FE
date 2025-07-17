@@ -65,7 +65,7 @@ export default function Login({setIsAuthenticated}) {
       }
 
     } catch (error) {
-      const backendMessage = error?.response?.data?.message || 'An unexpected error occurred';
+      const backendMessage = error?.response?.data?.errors[0].msg || 'An unexpected error occurred';
       toast.error(backendMessage);
     }
   };

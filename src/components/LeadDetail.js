@@ -89,7 +89,8 @@ export default function LeadDetailsPage() {
       }
     } catch (error) {
       console.error('Failed to fetch users:', error);
-      toast.error('Failed to load sales representatives');
+      const backendMessage = error.response?.data?.errors[0].msg || 'Failed to lead sales representative';
+      toast.error(backendMessage);
     } finally {
       setLoadingUsers(false);
     }
@@ -123,7 +124,7 @@ export default function LeadDetailsPage() {
         toast.error('Failed to assign sales representative');
       }
     } catch (error) {
-      const backendMessage = error.response?.data?.message || 'Failed to assign sales representative';
+      const backendMessage = error.response?.data?.errors[0].msg|| 'Failed to assign sales representative';
       toast.error(backendMessage);
       console.error('Failed to assign sales rep:', error);
     }
@@ -359,7 +360,7 @@ export default function LeadDetailsPage() {
 
       <div className="lead-details-container">
          <Button variant="contained" color="primary" size="small" onClick={() => handleViewLogs(leadId)} sx ={{alignItems: "right", ml: "auto" }}>
-          View Logs
+          Comments
         </Button>
         <CompanySection 
           leadDetails={leadDetails}
@@ -458,7 +459,8 @@ function CompanySection({ leadDetails, isEditing, onEdit, onCancel, onSave, savi
       }
     } catch (error) {
       console.error('Error fetching industry types:', error);
-      toast.error('Failed to fetch industry types');
+      const backendMessage = error.response?.data?.errors[0].msg || 'Failed to fetch industry types';
+      toast.error(backendMessage);
     } finally {
       setLoadingIndustryTypes(false);
     }
@@ -922,9 +924,9 @@ function OfficeSection({ leadDetails, leadId, isEditing, onEdit, onCancel, onSav
                   fullWidth
                 />
                 <TextField
-                  label="City"
-                  value={office.city || ''}
-                  onChange={(e) => handleOfficeChange(index, 'city', e.target.value)}
+                  label="Country"
+                  value={office.country || ''}
+                  onChange={(e) => handleOfficeChange(index, 'country', e.target.value)}
                   fullWidth
                 />
                 <TextField
@@ -934,9 +936,9 @@ function OfficeSection({ leadDetails, leadId, isEditing, onEdit, onCancel, onSav
                   fullWidth
                 />
                 <TextField
-                  label="Country"
-                  value={office.country || ''}
-                  onChange={(e) => handleOfficeChange(index, 'country', e.target.value)}
+                  label="City"
+                  value={office.city || ''}
+                  onChange={(e) => handleOfficeChange(index, 'city', e.target.value)}
                   fullWidth
                 />
                 <TextField

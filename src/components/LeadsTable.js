@@ -31,7 +31,7 @@ export default function LeadsTable({ searchTerm = "" }) {
         let response;
 
         if (searchTerm.trim()) {
-          response = await apiClient.get(`/lead/search`, {
+          response = await apiClient.get(`/lead/search/${userId}`, {
             params: { term: searchTerm.trim() }
           });
         } else {
@@ -144,7 +144,7 @@ export default function LeadsTable({ searchTerm = "" }) {
                   >
                     {lead.status}
                   </Box></TableCell>
-                  <TableCell sx={{ fontSize:'12px'}}>{lead.assigned_person}</TableCell>
+                  <TableCell sx={{ fontSize:'12px'}}>{highlightSearchTerm(lead.assigned_person, searchTerm)}</TableCell>
                   <TableCell sx={{ fontSize:'12px'}}>{lead.created_date}</TableCell>
                   <TableCell>
                     <Button onClick={() => handleViewDetails(lead.id)} variant="contained" sx={{ fontSize: '10px', backgroundColor: '#007BFF', '&:hover': { backgroundColor: '#0056b3' }, textTransform: 'none'  }}>View Details</Button>
