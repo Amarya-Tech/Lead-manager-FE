@@ -1,6 +1,7 @@
 import "./css/LeadDetail.css";
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from 'react-router-dom';
+import { Country, State, City } from "country-state-city";
 import apiClient from "../apicaller/APIClient.js";
 import { toast } from 'react-toastify';
 import {
@@ -214,7 +215,8 @@ export default function LeadDetailsPage() {
 
     } catch (error) {
       console.error(`Failed to update ${section}:`, error);
-      toast.error('Failed to update');
+      const backendMessage = error.response?.data?.errors[0].msg || 'Failed to update';
+      toast.error(backendMessage);
     } finally {
       setSaving(false);
     }
@@ -805,6 +807,15 @@ function ContactSection({ leadDetails, leadId, isEditing, onEdit, onCancel, onSa
 // Office Section Component
 function OfficeSection({ leadDetails, leadId, isEditing, onEdit, onCancel, onSave, saving }) {
   const [offices, setOffices] = useState([]);
+  const [countries, setCountries] = useState([]);
+  const [statesList, setStatesList] = useState({});
+  const [citiesList, setCitiesList] = useState({});
+
+  
+  useEffect(() => {
+    const allCountries = Country.getAllCountries();
+    setCountries(allCountries);
+  }, []);
 
   useEffect(() => {
     const initialOffices = leadDetails.office_details || [];
@@ -826,18 +837,84 @@ function OfficeSection({ leadDetails, leadId, isEditing, onEdit, onCancel, onSav
         city: '',
         state: '',
         country: '',
-        postal_code: ''
+        postal_code: '',
+        countryCode: '',
+        stateCode: ''
       }]);
     } else {
-      setOffices(initialOffices);
+        const processedOffices = initialOffices.map(office => {
+        const countryObj = countries.find(c => c.name === office.country);
+        const countryCode = countryObj?.isoCode || '';
+        let stateCode = '';
+        if (countryCode && office.state) {
+          const states = State.getStatesOfCountry(countryCode);
+          const stateObj = states.find(s => s.name === office.state);
+          stateCode = stateObj?.isoCode || '';
+        }
+        return {
+          ...office,
+          countryCode,
+          stateCode
+        };
+      });
+      setOffices(processedOffices);
     }
-  }, [leadDetails.office_details, leadId]);
+  }, [leadDetails.office_details, leadId, countries]);
 
-  const handleOfficeChange = (index, field, value) => {
+  const handleCountryChange = (index, countryCode, countryName) => {
     const updatedOffices = [...offices];
-    updatedOffices[index] = { ...updatedOffices[index], [field]: value };
+    updatedOffices[index] = {
+      ...updatedOffices[index],
+      country: countryName,
+      countryCode: countryCode,
+      state: '',
+      stateCode: '',
+      city: ''
+    };
+    setOffices(updatedOffices);
+
+    const states = State.getStatesOfCountry(countryCode);
+    setStatesList(prev => ({
+      ...prev,
+      [index]: states
+    }));
+
+    setCitiesList(prev => ({
+      ...prev,
+      [index]: []
+    }));
+  };
+
+  const handleStateChange = (index, stateCode, stateName) => {
+    const updatedOffices = [...offices];
+    updatedOffices[index] = {
+      ...updatedOffices[index],
+      state: stateName,
+      stateCode: stateCode,
+      city: ''
+    };
+    setOffices(updatedOffices);
+    const cities = City.getCitiesOfState(updatedOffices[index].countryCode, stateCode);
+    setCitiesList(prev => ({
+      ...prev,
+      [index]: cities
+    }));
+  };
+
+  const handleCityChange = (index, cityName) => {
+    const updatedOffices = [...offices];
+    updatedOffices[index] = {
+      ...updatedOffices[index],
+      city: cityName
+    };
     setOffices(updatedOffices);
   };
+
+  const handleOfficeChange = (index, field, value) => {
+      const updatedOffices = [...offices];
+      updatedOffices[index] = { ...updatedOffices[index], [field]: value };
+    setOffices(updatedOffices);
+    };
 
   const addNewOffice = () => {
     setOffices([...offices, {
@@ -846,7 +923,9 @@ function OfficeSection({ leadDetails, leadId, isEditing, onEdit, onCancel, onSav
       city: '',
       state: '',
       country: '',
-      postal_code: ''
+      postal_code: '',
+      countryCode: '',
+      stateCode: ''
     }]);
   };
 
@@ -857,6 +936,17 @@ function OfficeSection({ leadDetails, leadId, isEditing, onEdit, onCancel, onSav
     }
     const updatedOffices = offices.filter((_, i) => i !== index);
     setOffices(updatedOffices);
+    setStatesList(prev => {
+      const newStates = { ...prev };
+      delete newStates[index];
+      return newStates;
+    });
+
+    setCitiesList(prev => {
+      const newCities = { ...prev };
+      delete newCities[index];
+      return newCities;
+    });
   };
 
   const validateOffices = () => {
@@ -872,8 +962,34 @@ function OfficeSection({ leadDetails, leadId, isEditing, onEdit, onCancel, onSav
 
   const handleSave = () => {
     if (!validateOffices()) return;
-    onSave({ office_details: offices });
+    const officesToSave = offices.map(office => {
+      const { countryCode, stateCode, ...officeData } = office;
+      return officeData;
+    });
+    onSave({ office_details: officesToSave });
   };
+
+  // Initialize states and cities for existing offices when editing starts
+
+  useEffect(() => {
+    if (isEditing && offices.length > 0) {
+      const newStatesList = {};
+      const newCitiesList = {};
+
+      offices.forEach((office, index) => {
+        if (office.countryCode) {
+          const states = State.getStatesOfCountry(office.countryCode);
+          newStatesList[index] = states;
+          if (office.stateCode) {
+            const cities = City.getCitiesOfState(office.countryCode, office.stateCode);
+            newCitiesList[index] = cities;
+          }
+        }
+      });
+      setStatesList(newStatesList);
+      setCitiesList(newCitiesList);
+    }
+  }, [isEditing, offices]);
 
   return (
     <Box className="details-section" mt={3}>
@@ -923,24 +1039,56 @@ function OfficeSection({ leadDetails, leadId, isEditing, onEdit, onCancel, onSav
                   minRows={3}
                   fullWidth
                 />
-                <TextField
-                  label="Country"
-                  value={office.country || ''}
-                  onChange={(e) => handleOfficeChange(index, 'country', e.target.value)}
-                  fullWidth
-                />
-                <TextField
-                  label="State"
-                  value={office.state || ''}
-                  onChange={(e) => handleOfficeChange(index, 'state', e.target.value)}
-                  fullWidth
-                />
-                <TextField
-                  label="City"
-                  value={office.city || ''}
-                  onChange={(e) => handleOfficeChange(index, 'city', e.target.value)}
-                  fullWidth
-                />
+                <FormControl fullWidth>
+                  <InputLabel>Country</InputLabel>
+                  <Select
+                    value={office.countryCode || ''}
+                    onChange={(e) => {
+                      const selectedCountry = countries.find(c => c.isoCode === e.target.value);
+                      handleCountryChange(index, e.target.value, selectedCountry?.name || '');
+                    }}
+                    label="Country"
+                  >
+                    {countries.map((country) => (
+                      <MenuItem key={country.isoCode} value={country.isoCode}>
+                        {country.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                <FormControl fullWidth disabled={!office.countryCode}>
+                  <InputLabel>State</InputLabel>
+                  <Select
+                    value={office.stateCode || ''}
+                    onChange={(e) => {
+                      const selectedState = (statesList[index] || []).find(s => s.isoCode === e.target.value);
+                      handleStateChange(index, e.target.value, selectedState?.name || '');
+                    }}
+                    label="State"
+                  >
+                    {(statesList[index] || []).map((state) => (
+                      <MenuItem key={state.isoCode} value={state.isoCode}>
+                        {state.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                <FormControl fullWidth disabled={!office.stateCode}>
+                  <InputLabel>City</InputLabel>
+                  <Select
+                    value={office.city || ''}
+                    onChange={(e) => handleCityChange(index, e.target.value)}
+                    label="City"
+                  >
+                    {(citiesList[index] || []).map((city) => (
+                      <MenuItem key={city.name} value={city.name}>
+                        {city.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
                 <TextField
                   label="Postal Code"
                   value={office.postal_code || ''}
