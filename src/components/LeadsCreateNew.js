@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
+import { Country, State, City } from "country-state-city";
 import { useNavigate } from 'react-router-dom';
 import apiClient from "../apicaller/APIClient.js";
 import Sidebar from "./SideBar.js";
@@ -56,6 +57,10 @@ const LeadsNewPage = () => {
   const [showOfficeErrors, setShowOfficeErrors] = useState(false);
   const [showContactErrors, setShowContactErrors] = useState(false);
 
+  const [countries, setCountries] = useState([]);
+  const [states, setStates] = useState([]);
+  const [cities, setCities] = useState([]);
+
   const [companyForm, setCompanyForm] = useState({
     company_name: '',
     product: '',
@@ -98,9 +103,37 @@ const LeadsNewPage = () => {
   };
 
   useEffect(() => {
+    const allCountries = Country.getAllCountries();
+    setCountries(allCountries);
+  }, []);
+
+  useEffect(() => {
     fetchUsers();
     fetchIndustryTypes();
   }, []);
+
+  const handleCountryChange = (e) => {
+    const countryCode = e.target.value;
+    const selectedCountry = countries.find((c) => c.isoCode === countryCode);
+    setOfficeForm({ ...officeForm, country: selectedCountry.name, state: '', city: '' });
+
+    const stateList = State.getStatesOfCountry(countryCode);
+    setStates(stateList);
+    setCities([]);
+  };
+
+  const handleStateChange = (e) => {
+    const stateCode = e.target.value;
+    const selectedState = states.find((s) => s.isoCode === stateCode);
+    setOfficeForm({ ...officeForm, state: selectedState.name, city: '' });
+
+    const cityList = City.getCitiesOfState(selectedState.countryCode, stateCode);
+    setCities(cityList);
+  };
+
+  const handleCityChange = (e) => {
+    setOfficeForm({ ...officeForm, city: e.target.value });
+  };
 
   const fetchUsers = async () => {
     try {
@@ -363,47 +396,6 @@ const LeadsNewPage = () => {
     if (skipped) return { text: 'Skipped', icon: <WarningIcon />, color: 'warning' };
     return { text: 'Pending', icon: <PendingIcon />, color: 'default' };
   };
-  
-    useEffect(() => {
-      if (
-        userRole === 'user' &&
-        companySaved &&
-        !assigneeSaved &&
-        !assigneeSkipped &&
-        !selectedAssignee
-      ) {
-        setSelectedAssignee(userId);
-        setDescription("Auto-assigned to self");
-      }
-    }, [
-      userRole,
-      companySaved,
-      assigneeSaved,
-      assigneeSkipped,
-      selectedAssignee,
-      userId,
-      setSelectedAssignee,
-      setDescription
-    ]);
-
-    useEffect(() => {
-      if (
-        userRole === 'user' &&
-        companySaved &&
-        !assigneeSaved &&
-        !assigneeSkipped &&
-        selectedAssignee === userId
-      ) {
-        assignSalesRep();
-      }
-    }, [
-      selectedAssignee,
-      userRole,
-      companySaved,
-      assigneeSaved,
-      assigneeSkipped,
-      userId
-    ]);
 
   return (
       <Box display="flex" sx={{
@@ -620,7 +612,7 @@ const LeadsNewPage = () => {
               />
               <CardContent>
                 <Grid container columnSpacing={3} rowSpacing={2}>
-                  <Grid item xs={12} sm={6} md={2.4}>
+                  <Grid item xs={12} sm={6} md={6}>
                     <TextField
                       fullWidth
                       label="Address"
@@ -635,52 +627,58 @@ const LeadsNewPage = () => {
                     />
                   </Grid>
 
-                  <Grid item xs={12} sm={6} md={2.4}>
-                    <TextField
-                      fullWidth
-                      label="Country"
-                      placeholder="Enter country"
-                      value={officeForm.country}
-                      onChange={(e) =>
-                        setOfficeForm({ ...officeForm, country: e.target.value })
-                      }
-                      error={showOfficeErrors && !officeForm.country}
-                      disabled={officeSaved || officeSkipped}
-                      required
-                    />
+                  <Grid item xs={12} sm={6} md={4}>
+                    <FormControl fullWidth required disabled={officeSaved || officeSkipped} sx={{ minWidth: 120 }}>
+                      <InputLabel>Country</InputLabel>
+                      <Select
+                        value={countries.find(c => c.name === officeForm.country)?.isoCode || ''}
+                        onChange={handleCountryChange}
+                        error={showOfficeErrors && !officeForm.country}
+                      >
+                        {countries.map((country) => (
+                          <MenuItem key={country.isoCode} value={country.isoCode}>
+                            {country.name}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
                   </Grid>
 
-                  <Grid item xs={12} sm={6} md={2.4}>
-                    <TextField
-                      fullWidth
-                      label="State"
-                      placeholder="Enter state"
-                      value={officeForm.state}
-                      onChange={(e) =>
-                        setOfficeForm({ ...officeForm, state: e.target.value })
-                      }
-                      error={showOfficeErrors && !officeForm.state}
-                      disabled={officeSaved || officeSkipped}
-                      required
-                    />
+                  <Grid item xs={12} sm={6} md={4}>
+                    <FormControl fullWidth required disabled={officeSaved || officeSkipped} sx={{ minWidth: 120 }}>
+                      <InputLabel>State</InputLabel>
+                      <Select
+                        value={states.find(s => s.name === officeForm.state)?.isoCode || ''}
+                        onChange={handleStateChange}
+                        error={showOfficeErrors && !officeForm.state}
+                      >
+                        {states.map((state) => (
+                          <MenuItem key={state.isoCode} value={state.isoCode}>
+                            {state.name}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
                   </Grid>
 
-                   <Grid item xs={12} sm={6} md={2.4}>
-                    <TextField
-                      fullWidth
-                      label="City"
-                      placeholder="Enter city"
-                      value={officeForm.city}
-                      onChange={(e) =>
-                        setOfficeForm({ ...officeForm, city: e.target.value })
-                      }
-                      error={showOfficeErrors && !officeForm.city}
-                      disabled={officeSaved || officeSkipped}
-                      required
-                    />
+                  <Grid item xs={12} sm={6} md={4}>
+                    <FormControl fullWidth required disabled={officeSaved || officeSkipped} sx={{ minWidth: 120 }}>
+                      <InputLabel>City</InputLabel>
+                      <Select
+                        value={officeForm.city}
+                        onChange={handleCityChange}
+                        error={showOfficeErrors && !officeForm.city}
+                      >
+                        {cities.map((city) => (
+                          <MenuItem key={city.name} value={city.name}>
+                            {city.name}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
                   </Grid>
 
-                  <Grid item xs={12} sm={6} md={2.4}>
+                  <Grid item xs={12} sm={6} md={4}>
                     <TextField
                       fullWidth
                       label="Postal Code"

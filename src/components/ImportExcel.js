@@ -16,8 +16,8 @@ import {
   TableRow,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import AdminSidebar from './AdminSideBar';
 import { useAuthStore } from '../apicaller/AuthStore.js';
+import Sidebar from './SideBar.js';
 
 const CsvUploadPage = () => {
   const { userId } = useAuthStore();
@@ -52,8 +52,6 @@ const CsvUploadPage = () => {
           headers: { 'Content-Type': 'multipart/form-data' }
         })
 
-        console.log("response from upload excel", response);
-
         if (!response.data.success && response.status === 201) {
           setErrorData(response.data.data);
         } else if (response.data.success && response.status === 200){
@@ -64,7 +62,7 @@ const CsvUploadPage = () => {
         }
       } catch (error) {
         console.error('Failed to upload file:', error);
-        const backendMessage = error.response?.data?.errors[0].msg || 'Something went wrong.';
+        const backendMessage = error.response?.data?.message || 'Something went wrong.';
         toast.error(backendMessage);
       }
 
@@ -94,14 +92,14 @@ const CsvUploadPage = () => {
   const tableHeaders = getHeaders(errorData);
 
   return (
-    <Box >
-      <AdminSidebar />
+    <Box  sx={{ display: 'flex' }}>
+      <Sidebar />
       <Box
         component="main"
         sx={{
           flexGrow: 1,
           py: 6,
-          px: 4,
+          px: 8,
           minHeight: '90vh',
           backgroundColor: '#f8f9fa',
         }}

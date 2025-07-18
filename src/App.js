@@ -11,14 +11,12 @@ import LeadsNewPage from "./components/LeadsCreateNew.js";
 import UserProfilePage from "./pages/UserProfile.js";
 import Leads from "./pages/Leads.js";
 import UserPage from "./pages/Users.js";
-import HomePage from "./pages/AdminHome.js";
 import CsvUploadPage from "./components/ImportExcel.js";
 import { useAuthStore } from "./apicaller/AuthStore.js";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const { jwt } = useAuthStore();
-  console.log("token", jwt)
   return jwt ? children : <Navigate to="/login" replace />;
 };
 
@@ -83,9 +81,9 @@ function App() {
         } />
 
          {/* Super Admin-only route */}
-        <Route path="/admin-dashboard" element={
+        <Route path="/upload-sheet" element={
           <RoleProtectedRoute allowedRoles={['super_admin']}>
-            <HomePage />
+            <CsvUploadPage />
           </RoleProtectedRoute>
         } />
 
