@@ -500,7 +500,7 @@ const LeadsNewPage = () => {
                       required
                     />
                     {matchingCompanies?.company_names?.length > 0 && (
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1, ml: 1 }}>
+                      <Typography variant="body2" sx={{ mt: 1, ml: 1, color: 'red' }}>
                         {`${matchingCompanies.companies_matched_count} matching record(s) found: `}
                         {matchingCompanies.company_names.join(', ')}
                       </Typography>
