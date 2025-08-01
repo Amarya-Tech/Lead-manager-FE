@@ -13,6 +13,10 @@ import Leads from "./pages/Leads.js";
 import UserPage from "./pages/Users.js";
 import CsvUploadPage from "./components/ImportExcel.js";
 import { useAuthStore } from "./apicaller/AuthStore.js";
+import InactiveLeadsTable from "./components/InactiveLeads.js";
+import PossibleInactiveLeadsTable from "./components/PossibleInactiveLeads.js";
+import AssignedLeads from "./components/AssignedLeads.js";
+import UnAssignedLeads from "./components/UnassignedLeads.js";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -71,13 +75,17 @@ function App() {
         <Route path="/leads/*" element={<ProtectedRoute><Leads /></ProtectedRoute>} /> 
         <Route path="/leads/status/:status" element={<ProtectedRoute><Leads /></ProtectedRoute>} />
         <Route path="/leads/new" element={<ProtectedRoute><LeadsNewPage /></ProtectedRoute>} />
+        <Route path="/leads/inactive" element={<ProtectedRoute><InactiveLeadsTable /></ProtectedRoute>} />
+        <Route path="/leads/possible-inactive" element={<ProtectedRoute><PossibleInactiveLeadsTable /></ProtectedRoute>} />
+        <Route path="/leads/assigned" element={<RoleProtectedRoute allowedRoles={['super_admin', 'admin']}><AssignedLeads /></RoleProtectedRoute>} />
+        <Route path="/leads/unassigned" element={<RoleProtectedRoute allowedRoles={['super_admin', 'admin']}><UnAssignedLeads /></RoleProtectedRoute>} />
         <Route path="/user-profile" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
 
         {/* Admin-only route */}
         <Route path="/users" element={
           <RoleProtectedRoute allowedRoles={['admin']}>
             <UserPage />
-          </RoleProtectedRoute>
+          </RoleProtectedRoute> 
         } />
 
          {/* Super Admin-only route */}

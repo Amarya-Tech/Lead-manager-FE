@@ -115,7 +115,7 @@ export default function LeadDetailsPage() {
         ...(description && { description: description }),
       };
 
-      const response = await apiClient.post('/lead-com/update-assignee', requestBody);
+      const response = await apiClient.post(`/lead-com/update-assignee/${userId}`, requestBody);
 
       if (response.data.success) {
         setAssigneeSaved(true);

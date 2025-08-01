@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Cookies from 'js-cookie';
 import { useParams, useNavigate } from 'react-router-dom';
 import apiClient from "../apicaller/APIClient.js";
+import dayjs from 'dayjs';
 import {
     Box,
     Typography,
@@ -15,10 +16,11 @@ import {
 } from '@mui/material';
 import { useAuthStore } from "../apicaller/AuthStore.js";
 
-export default function LeadLogsPage() {
+export default function LeadLogsPage() { 
+    const today = new Date().toISOString().split("T")[0];
     const { userId } = useAuthStore();
     const { leadId } = useParams();
-    const navigate = useNavigate();
+    const navigate = useNavigate(); 
     const [leadLogs, setLeadLogs] = useState([]);
     const [leadInfo, setLeadInfo] = useState(null);
     const [newComment, setNewComment] = useState("");
@@ -26,6 +28,7 @@ export default function LeadLogsPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [leadCommunicationId, setLeadCommunicationId] = useState(null);
     const [error, setError] = useState("");
+    const [followUpDate, setFollowUpDate] = useState(null);
 
     useEffect(() => {
         const fetchLeadLogs = async () => {
@@ -65,18 +68,28 @@ export default function LeadLogsPage() {
             setError("Please enter a comment before submitting.");
             return;
         }
-
+        const followUp = followUpDate ? dayjs(followUpDate).format('YYYY-MM-DD') : null;
+        let action;
         try {
             setIsSubmitting(true);
             setError("");
 
-            const response = await apiClient.post(`/lead-com/add-comments/${userId}/${leadId}`, {
+            const payload = {
                 comment: newComment.trim(),
-            });
+            };
+
+            if (followUp) {
+                action = 'FOLLOW_UP'
+                payload.action = 'FOLLOW_UP';
+                payload.action_date = followUp;
+            }
+ 
+            const response = await apiClient.post(`/lead-com/add-comments/${userId}/${leadId}`, payload);
 
             if (response.data.success) {
                 const newLog = {
                     id: Date.now(),
+                    action: action,
                     comment: newComment.trim(),
                     created_date: new Date().toISOString(),
                     created_by_name: "You"
@@ -165,26 +178,43 @@ export default function LeadLogsPage() {
                     </Button>
             </Box>
 
-            <Paper elevation={2} sx={{ p: 2, mb: 3 }}>
-                <Typography variant="h6" gutterBottom>Add Comment</Typography>
-                <TextField
-                    multiline
-                    fullWidth
-                    rows={4}
-                    placeholder="Add a comment"
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    error={!!error}
-                    helperText={error}
-                />
+           <Paper elevation={2} sx={{ p: 3, mb: 3}}>
+            <Typography variant="h6" gutterBottom> Add Comment </Typography>
+            <TextField
+                multiline
+                fullWidth
+                rows={4}
+                placeholder="Add a comment"
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                error={!!error}
+                helperText={error}
+                sx={{ mb: 3 }}
+            />
+           <label style={{ display: 'block', marginBottom: '4px', fontSize: '16px', fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif` }}>Follow-up Date</label>
+            <input
+                type="date"
+                value={followUpDate} 
+                min={today}
+                onChange={(e) => setFollowUpDate(e.target.value)}
+                style={{
+                width: "50%",
+                padding: "10px",
+                fontSize: "14px",
+                border: "1px solid #ccc",
+                borderRadius: "4px", 
+                }}
+            />
+
+            <Box textAlign="right">
                 <Button
-                    onClick={handleAddComment}
-                    variant="contained"
-                    sx={{ mt: 2 }}
-                    disabled={isSubmitting || !newComment.trim()}
+                onClick={handleAddComment}
+                variant="contained"
+                disabled={isSubmitting || !newComment.trim()}
                 >
-                    {isSubmitting ? "Adding Comment..." : "Add Comment"}
+                {isSubmitting ? "Adding Comment..." : "Add Comment"}
                 </Button>
+            </Box>
             </Paper>
 
             {leadLogs.length > 0 ? (

@@ -353,7 +353,7 @@ const LeadsNewPage = () => {
         ...(description && { description: description }),
       };
 
-      const response = await apiClient.post('/lead-com/add-assignee', requestBody);
+      const response = await apiClient.post(`/lead-com/add-assignee/${userId}`, requestBody);
 
       if (response.data.success) {
         setAssigneeSaved(true);
