@@ -223,6 +223,7 @@ export default function LeadLogsPage() {
                     <Typography variant="subtitle1" color="text.secondary" gutterBottom>{dateGroup}</Typography>
                     {logs.map((log, idx) => {
                         const isActionLog = log.action && log.action.toUpperCase() !== 'COMMENT';
+                        const isFollowupActionLog = log.action && log.action.toUpperCase() === 'FOLLOW_UP';
 
                         return (
                         <Paper
@@ -246,20 +247,34 @@ export default function LeadLogsPage() {
                                 </Typography>
                                 </Box>
 
+                                <Box display="flex" justifyContent="space-between" alignItems="center">
                                 {isActionLog && (
                                 <Typography
                                     variant="subtitle2"
                                     fontWeight="bold"
-                                    sx={{ mt: 1, color: '#0d47a1' }}
+                                    sx={{ mt: 1, color: '#9d1854ff' }}
                                 >
                                     ACTION: {log.action}
                                 </Typography>
                                 )}
 
+                                {isFollowupActionLog && (
+                                <Typography
+                                    variant="subtitle2"
+                                    fontWeight="bold"
+                                    sx={{ mt: 1, color: '#2899cdff' }}
+                                    textAlign={"right"} 
+                                >
+                                    FOLLOW UP DATE: {dayjs(log.action_date).format('DD-MM-YYYY')}
+                                </Typography>
+                                )}
+                                </Box>
+
                                 {/* Comment always displayed */}
                                 <Typography variant="body1" sx={{ mt: 0.5 }}>
                                 {log.comment}
                                 </Typography>
+                             
                             </Box>
                             </Stack>
                         </Paper>
@@ -273,4 +288,4 @@ export default function LeadLogsPage() {
 
         </Box>
     );
-}
+} 

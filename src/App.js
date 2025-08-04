@@ -17,6 +17,7 @@ import InactiveLeadsTable from "./components/InactiveLeads.js";
 import PossibleInactiveLeadsTable from "./components/PossibleInactiveLeads.js";
 import AssignedLeads from "./components/AssignedLeads.js";
 import UnAssignedLeads from "./components/UnassignedLeads.js";
+import FollowupLeads from "./components/FollowupLeads.js";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -79,6 +80,7 @@ function App() {
         <Route path="/leads/possible-inactive" element={<ProtectedRoute><PossibleInactiveLeadsTable /></ProtectedRoute>} />
         <Route path="/leads/assigned" element={<RoleProtectedRoute allowedRoles={['super_admin', 'admin']}><AssignedLeads /></RoleProtectedRoute>} />
         <Route path="/leads/unassigned" element={<RoleProtectedRoute allowedRoles={['super_admin', 'admin']}><UnAssignedLeads /></RoleProtectedRoute>} />
+        <Route path="/leads/followups" element={<RoleProtectedRoute allowedRoles={['super_admin', 'admin']}><FollowupLeads /></RoleProtectedRoute>} />
         <Route path="/user-profile" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
 
         {/* Admin-only route */}

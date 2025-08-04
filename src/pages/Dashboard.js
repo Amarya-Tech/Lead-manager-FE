@@ -132,7 +132,7 @@ export default function Dashboard() {
               </Typography>
           </Card>
 
-          {(userRole === 'admin' || userRole === 'super admin') && (
+          {(userRole === 'admin' || userRole === 'super_admin') && (
             <>
               {/* Assigned Leads */}
               <Card
@@ -173,6 +173,27 @@ export default function Dashboard() {
                   {leadCounts?.unassigned_leads ?? '...'}
                 </Typography>
                 <Typography component="span" fontSize={12} sx={{ color: '#1038afff', ml: 0.5 }}>
+                  /{leadCounts?.total_leads ?? '...'}
+                </Typography>
+              </Card>
+              {/* Todays Followups */}
+              <Card
+                onClick={() => navigate('/leads/followups')}
+                sx={{
+                  width: 180,
+                  height: 60,
+                  cursor: 'pointer',
+                  bgcolor: '#ffdbf5ff',
+                  p: 2,
+                  boxShadow: 2,
+                }}
+              >
+                <Typography fontWeight="bold" fontSize={14} sx={{ color: '#933b7aff' }}>FollowUp Leads</Typography>
+                <Typography fontSize={12} sx={{ color: '#d979beff' }}>Followups for Today</Typography>
+                <Typography component="span" fontSize={18} fontWeight="bold" sx={{ color: '#cf41a7ff' }}>
+                  {leadCounts?.today_followups ?? '...'}
+                </Typography>
+                <Typography component="span" fontSize={12} sx={{ color: '#cf41a7ff', ml: 0.5 }}>
                   /{leadCounts?.total_leads ?? '...'}
                 </Typography>
               </Card>

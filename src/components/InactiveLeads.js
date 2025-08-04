@@ -21,7 +21,7 @@ export default function InactiveLeadsTable() {
     const [leads, setLeads] = useState([]);
     const { userId } = useAuthStore();
     const [currentPage, setCurrentPage] = useState(1);
-    const leadsPerPage = 15;
+    const leadsPerPage = 10;
 
     useEffect(() => {
         const fetchLeads = async () => {

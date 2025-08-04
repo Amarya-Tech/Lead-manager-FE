@@ -17,7 +17,7 @@ import './css/LeadsTable.css'
 import { useAuthStore } from "../apicaller/AuthStore.js";
 import Sidebar from "./SideBar.js";
 
-export default function AssignedLeads() {
+export default function FollowupLeads() {
     const [leads, setLeads] = useState([]);
     const { userId } = useAuthStore();
     const [currentPage, setCurrentPage] = useState(1);
@@ -27,10 +27,7 @@ export default function AssignedLeads() {
         const fetchLeads = async () => {
             try {
                 let response;
-                const action = "";
-                response = await apiClient.post(`/lead/fetch-assigned-unassigned-leads/${userId}`, {
-                    action : 'assigned'
-                });
+                response = await apiClient.post(`/lead/fetch-todays-followup-leads/${userId}`);
 
                 if (Array.isArray(response.data.data)) {
                     setLeads(response.data.data);
@@ -81,9 +78,9 @@ export default function AssignedLeads() {
                     <Typography variant="h5" sx={{
                         fontSize: '22px',
                         fontWeight: 'bold',
-                        color: '#16b14f',
+                        color: '#933b7aff',
                         fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif`
-                    }}>Assigned Leads
+                    }}>Leads require Follow up (today)
                     </Typography>
                 </Box>
                 {currentLeads.length > 0 && (
