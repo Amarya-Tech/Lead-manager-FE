@@ -86,6 +86,11 @@ export default function UnAssignedLeads() {
                     }}>Unassigned Leads
                     </Typography>
                 </Box>
+                {currentLeads.length === 0 && (
+                    <Box textAlign="center" mt={2}>
+                    <Typography variant="h6">No leads found</Typography>
+                    </Box>
+                )}
                 {currentLeads.length > 0 && (
                     <TableContainer component={Paper} sx={{ mb: 2, border: '1px solid #ddd' }}>
                         <Table sx={{ minWidth: 650, borderCollapse: 'collapse' }} aria-label="leads table">
