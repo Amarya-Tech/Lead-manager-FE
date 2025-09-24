@@ -1175,7 +1175,7 @@ function SalesAssignmentSection({
       <Box className="section-header" display="flex" justifyContent="space-between" alignItems="center">
         <Typography variant="h6">Sales Representative Assignment</Typography>
 
-        {userRole === 'admin' && !isEditing && !hasAssignment && (
+        {userRole === 'admin' || userRole === 'super_admin' && !isEditing && !hasAssignment && (
           <Button
             variant="outlined"
             onClick={onEdit}
@@ -1184,7 +1184,7 @@ function SalesAssignmentSection({
             Assign Representative
           </Button>
         )}
-        {userRole === 'admin' && !isEditing && hasAssignment && (
+        {userRole === 'admin' || userRole === 'super_admin' && !isEditing && hasAssignment && (
           <Tooltip title="Edit Assignment">
             <IconButton onClick={onEdit}>
               <EditIcon />
@@ -1277,7 +1277,7 @@ function SalesAssignmentSection({
               <Typography variant="body2" color="text.secondary" mt={1}>
                 Sales representative assignment was skipped.
               </Typography>
-              {userRole === 'admin' && (
+              {userRole === 'admin' || userRole === 'super_admin'&& (
                 <Button
                   variant="outlined"
                   onClick={onEdit}
