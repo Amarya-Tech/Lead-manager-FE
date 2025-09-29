@@ -90,6 +90,7 @@ export default function LeadLogsPage() {
                 const newLog = {
                     id: Date.now(),
                     action: action,
+                    action_date: followUp,
                     comment: newComment.trim(),
                     created_date: new Date().toISOString(),
                     created_by_name: "You"
