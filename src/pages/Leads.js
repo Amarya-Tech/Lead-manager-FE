@@ -1,12 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom"; 
 import Sidebar from "../components/SideBar.js";
 import LeadsManager from "../components/LeadManager.js";
 import { Box, Typography, TextField, IconButton, Paper, InputAdornment } from "@mui/material";
 import ClearIcon from '@mui/icons-material/Clear';
+import apiClient from "../apicaller/APIClient.js";
 
 export default function Leads() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [userCompanies, setUserCompanies] = useState([]);
+  const [selectedCompany, setSelectedCompany] = useState("");
   const { status } = useParams();
 
   const handleSearchChange = (e) => {
@@ -16,6 +19,24 @@ export default function Leads() {
   const clearSearch = () => {
     setSearchTerm("");
   };
+
+   useEffect(() => {
+      const fetchUserCompanies = async () => {
+        try {
+          const response = await apiClient.get(`/lead/fetch-company-brands`);
+          if (response.data && response.data.success && Array.isArray(response.data.data)) {
+            setUserCompanies(response.data.data);
+          } else {
+            setUserCompanies([]);
+          }
+        } catch (error) {
+          console.error("Error fetching company brands:", error);
+          setUserCompanies([]);
+        }
+      };
+
+      fetchUserCompanies();
+    }, []);
 
   return (
       <Box display="flex">
@@ -37,7 +58,49 @@ export default function Leads() {
               Leads
             </Typography>
 
-             <Box position="relative" mb={1} mt={2}>
+               {/*Filter by Company/Brand  */}
+              <Box position="relative" mb={1} mt={3} width="250px">
+              <Typography variant="h6" sx={{
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  color: '#000000',
+                  fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif`
+                }}>Filter by Managing Brand
+                </Typography>
+      
+                <TextField
+                  select
+                  fullWidth
+                  variant="outlined"
+                  Placeholder="Filter by Managing Brand"
+                  value={selectedCompany}
+                  onChange={(e) => setSelectedCompany(e.target.value)}
+                  SelectProps={{ native: true }}
+                  sx={{
+                    '& .MuiInputBase-root': {
+                      fontSize: '12px',   // font for selected value
+                      height: '40px',
+                    },
+                    '& .MuiInputLabel-root': {
+                      fontSize: '12px',   // font for label
+                    },
+                    '& option': {
+                      fontSize: '12px',   // font for dropdown items
+                    },
+                  }}
+                >
+                
+                  <option value="">All Brands</option>
+                  {userCompanies.map((company) => (
+                    <option key={company.id} value={company.id}>
+                      {company.parent_company_name}
+                    </option>
+                  ))}
+                </TextField>
+              </Box>
+
+            {/* Search Box */}
+            <Box position="relative" mb={1} mt={2}>
             <TextField
               fullWidth
               variant="outlined"
@@ -85,7 +148,7 @@ export default function Leads() {
               </Paper>
             )}
 
-            <LeadsManager searchTerm={searchTerm} statusFilter={status}/>
+            <LeadsManager searchTerm={searchTerm} statusFilter={status} selectedCompany={selectedCompany}/>
           </Box>
         </Box>
       </Box>

@@ -3,7 +3,7 @@ import LeadsLogTable from "./LeadsLogTable.js";
 import LeadDetailsPage from "./LeadDetail.js";
 import LeadLogsPage from "./LeadsLogs.js";
 
-export default function LeadsManager({ searchTerm = "", statusFilter = "" }) {
+export default function LeadsManager({ searchTerm = "", statusFilter = "", selectedCompany = null }) {
   const navigate = useNavigate();
 
   const handleUpdateLead = (leadId) => {
@@ -22,6 +22,7 @@ export default function LeadsManager({ searchTerm = "", statusFilter = "" }) {
           <LeadsLogTable
             searchTerm={searchTerm}
             statusFilter={statusFilter}
+            selectedCompany={selectedCompany}
             onUpdateLead={handleUpdateLead}
             onViewLogs={handleViewLogs}
           />

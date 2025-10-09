@@ -41,7 +41,8 @@ const LeadsNewPage = () => {
   const [industryTypes, setIndustryTypes] = useState([]);
   const [selectedAssignee, setSelectedAssignee] = useState('');
   const [description, setDescription] = useState('');
-  const [matchingCompanies, setMatchingCompanies] = useState([])
+  const [matchingCompanies, setMatchingCompanies] = useState([]);
+  const [userCompanies, setUserCompanies] = useState([]);
 
   // Section completion states
   const [companySaved, setCompanySaved] = useState(false);
@@ -107,9 +108,10 @@ const LeadsNewPage = () => {
     setCountries(allCountries);
   }, []);
 
-  useEffect(() => {
+  useEffect(() => { 
     fetchUsers();
     fetchIndustryTypes();
+    fetchUserCompanies();
   }, []);
 
   const handleCountryChange = (e) => {
@@ -133,6 +135,21 @@ const LeadsNewPage = () => {
 
   const handleCityChange = (e) => {
     setOfficeForm({ ...officeForm, city: e.target.value });
+  };
+
+  const fetchUserCompanies = async () => {
+    try {
+      const response = await apiClient.get(`/lead/fetch-company-brands`);
+
+      if (response.data && response.data.success && Array.isArray(response.data.data)) {
+        setUserCompanies(response.data.data);
+      } else {
+        setUserCompanies([]);
+      }
+    } catch (error) {
+      console.error("Error fetching company brands:", error);
+      setUserCompanies([]);
+    }
   };
 
   const fetchUsers = async () => {
@@ -165,7 +182,7 @@ const LeadsNewPage = () => {
     }
   };
 
-    const fetchMatchingCompanies = async (searchTerm) => {
+  const fetchMatchingCompanies = async (searchTerm) => {
     try {
       let response;
     
@@ -201,6 +218,7 @@ const LeadsNewPage = () => {
       const requestBody = {
         company_name: companyForm.company_name,
         industry_type: companyForm.industry_type,
+        parent_company_id: companyForm.parent_company_id,
         ...(companyForm.product && { product: companyForm.product }),
         ...(companyForm.export_value && { export_value: companyForm.export_value }),
         ...(companyForm.insured_amount && { insured_amount: companyForm.insured_amount }),
@@ -526,6 +544,27 @@ const LeadsNewPage = () => {
                         ))}
                       </Select>
                     </FormControl>
+                  </Grid>
+
+                  <Grid item xs={12} sm={6} md={2.4}>
+                     <FormControl fullWidth sx={{ minWidth: 220 }}>
+                      <InputLabel>Managing Brand</InputLabel>
+                      <Select
+                        value={companyForm.parent_company_id}
+                        label="Managing Brand"
+                        onChange={(e) =>
+                          setCompanyForm({ ...companyForm, parent_company_id: e.target.value })
+                        }
+                        disabled={companySaved}
+                      >
+                        <MenuItem value="">Select managing brand</MenuItem>
+                        {userCompanies.map((company) => (
+                          <MenuItem key={company.id} value={company.id}>
+                            {company.parent_company_name}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                      </FormControl>
                   </Grid>
 
                   <Grid item xs={12} sm={6} md={2.4}>

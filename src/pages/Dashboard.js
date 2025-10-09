@@ -23,6 +23,8 @@ export default function Dashboard() {
   const userRole = role;
   const [searchTerm, setSearchTerm] = useState("");
   const [leadCounts, setLeadCounts] = useState(null);
+  const [userCompanies, setUserCompanies] = useState([]);
+  const [selectedCompany, setSelectedCompany] = useState("");
   const navigate = useNavigate();
 
   const handleSearchChange = (e) => setSearchTerm(e.target.value);
@@ -49,6 +51,24 @@ export default function Dashboard() {
   
           fetchLeadCounts();
       }, [userId]);
+
+    useEffect(() => {
+      const fetchUserCompanies = async () => {
+        try {
+          const response = await apiClient.get(`/lead/fetch-company-brands`);
+          if (response.data && response.data.success && Array.isArray(response.data.data)) {
+            setUserCompanies(response.data.data);
+          } else {
+            setUserCompanies([]);
+          }
+        } catch (error) {
+          console.error("Error fetching company brands:", error);
+          setUserCompanies([]);
+        }
+      };
+
+      fetchUserCompanies();
+    }, []);
 
   return (
     <Box display="flex" sx={{
@@ -200,6 +220,49 @@ export default function Dashboard() {
             </>
           )}
         </Box>
+
+        {/*Filter by Company/Brand  */}
+        <Box position="relative" mb={1} width="250px">
+        <Typography variant="h6" sx={{
+            fontSize: '12px',
+            fontWeight: 'bold',
+            color: '#000000',
+            fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif`
+          }}>Filter by Managing Brand
+          </Typography>
+
+          <TextField
+            select
+            fullWidth
+            variant="outlined"
+            Placeholder="Filter by Managing Brand"
+            value={selectedCompany}
+            onChange={(e) => setSelectedCompany(e.target.value)}
+            SelectProps={{ native: true }}
+           sx={{
+              '& .MuiInputBase-root': {
+                fontSize: '12px',   // font for selected value
+                height: '40px',
+              },
+              '& .MuiInputLabel-root': {
+                fontSize: '10px',   // font for label
+              },
+              '& option': {
+                fontSize: '10px',   // font for dropdown items
+              },
+            }}
+          >
+          
+            <option value="">All Brands</option>
+            {userCompanies.map((company) => (
+              <option key={company.id} value={company.id}>
+                {company.parent_company_name}
+              </option>
+            ))}
+          </TextField>
+        </Box>
+
+        {/* Search Box */}
         <Box position="relative" mb={1}>
           <TextField
             fullWidth
@@ -247,7 +310,7 @@ export default function Dashboard() {
           </Paper>
         )}
 
-        <LeadsTable searchTerm={searchTerm} />
+        <LeadsTable searchTerm={searchTerm} selectedCompany={selectedCompany}/>
       </Box>
     </Box>
   );

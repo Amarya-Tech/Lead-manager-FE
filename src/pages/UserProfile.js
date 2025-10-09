@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import apiClient from "../apicaller/APIClient.js";
 import Sidebar from "../components/SideBar.js";
 import './css/UserProfile.css';
+import { toast } from 'react-toastify';
 import {
   Avatar,
   Box,
@@ -12,6 +13,8 @@ import {
   Typography,
   Chip,
   Paper,
+  List,
+  ListItem,
   CircularProgress,
 } from "@mui/material";
 import { useAuthStore } from '../apicaller/AuthStore.js';
@@ -21,6 +24,9 @@ const UserProfilePage = () => {
     const [loading, setLoading] = useState(true);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
+    const [userCompanies, setUserCompanies] = useState([]);
+    const [showAddBrand, setShowAddBrand] = useState(false);
+    const [newBrand, setNewBrand] = useState("");
     const [editedData, setEditedData] = useState({
         first_name: '',
         last_name: '',
@@ -59,6 +65,50 @@ const UserProfilePage = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const fetchUserCompanies = async () => {
+      try {
+        const response = await apiClient.get(`/lead/fetch-company-brands`);
+
+        if (response.data && response.data.success && Array.isArray(response.data.data)) {
+          setUserCompanies(response.data.data);
+        } else {
+          setUserCompanies([]);
+        }
+      } catch (error) {
+        console.error("Error fetching company brands:", error);
+        setUserCompanies([]);
+      }
+    };
+
+    useEffect(() => {
+      if (userProfile) {
+        fetchUserCompanies();
+      }
+    }, [userProfile]);
+
+    const handleAddBrand = async () => {
+      try {
+        const response = await apiClient.post("/lead/add-company-brand", {
+          company_name: newBrand.trim(),
+        });
+
+        if (!response.data.success && response.status === 201) {
+            toast.warning(response?.data?.message);
+        } else if (response.data.success && response.status === 200){
+            setNewBrand("");
+            setShowAddBrand(false);
+            fetchUserCompanies(); 
+            toast.success("Brand added successfully.");
+        } else {
+            toast.error("Brand could not be added")
+        }
+
+      } catch (error) {
+        console.error("Error adding brand:", error);
+        alert("Error adding brand");
+      }
     };
 
     const handleEditToggle = () => setIsEditing(true);
@@ -250,6 +300,121 @@ const UserProfilePage = () => {
                       {new Date(userProfile.created_at).toLocaleDateString()}
                     </Typography>
                   </Box>
+                </Box>
+              </Box>
+
+              <Box>
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                  sx={{
+                    px: 4,
+                    pt: 3,
+                    pb: 1,
+                    fontWeight: 500,
+                    bgcolor: "#fafbfc",
+                    borderBottom: "1px solid #f1f5f9",
+                  }}
+                >
+                  <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
+                    Managing Brands
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    sx={{
+                      fontSize: "11px",
+                      backgroundColor: "#10b981",
+                      textTransform: "none",
+                      "&:hover": { backgroundColor: "#059669" },
+                    }}
+                    onClick={() => setShowAddBrand(true)}
+                  >
+                    + Add Brand
+                  </Button>
+                </Box>
+
+                <Box sx={{ px: 4, pt: 2, pb: 3 }}>
+                  {showAddBrand && (
+                    <Box
+                      sx={{
+                        mb: 2,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                      }}
+                    >
+                      <TextField
+                        size="small"
+                        label="Brand Name"
+                        variant="outlined"
+                        value={newBrand}
+                        onChange={(e) => setNewBrand(e.target.value)}
+                        sx={{ width: "250px" }}
+                      />
+                      <Button
+                        variant="contained"
+                        size="small"
+                        sx={{
+                          fontSize: "12px",
+                          backgroundColor: "#2563eb",
+                          "&:hover": { backgroundColor: "#1e40af" },
+                        }}
+                        onClick={handleAddBrand}
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        sx={{
+                          fontSize: "12px",
+                          color: "#6b7280",
+                          borderColor: "#d1d5db",
+                          "&:hover": { borderColor: "#9ca3af", color: "#374151" },
+                        }}
+                        onClick={() => {
+                          setShowAddBrand(false);
+                          setNewBrand("");
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </Box>
+                  )}
+
+                  {userCompanies.length > 0 ? (
+                    <List dense disablePadding>
+                      {userCompanies.map((company, index) => (
+                        <ListItem
+                          key={index}
+                          sx={{
+                            px: 0,
+                            py: 0.5,
+                            borderBottom:
+                              index !== userCompanies.length - 1
+                                ? "1px solid #f1f5f9"
+                                : "none",
+                          }}
+                        >
+                          <Typography
+                            sx={{
+                              fontSize: 13,
+                              fontWeight: 700,
+                              color: "#162f67ff",
+                            }}
+                          >
+                            {company.parent_company_name}
+                          </Typography>
+                        </ListItem>
+                      ))}
+                    </List>
+                  ) : (
+                    <Typography sx={{ fontSize: 12, color: "#64748b" }}>
+                      No managing brand present
+                    </Typography>
+                  )}
                 </Box>
               </Box>
 

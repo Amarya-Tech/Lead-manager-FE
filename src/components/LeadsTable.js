@@ -11,16 +11,19 @@ import {
   Button,
   Divider,
 } from "@mui/material";
+import { ArrowUpward, ArrowDownward, UnfoldMore } from "@mui/icons-material";
 import React from 'react';
 import { useState, useEffect, useMemo } from "react";
 import apiClient from "../apicaller/APIClient.js";
 import './css/LeadsTable.css'
 import { useAuthStore } from "../apicaller/AuthStore.js";
 
-export default function LeadsTable({ searchTerm = "" }) {
+export default function LeadsTable({ searchTerm = "" , selectedCompany = null}) {
   const [leads, setLeads] = useState([]);
   const [selectedLeadDetails, setSelectedLeadDetails] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const [sortField, setSortField] = useState(null);
+  const [sortOrder, setSortOrder] = useState("asc");
   const { userId } = useAuthStore();
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -36,7 +39,9 @@ export default function LeadsTable({ searchTerm = "" }) {
             params: { term: searchTerm.trim() }
           });
         } else {
-          response = await apiClient.get(`/lead/fetch-lead-table-detail/${userId}`);
+          response = await apiClient.get(`/lead/fetch-lead-table-detail/${userId}`, {
+            params: {company_id: selectedCompany}
+          });
         }
 
         if (Array.isArray(response.data.data)) {
@@ -54,7 +59,23 @@ export default function LeadsTable({ searchTerm = "" }) {
     fetchLeads();
     setCurrentPage(1);
     setSelectedLeadDetails(null);
-  }, [searchTerm, userId]);
+  }, [searchTerm, selectedCompany, userId]);
+
+  const handleSort = (field) => {
+    const order = sortField === field && sortOrder === "asc" ? "desc" : "asc";
+    setSortField(field);
+    setSortOrder(order);
+
+    const sorted = [...leads].sort((a, b) => {
+      const aVal = a[field]?.toLowerCase?.() || "";
+      const bVal = b[field]?.toLowerCase?.() || "";
+      if (aVal < bVal) return order === "asc" ? -1 : 1;
+      if (aVal > bVal) return order === "asc" ? 1 : -1;
+      return 0;
+    });
+
+    setLeads(sorted);
+  };
 
   const totalPages = Math.ceil(leads.length / leadsPerPage);
   const startIndex = (currentPage - 1) * leadsPerPage;
@@ -111,9 +132,32 @@ export default function LeadsTable({ searchTerm = "" }) {
           <Table sx={{ minWidth: 650, borderCollapse: 'collapse' }} aria-label="leads table">
             <TableHead>
               <TableRow sx={{ backgroundColor: '#f4f4f4',height: 18}}>
-                <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}><strong>Company Name</strong></TableCell>
+                <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}} 
+                onClick={() => handleSort("company_name")}>
+                  <Box sx={{display: "inline-flex",alignItems: "center", gap: "4px", verticalAlign: "middle", lineHeight: 1}}>
+                  <strong>Company Name</strong>{sortField === "company_name" ? (
+                      sortOrder === "asc" ? (
+                        <ArrowUpward sx={{ fontSize: "18px" , marginTop: "1px" }} />
+                      ) : (
+                        <ArrowDownward sx={{ fontSize: "18px" , marginTop: "1px" }} />
+                      )
+                    ) : (
+                      <UnfoldMore sx={{ fontSize: "18px", color: "black", marginTop: "1px"  }} /> 
+                    )}</Box></TableCell>
                 <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}><strong>Product</strong></TableCell>
-                <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}><strong>Industry Type</strong></TableCell>
+                <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}
+                onClick={() => handleSort("industry_type")}>
+                  <Box sx={{display: "inline-flex",alignItems: "center", gap: "4px", verticalAlign: "middle", lineHeight: 1}}>
+                  <strong>Industry Type</strong>{sortField === "industry_type" ? (
+                      sortOrder === "asc" ? (
+                        <ArrowUpward sx={{ fontSize: "18px" , marginTop: "1px" }} />
+                      ) : (
+                        <ArrowDownward sx={{ fontSize: "18px" , marginTop: "1px" }} />
+                      )
+                    ) : (
+                      <UnfoldMore sx={{ fontSize: "18px", color: "black", marginTop: "1px"  }} />
+                    )}</Box></TableCell>
+                <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}><strong>Managing Brand</strong></TableCell>
                 <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}><strong>Status</strong></TableCell>
                 <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}><strong>Assignee</strong></TableCell>
                 <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}><strong>Created Date</strong></TableCell>
@@ -131,6 +175,7 @@ export default function LeadsTable({ searchTerm = "" }) {
                   <TableCell sx={{ fontSize:'12px'}}>{highlightSearchTerm(lead.company_name, searchTerm)}</TableCell>
                   <TableCell sx={{ fontSize:'12px'}}>{highlightSearchTerm(lead.product, searchTerm)}</TableCell>
                   <TableCell sx={{ fontSize:'12px'}}>{highlightSearchTerm(lead.industry_type, searchTerm)}</TableCell>
+                  <TableCell sx={{ fontSize:'12px'}}>{lead.parent_company_name}</TableCell>
                   <TableCell><Box
                     component="span"
                     sx={{
@@ -204,6 +249,7 @@ export default function LeadsTable({ searchTerm = "" }) {
               <Typography sx={{fontSize:'12px'}}><strong>Company Name:</strong> {selectedLeadDetails.company_name}</Typography>
               <Typography sx={{fontSize:'12px'}}><strong>Product:</strong> {selectedLeadDetails.product}</Typography>
               <Typography sx={{fontSize:'12px'}}><strong>Industry Type:</strong> {selectedLeadDetails.industry_type}</Typography>
+              <Typography sx={{fontSize:'12px'}}><strong>Managing Brand:</strong> {selectedLeadDetails.parent_company_name || "N/A"}</Typography>
               <Typography sx={{fontSize:'12px'}}><strong>Insured Amount:</strong> {selectedLeadDetails.insured_amount || "N/A"}</Typography>
               <Typography sx={{fontSize:'12px'}}><strong>Export Value:</strong> {selectedLeadDetails.export_value || "N/A"}</Typography>
               <Typography sx={{fontSize:'12px'}}><strong>Suitable Product:</strong> {selectedLeadDetails.suitable_product || "N/A"}</Typography>

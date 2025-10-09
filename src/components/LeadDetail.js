@@ -423,6 +423,7 @@ function CompanySection({ leadDetails, isEditing, onEdit, onCancel, onSave, savi
     company_name: '',
     product: '',
     industry_type: '',
+    parent_company_id: '',
     insured_amount: '',
     export_value: '',
     status: ''
@@ -430,21 +431,27 @@ function CompanySection({ leadDetails, isEditing, onEdit, onCancel, onSave, savi
 
   const [industryTypes, setIndustryTypes] = useState([]);
   const [loadingIndustryTypes, setLoadingIndustryTypes] = useState(false);
+  const [userCompanies, setUserCompanies] = useState([]);
 
   useEffect(() => {
+    const parentCompany = userCompanies.find(
+      (company) => company.parent_company_name === leadDetails.parent_company_name
+    );
     setFormData({
       company_name: leadDetails.company_name || '',
       product: leadDetails.product || '',
       industry_type: leadDetails.industry_type || '',
+      parent_company_id: parentCompany?.id || '',
       insured_amount: leadDetails.insured_amount || '',
       export_value: leadDetails.export_value || '',
       status: leadDetails.status || ''
     });
-  }, [leadDetails]);
+  }, [leadDetails, userCompanies]);
 
   useEffect(() => {
     if (isEditing) {
       fetchIndustryTypes();
+      fetchUserCompanies();
     }
   }, [isEditing]);
 
@@ -467,6 +474,22 @@ function CompanySection({ leadDetails, isEditing, onEdit, onCancel, onSave, savi
       setLoadingIndustryTypes(false);
     }
   };
+
+   const fetchUserCompanies = async () => {
+      try {
+        const response = await apiClient.get(`/lead/fetch-company-brands`);
+
+        if (response.data && response.data.success && Array.isArray(response.data.data)) {
+          setUserCompanies(response.data.data);
+        } else {
+          setUserCompanies([]);
+        }
+      } catch (error) {
+        console.error("Error fetching company brands:", error);
+        setUserCompanies([]);
+      }
+    };
+
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -535,6 +558,22 @@ function CompanySection({ leadDetails, isEditing, onEdit, onCancel, onSave, savi
             </Select>
           </FormControl>
 
+          <FormControl fullWidth>
+            <InputLabel>Managing Brand</InputLabel>
+            <Select
+              value={formData.parent_company_id}
+              onChange={(e) => handleInputChange('parent_company_id', e.target.value)}
+              label="Managing Brand"
+            >
+             <MenuItem value="">Select managing brand</MenuItem>
+              {userCompanies.map((company) => (
+                <MenuItem key={company.id} value={company.id}>
+                  {company.parent_company_name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
           <TextField
             label="Insured Amount"
             type="number"
@@ -585,6 +624,7 @@ function CompanySection({ leadDetails, isEditing, onEdit, onCancel, onSave, savi
           <Typography className="detail-item"><strong>Company Name:</strong> {leadDetails.company_name || 'N/A'}</Typography>
           <Typography className="detail-item"><strong>Product:</strong> {leadDetails.product || 'N/A'}</Typography>
           <Typography className="detail-item"><strong>Industry Type:</strong> {leadDetails.industry_type || 'N/A'}</Typography>
+          <Typography className="detail-item"><strong>Managing Brand:</strong> {leadDetails.parent_company_name || 'N/A'}</Typography>
           <Typography className="detail-item"><strong>Insured Amount:</strong> {leadDetails.insured_amount || 'N/A'}</Typography>
           <Typography className="detail-item"><strong>Export Value:</strong> {leadDetails.export_value || 'N/A'}</Typography>
           <Typography className="detail-item"><strong>Suitable Product:</strong> {leadDetails.suitable_product || 'N/A'}</Typography>

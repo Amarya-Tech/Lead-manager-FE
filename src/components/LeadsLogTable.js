@@ -12,11 +12,14 @@ import {
   Paper,
   Button
 } from "@mui/material";
+import { ArrowUpward, ArrowDownward, UnfoldMore } from "@mui/icons-material";
 import { useAuthStore } from "../apicaller/AuthStore.js";
 
-export default function LeadsLogTable({ searchTerm = "", statusFilter = "", onUpdateLead, onViewLogs }) {
+export default function LeadsLogTable({ searchTerm = "", statusFilter = "", selectedCompany = null, onUpdateLead, onViewLogs }) {
   const { userId, role} = useAuthStore();
   const [leads, setLeads] = useState([]);
+  const [sortField, setSortField] = useState(null);
+  const [sortOrder, setSortOrder] = useState("asc");
   const [currentPage, setCurrentPage] = useState(1);
   const leadsPerPage = 10;
 
@@ -30,7 +33,9 @@ export default function LeadsLogTable({ searchTerm = "", statusFilter = "", onUp
             params: { term: searchTerm.trim() }
           });
         } else {
-          response = await apiClient.get(`/lead/fetch-lead-log-list/${userId}`);
+          response = await apiClient.get(`/lead/fetch-lead-log-list/${userId}`, {
+            params : {company_id : selectedCompany}
+          });
         }
 
         if (Array.isArray(response.data.data)) {
@@ -55,7 +60,23 @@ export default function LeadsLogTable({ searchTerm = "", statusFilter = "", onUp
 
     fetchLeads();
     setCurrentPage(1);
-  }, [searchTerm, statusFilter, userId]);
+  }, [searchTerm, selectedCompany, statusFilter, userId]);
+
+  const handleSort = (field) => {
+    const order = sortField === field && sortOrder === "asc" ? "desc" : "asc";
+    setSortField(field);
+    setSortOrder(order);
+
+    const sorted = [...leads].sort((a, b) => {
+      const aVal = a[field]?.toLowerCase?.() || "";
+      const bVal = b[field]?.toLowerCase?.() || "";
+      if (aVal < bVal) return order === "asc" ? -1 : 1;
+      if (aVal > bVal) return order === "asc" ? 1 : -1;
+      return 0;
+    });
+
+    setLeads(sorted);
+  };
 
   const handleUpdateLead = (leadId) => {
     if (onUpdateLead) onUpdateLead(leadId);
@@ -127,9 +148,32 @@ export default function LeadsLogTable({ searchTerm = "", statusFilter = "", onUp
           <Table sx={{ minWidth: 650, borderCollapse: 'collapse' }} aria-label="leads table">
             <TableHead>
               <TableRow sx={{ backgroundColor: '#f4f4f4', height: 20 }}>
-                <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}><strong>Company Name</strong></TableCell>
+                <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}} 
+                  onClick={() => handleSort("company_name")}>
+                    <Box sx={{display: "inline-flex",alignItems: "center", gap: "4px", verticalAlign: "middle", lineHeight: 1}}>
+                    <strong>Company Name</strong>{sortField === "company_name" ? (
+                        sortOrder === "asc" ? (
+                          <ArrowUpward sx={{ fontSize: "18px" , marginTop: "1px" }} />
+                        ) : (
+                          <ArrowDownward sx={{ fontSize: "18px" , marginTop: "1px" }} />
+                        )
+                      ) : (
+                        <UnfoldMore sx={{ fontSize: "18px", color: "black", marginTop: "1px"  }} />
+                )}</Box></TableCell>
                 <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}><strong>Product</strong></TableCell>
-                <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}><strong>Industry Type</strong></TableCell>
+                <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}
+                  onClick={() => handleSort("industry_type")}>
+                    <Box sx={{display: "inline-flex",alignItems: "center", gap: "4px", verticalAlign: "middle", lineHeight: 1}}>
+                    <strong>Industry Type</strong>{sortField === "industry_type" ? (
+                        sortOrder === "asc" ? (
+                          <ArrowUpward sx={{ fontSize: "18px" , marginTop: "1px" }} />
+                        ) : (
+                          <ArrowDownward sx={{ fontSize: "18px" , marginTop: "1px" }} />
+                        )
+                      ) : (
+                        <UnfoldMore sx={{ fontSize: "18px", color: "black", marginTop: "1px"  }} />
+                  )}</Box></TableCell>
+                <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}><strong>Managing Brand</strong></TableCell>
                 <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}><strong>Status</strong></TableCell>
                 <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}><strong>Latest Comment</strong></TableCell>
                 <TableCell sx={{ fontSize:'12px', paddingTop: '8px', paddingBottom: '8px'}}><strong>Latest Comment Date</strong></TableCell>
@@ -148,6 +192,7 @@ export default function LeadsLogTable({ searchTerm = "", statusFilter = "", onUp
                   <TableCell sx={{ fontSize:'12px'}}>{highlightSearchTerm(lead.company_name, searchTerm)}</TableCell>
                   <TableCell sx={{ fontSize:'12px'}}>{highlightSearchTerm(lead.product, searchTerm)}</TableCell>
                   <TableCell sx={{ fontSize:'12px'}}>{highlightSearchTerm(lead.industry_type, searchTerm)}</TableCell>
+                  <TableCell sx={{ fontSize:'12px'}}>{lead.parent_company_name}</TableCell>
                   <TableCell sx={{ fontSize:'12px'}}>
                     <Box component="span" sx={getStatusStyle(lead.status)}>{lead.status}</Box>
                   </TableCell>
