@@ -20,7 +20,8 @@ import {
   CardContent,
   Tooltip,
   Chip,
-  Grid
+  Grid,
+  FormHelperText
 } from "@mui/material";
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
@@ -432,6 +433,7 @@ function CompanySection({ leadDetails, isEditing, onEdit, onCancel, onSave, savi
   const [industryTypes, setIndustryTypes] = useState([]);
   const [loadingIndustryTypes, setLoadingIndustryTypes] = useState(false);
   const [userCompanies, setUserCompanies] = useState([]);
+  const [showErrors, setShowErrors] = useState(false);
 
   useEffect(() => {
     const parentCompany = userCompanies.find(
@@ -496,8 +498,9 @@ function CompanySection({ leadDetails, isEditing, onEdit, onCancel, onSave, savi
   };
 
   const handleSave = () => {
-    if (!formData.company_name.trim()) {
-      toast.error('Company name is required');
+    setShowErrors(true);
+    if (!formData.company_name.trim() || !formData.parent_company_id) {
+      toast.error('Company related fields is required');
       return;
     }
     onSave(formData);
@@ -526,7 +529,7 @@ function CompanySection({ leadDetails, isEditing, onEdit, onCancel, onSave, savi
             value={formData.company_name}
             onChange={(e) => handleInputChange('company_name', e.target.value)}
             required
-            fullWidth
+            fullWidth error={!formData.company_name && showErrors}
           />
 
           <TextField
@@ -558,12 +561,13 @@ function CompanySection({ leadDetails, isEditing, onEdit, onCancel, onSave, savi
             </Select>
           </FormControl>
 
-          <FormControl fullWidth>
+          <FormControl fullWidth required error={!formData.parent_company_id && showErrors}>
             <InputLabel>Managing Brand</InputLabel>
             <Select
               value={formData.parent_company_id}
               onChange={(e) => handleInputChange('parent_company_id', e.target.value)}
               label="Managing Brand"
+              required
             >
              <MenuItem value="">Select managing brand</MenuItem>
               {userCompanies.map((company) => (

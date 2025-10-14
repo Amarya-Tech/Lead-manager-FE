@@ -88,7 +88,7 @@ const LeadsNewPage = () => {
 
   // Validation functions
   const validateCompanyForm = () => {
-    return companyForm.company_name.trim() !== '' && companyForm.industry_type.trim() !== '';
+    return companyForm.company_name.trim() !== '' && companyForm.industry_type.trim() !== '' && companyForm.parent_company_id !== '' && companyForm.parent_company_id !== null;
   };
 
   const validateOfficeForm = () => {
@@ -231,7 +231,9 @@ const LeadsNewPage = () => {
       toast.success('Company information saved successfully');
     } catch (error) {
       console.error('Failed to create lead:', error);
-      const backendMessage = error.response?.data?.errors[0].msg || 'Failed to create lead';
+      const backendMessage = Array.isArray(error.response?.data?.errors) && error.response.data.errors.length > 0
+                            ? error.response.data.errors[0].msg
+                            : error.response?.data?.message || 'Failed to create lead';;
       toast.error(backendMessage);
     }
   };
@@ -547,7 +549,7 @@ const LeadsNewPage = () => {
                   </Grid>
 
                   <Grid item xs={12} sm={6} md={2.4}>
-                     <FormControl fullWidth sx={{ minWidth: 220 }}>
+                     <FormControl fullWidth required error={showCompanyErrors && !companyForm.parent_company_id} sx={{ minWidth: 220 }}>
                       <InputLabel>Managing Brand</InputLabel>
                       <Select
                         value={companyForm.parent_company_id}
