@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom"; 
 import Sidebar from "../components/SideBar.js";
 import LeadsManager from "../components/LeadManager.js";
-import { Box, Typography, TextField, IconButton, Paper, InputAdornment } from "@mui/material";
+import { Box, Typography, TextField, IconButton, Paper, InputAdornment, Drawer, Button  } from "@mui/material";
 import ClearIcon from '@mui/icons-material/Clear';
+import Chip from '@mui/material/Chip';
+import TuneIcon from '@mui/icons-material/Tune'; 
 import apiClient from "../apicaller/APIClient.js";
 
 export default function Leads() {
@@ -11,6 +13,19 @@ export default function Leads() {
   const [userCompanies, setUserCompanies] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState("");
   const { status } = useParams();
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+
+  // Advanced search fields
+  const [filters, setFilters] = useState({
+    companyName: "",
+    product: "",
+    industryType: ""
+  });
+  const [appliedFilters, setAppliedFilters] = useState({
+    companyName: "",
+    product: "",
+    industryType: ""
+  });
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
@@ -18,6 +33,23 @@ export default function Leads() {
 
   const clearSearch = () => {
     setSearchTerm("");
+  };
+
+ const handleAdvancedChange = (e) => {
+    const { name, value } = e.target;
+    setFilters((prev) => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+  const handleAdvancedSearch = () => {
+    setAppliedFilters(filters);
+    setAdvancedOpen(false);
+    setFilters({
+    companyName: "",
+    product: "",
+    industryType: ""
+  });
   };
 
    useEffect(() => {
@@ -78,14 +110,14 @@ export default function Leads() {
                   SelectProps={{ native: true }}
                   sx={{
                     '& .MuiInputBase-root': {
-                      fontSize: '12px',   // font for selected value
+                      fontSize: '12px',  
                       height: '40px',
                     },
                     '& .MuiInputLabel-root': {
-                      fontSize: '12px',   // font for label
+                      fontSize: '12px',
                     },
                     '& option': {
-                      fontSize: '12px',   // font for dropdown items
+                      fontSize: '12px',  
                     },
                   }}
                 >
@@ -99,8 +131,8 @@ export default function Leads() {
                 </TextField>
               </Box>
 
-            {/* Search Box */}
-            <Box position="relative" mb={1} mt={2}>
+            {/* Search Box  For Advance Search*/}
+            <Box position="relative" mb={1} mt={2} display="flex" alignItems="center">
             <TextField
               fullWidth
               variant="outlined"
@@ -109,17 +141,37 @@ export default function Leads() {
               onChange={handleSearchChange}
               className="search-input"
               InputProps={{
-                endAdornment: searchTerm && (
+                startAdornment: (
+                  <>
+                    {Object.entries(appliedFilters).map(([key, value]) =>
+                      value ? (
+                        <Chip
+                          key={key}
+                          label={`${key}: ${value}`}
+                          size="small"
+                          onDelete={() => setAppliedFilters(prev => ({ ...prev, [key]: "" }))}
+                          sx={{ mr: 0.5 }}
+                        />
+                      ) : null
+                    )}
+                  </>
+                ),
+                endAdornment: (
                   <InputAdornment position="end">
-                    <IconButton onClick={clearSearch} title="Clear search">
-                      <ClearIcon sx={{ color: '#666'}} />
+                    {searchTerm && (
+                      <IconButton onClick={clearSearch} title="Clear search">
+                        <ClearIcon sx={{ color: '#666'}} />
+                      </IconButton>
+                    )}
+                    <IconButton onClick={() => setAdvancedOpen(true)} title="Advanced Search">
+                      <TuneIcon sx={{ color: '#303840ff'}} />
                     </IconButton>
                   </InputAdornment>
                 )
               }}
               sx={{
                 '& input': {
-                  paddingRight: searchTerm ? '40px' : '10px',
+                  paddingRight: '80px',
                   paddingLeft: '10px',
                   paddingTop: '10px',
                   paddingBottom: '10px',
@@ -129,6 +181,45 @@ export default function Leads() {
               }}
             />
           </Box>
+
+           {/* Advanced Search Drawer */}
+          <Drawer
+            anchor="right"
+            open={advancedOpen}
+            onClose={() => setAdvancedOpen(false)}
+          >
+            <Box sx={{ width: 350, p: 3 }}>
+              <Typography variant="h6" mb={1} sx={{fontSize: '17px', fontWeight: 'bold'}}>Advanced Search</Typography>
+              <TextField
+                name="companyName"
+                label="Company Name"
+                value={filters.companyName}
+                onChange={handleAdvancedChange}
+                fullWidth
+                margin="normal"
+              />
+              <TextField
+                name="product"
+                label="Product"
+                value={filters.product}
+                onChange={handleAdvancedChange}
+                fullWidth
+                margin="normal"
+              />
+              <TextField
+                name="industryType"
+                label="Industry Type"
+                value={filters.industryType}
+                onChange={handleAdvancedChange}
+                fullWidth
+                margin="normal"
+              />
+              <Box mt={2} display="flex" justifyContent="space-between">
+                <Button variant="outlined" onClick={() => setAdvancedOpen(false)}>Cancel</Button>
+                <Button variant="contained" onClick={handleAdvancedSearch}>Search</Button>
+              </Box>
+            </Box>
+          </Drawer>
 
             {searchTerm && (
               <Paper
@@ -148,7 +239,7 @@ export default function Leads() {
               </Paper>
             )}
 
-            <LeadsManager searchTerm={searchTerm} statusFilter={status} selectedCompany={selectedCompany}/>
+            <LeadsManager searchTerm={searchTerm} statusFilter={status} selectedCompany={selectedCompany} advancedFilters={appliedFilters}/>
           </Box>
         </Box>
       </Box>

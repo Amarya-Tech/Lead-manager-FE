@@ -12,9 +12,12 @@ import {
   Paper,
   Card,
   IconButton,
+  Drawer, 
   InputAdornment,
 } from '@mui/material';
 import ClearIcon from '@mui/icons-material/Clear';
+import TuneIcon from '@mui/icons-material/Tune';
+import Chip from '@mui/material/Chip';
 import { useAuthStore } from "../apicaller/AuthStore.js";
 import apiClient from "../apicaller/APIClient.js";
 
@@ -25,50 +28,84 @@ export default function Dashboard() {
   const [leadCounts, setLeadCounts] = useState(null);
   const [userCompanies, setUserCompanies] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState("");
-  const navigate = useNavigate();
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+
+  // Advanced search fields
+  const [filters, setFilters] = useState({
+    companyName: "",
+    product: "",
+    industryType: "",
+    assignedPerson: ""
+  });
+
+  const [appliedFilters, setAppliedFilters] = useState({
+      companyName: "",
+      product: "",
+      industryType: "",
+      assignedPerson: ""
+    });
+      const navigate = useNavigate();
 
   const handleSearchChange = (e) => setSearchTerm(e.target.value);
   const handleNewLead = () => navigate('/leads/new');
   const clearSearch = () => setSearchTerm("");
 
-   useEffect(() => {
-          const fetchLeadCounts = async () => {
-              try {
-                  let response;
-                  const action = "";
-                  response = await apiClient.get(`/lead/fetch-lead-type-count/${userId}`);
-                  if (Array.isArray(response.data.data)) {
-                      setLeadCounts(response.data.data[0])
-                  } else {
-                      console.error("Invalid data format:", response.data);
-                      setLeadCounts([]);
-                  }
-              } catch (error) {
-                  console.error("Failed to fetch leads:", error);
-                  setLeadCounts([]);
-              }
-          };
-  
-          fetchLeadCounts();
-      }, [userId]);
+  const handleAdvancedChange = (e) => {
+      const { name, value } = e.target;
+        setFilters((prev) => ({
+          ...prev,
+          [name]: value
+        }));
+  };
+  const handleAdvancedSearch = () => {
+    setAppliedFilters(filters);
+    setAdvancedOpen(false);
+    setFilters({
+    companyName: "",
+    product: "",
+    industryType: "",
+    assignedPerson: ""
+  });
+  };
 
-    useEffect(() => {
-      const fetchUserCompanies = async () => {
-        try {
-          const response = await apiClient.get(`/lead/fetch-company-brands`);
-          if (response.data && response.data.success && Array.isArray(response.data.data)) {
-            setUserCompanies(response.data.data);
-          } else {
-            setUserCompanies([]);
-          }
-        } catch (error) {
-          console.error("Error fetching company brands:", error);
+  useEffect(() => {
+    const fetchLeadCounts = async () => {
+      try {
+        let response;
+        const action = "";
+        response = await apiClient.get(`/lead/fetch-lead-type-count/${userId}`);
+        if (Array.isArray(response.data.data)) {
+          setLeadCounts(response.data.data[0])
+        } else {
+          console.error("Invalid data format:", response.data);
+          setLeadCounts([]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch leads:", error);
+        setLeadCounts([]);
+      }
+    };
+
+    fetchLeadCounts();
+  }, [userId]);
+
+  useEffect(() => {
+    const fetchUserCompanies = async () => {
+      try {
+        const response = await apiClient.get(`/lead/fetch-company-brands`);
+        if (response.data && response.data.success && Array.isArray(response.data.data)) {
+          setUserCompanies(response.data.data);
+        } else {
           setUserCompanies([]);
         }
-      };
+      } catch (error) {
+        console.error("Error fetching company brands:", error);
+        setUserCompanies([]);
+      }
+    };
 
-      fetchUserCompanies();
-    }, []);
+    fetchUserCompanies();
+  }, []);
 
   return (
     <Box display="flex" sx={{
@@ -145,11 +182,11 @@ export default function Dashboard() {
             <Typography fontWeight="bold" fontSize={14} sx={{ color: '#7f672e' }}>Leads at Risk of Inactivity</Typography>
             <Typography fontSize={12} sx={{ color: '#e1c872' }}>Leads idle for 10+ days</Typography>
             <Typography component="span" fontSize={18} fontWeight="bold" sx={{ color: '#d69c17ff' }}>
-                {leadCounts?.possible_inactive_leads ?? '...'}
-              </Typography>
-              <Typography component="span" fontSize={12} sx={{ color: '#d69c17ff', ml: 0.5 }}>
-                /{leadCounts?.total_leads ?? '...'}
-              </Typography>
+              {leadCounts?.possible_inactive_leads ?? '...'}
+            </Typography>
+            <Typography component="span" fontSize={12} sx={{ color: '#d69c17ff', ml: 0.5 }}>
+              /{leadCounts?.total_leads ?? '...'}
+            </Typography>
           </Card>
 
           {(userRole === 'admin' || userRole === 'super_admin') && (
@@ -223,7 +260,7 @@ export default function Dashboard() {
 
         {/*Filter by Company/Brand  */}
         <Box position="relative" mb={1} width="250px">
-        <Typography variant="h6" sx={{
+          <Typography variant="h6" sx={{
             fontSize: '12px',
             fontWeight: 'bold',
             color: '#000000',
@@ -239,7 +276,7 @@ export default function Dashboard() {
             value={selectedCompany}
             onChange={(e) => setSelectedCompany(e.target.value)}
             SelectProps={{ native: true }}
-           sx={{
+            sx={{
               '& .MuiInputBase-root': {
                 fontSize: '12px',   // font for selected value
                 height: '40px',
@@ -252,7 +289,7 @@ export default function Dashboard() {
               },
             }}
           >
-          
+
             <option value="">All Brands</option>
             {userCompanies.map((company) => (
               <option key={company.id} value={company.id}>
@@ -262,35 +299,103 @@ export default function Dashboard() {
           </TextField>
         </Box>
 
-        {/* Search Box */}
-        <Box position="relative" mb={1}>
+        {/* Search Box For Advanced Search*/}
+        <Box position="relative" mb={1} mt={2} display="flex" alignItems="center">
           <TextField
             fullWidth
             variant="outlined"
-            placeholder="Search leads by company name, industry type, product and sales rep..."
+            placeholder="Search leads by company name, industry type and product..."
             value={searchTerm}
             onChange={handleSearchChange}
             className="search-input"
             InputProps={{
-              endAdornment: searchTerm && (
+              startAdornment: (
+                <>
+                  {Object.entries(appliedFilters).map(([key, value]) =>
+                    value ? (
+                      <Chip
+                        key={key}
+                        label={`${key}: ${value}`}
+                        size="small"
+                        onDelete={() => setAppliedFilters(prev => ({ ...prev, [key]: "" }))}
+                        sx={{ mr: 0.5 }}
+                      />
+                    ) : null
+                  )}
+                </>
+              ),
+              endAdornment: (
                 <InputAdornment position="end">
-                  <IconButton onClick={clearSearch} title="Clear search">
-                    <ClearIcon sx={{ color: '#666' }} />
+                  {searchTerm && (
+                    <IconButton onClick={clearSearch} title="Clear search">
+                      <ClearIcon sx={{ color: '#666' }} />
+                    </IconButton>
+                  )}
+                  <IconButton onClick={() => setAdvancedOpen(true)} title="Advanced Search">
+                    <TuneIcon sx={{ color: '#303840ff' }} />
                   </IconButton>
                 </InputAdornment>
               )
             }}
             sx={{
               '& input': {
-                paddingRight: searchTerm ? '40px' : '10px',
+                paddingRight: '80px',
                 paddingLeft: '10px',
                 paddingTop: '10px',
                 paddingBottom: '10px',
                 fontSize: '12px',
               }
+
             }}
           />
         </Box>
+
+        {/* Advanced Search Drawer */}
+        <Drawer
+          anchor="right"
+          open={advancedOpen}
+          onClose={() => setAdvancedOpen(false)}
+        >
+          <Box sx={{ width: 350, p: 2 }}>
+            <Typography variant="h6" mb={1} sx={{fontSize: '17px', fontWeight: 'bold'}}>Advanced Search</Typography>
+            <TextField
+              name="companyName"
+              label="Company Name"
+              value={filters.companyName}
+              onChange={handleAdvancedChange}
+              fullWidth
+              margin="normal"
+            />
+            <TextField
+              name="product"
+              label="Product"
+              value={filters.product}
+              onChange={handleAdvancedChange}
+              fullWidth
+              margin="normal"
+            />
+            <TextField
+              name="industryType"
+              label="Industry Type"
+              value={filters.industryType}
+              onChange={handleAdvancedChange}
+              fullWidth
+              margin="normal"
+            />
+            <TextField
+              name="assignedPerson"
+              label="Assigned Person"
+              value={filters.assignedPerson}
+              onChange={handleAdvancedChange}
+              fullWidth
+              margin="normal"
+            />
+            <Box mt={2} display="flex" justifyContent="space-between">
+              <Button variant="outlined" onClick={() => setAdvancedOpen(false)}>Cancel</Button>
+              <Button variant="contained" onClick={handleAdvancedSearch}>Search</Button>
+            </Box>
+          </Box>
+        </Drawer>
 
         {searchTerm && (
           <Paper
@@ -310,7 +415,7 @@ export default function Dashboard() {
           </Paper>
         )}
 
-        <LeadsTable searchTerm={searchTerm} selectedCompany={selectedCompany}/>
+        <LeadsTable searchTerm={searchTerm} selectedCompany={selectedCompany} advancedFilters={appliedFilters}/>
       </Box>
     </Box>
   );

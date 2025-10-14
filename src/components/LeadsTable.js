@@ -18,7 +18,7 @@ import apiClient from "../apicaller/APIClient.js";
 import './css/LeadsTable.css'
 import { useAuthStore } from "../apicaller/AuthStore.js";
 
-export default function LeadsTable({ searchTerm = "" , selectedCompany = null}) {
+export default function LeadsTable({ searchTerm = "" , selectedCompany = null, advancedFilters = {}}) {
   const [leads, setLeads] = useState([]);
   const [selectedLeadDetails, setSelectedLeadDetails] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
@@ -34,10 +34,14 @@ export default function LeadsTable({ searchTerm = "" , selectedCompany = null}) 
       try {
         let response;
 
-        if (searchTerm.trim()) {
-          response = await apiClient.get(`/lead/search/${userId}`, {
-            params: { term: searchTerm.trim() }
-          });
+        const payload = {
+          searchTerm: searchTerm.trim() || "",
+          brandId: selectedCompany || "",
+          ...advancedFilters
+        };
+
+         if (searchTerm.trim() || Object.values(advancedFilters).some(v => v)) {
+          response = await apiClient.post(`/lead/search/${userId}`, payload);
         } else {
           response = await apiClient.get(`/lead/fetch-lead-table-detail/${userId}`, {
             params: {company_id: selectedCompany}
@@ -59,7 +63,7 @@ export default function LeadsTable({ searchTerm = "" , selectedCompany = null}) 
     fetchLeads();
     setCurrentPage(1);
     setSelectedLeadDetails(null);
-  }, [searchTerm, selectedCompany, userId]);
+  }, [searchTerm, selectedCompany, advancedFilters, userId]);
 
   const handleSort = (field) => {
     const order = sortField === field && sortOrder === "asc" ? "desc" : "asc";

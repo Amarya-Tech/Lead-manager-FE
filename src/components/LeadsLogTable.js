@@ -15,7 +15,7 @@ import {
 import { ArrowUpward, ArrowDownward, UnfoldMore } from "@mui/icons-material";
 import { useAuthStore } from "../apicaller/AuthStore.js";
 
-export default function LeadsLogTable({ searchTerm = "", statusFilter = "", selectedCompany = null, onUpdateLead, onViewLogs }) {
+export default function LeadsLogTable({ searchTerm = "", statusFilter = "", selectedCompany = null, advancedFilters = {}, onUpdateLead, onViewLogs }) {
   const { userId, role} = useAuthStore();
   const [leads, setLeads] = useState([]);
   const [sortField, setSortField] = useState(null);
@@ -28,10 +28,14 @@ export default function LeadsLogTable({ searchTerm = "", statusFilter = "", sele
       try {
         let response;
 
-          if (searchTerm.trim()) {
-          response = await apiClient.get(`/lead/search-term/${userId}`, {
-            params: { term: searchTerm.trim() }
-          });
+        const payload = {
+          searchTerm: searchTerm.trim() || "",
+          brandId: selectedCompany || "",
+          ...advancedFilters
+        };
+
+          if (searchTerm.trim() || Object.values(advancedFilters).some(v => v)) {
+          response = await apiClient.post(`/lead/search-term/${userId}`, payload);
         } else {
           response = await apiClient.get(`/lead/fetch-lead-log-list/${userId}`, {
             params : {company_id : selectedCompany}
@@ -60,7 +64,7 @@ export default function LeadsLogTable({ searchTerm = "", statusFilter = "", sele
 
     fetchLeads();
     setCurrentPage(1);
-  }, [searchTerm, selectedCompany, statusFilter, userId]);
+  }, [searchTerm, selectedCompany, advancedFilters, statusFilter, userId]);
 
   const handleSort = (field) => {
     const order = sortField === field && sortOrder === "asc" ? "desc" : "asc";
