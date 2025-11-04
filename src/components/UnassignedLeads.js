@@ -11,6 +11,7 @@ import {
     Button,
     Divider,
 } from "@mui/material";
+import React from 'react';
 import { useState, useEffect, useMemo } from "react";
 import apiClient from "../apicaller/APIClient.js";
 import './css/LeadsTable.css'
@@ -29,7 +30,7 @@ export default function UnAssignedLeads() {
                 let response;
                 const action = "";
                 response = await apiClient.post(`/lead/fetch-assigned-unassigned-leads/${userId}`, {
-                    action : 'unassigned'
+                    action: 'unassigned'
                 });
 
                 if (Array.isArray(response.data.data)) {
@@ -88,7 +89,7 @@ export default function UnAssignedLeads() {
                 </Box>
                 {currentLeads.length === 0 && (
                     <Box textAlign="center" mt={2}>
-                    <Typography variant="h6">No leads found</Typography>
+                        <Typography variant="h6">No leads found</Typography>
                     </Box>
                 )}
                 {currentLeads.length > 0 && (
@@ -143,19 +144,30 @@ export default function UnAssignedLeads() {
                         <button onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} disabled={currentPage === 1} style={{ fontSize: '12px' }}>
                             Previous
                         </button>
-                        {[...Array(totalPages)].map((_, i) => {
-                            const page = i + 1;
-                            return (
-                                <button
-                                    key={page}
-                                    onClick={() => setCurrentPage(page)}
-                                    style={{ fontSize: '12px' }}
-                                    className={currentPage === page ? "active" : ""}
-                                >
-                                    {page}
-                                </button>
-                            );
-                        })}
+                        {Array.from({ length: totalPages }, (_, i) => i + 1)
+                            .filter((page) => {
+                                if (page <= 2 || page === totalPages) return true;
+                                if (page >= currentPage - 1 && page <= currentPage + 1) return true;
+                                return false;
+                            })
+                            .map((page, index, filteredPages) => {
+                                const prevPage = filteredPages[index - 1];
+                                const showEllipsis = prevPage && page - prevPage > 1;
+
+                                return (
+                                    <React.Fragment key={page}>
+                                        {showEllipsis && <span style={{ fontSize: '12px' }}>...</span>}
+                                        <button
+                                            key={page}
+                                            onClick={() => setCurrentPage(page)}
+                                            style={{ fontSize: '12px' }}
+                                            className={currentPage === page ? "active" : ""}
+                                        >
+                                            {page}
+                                        </button>
+                                    </React.Fragment>
+                                );
+                            })}
                         <button onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} style={{ fontSize: '12px' }}>
                             Next
                         </button>
