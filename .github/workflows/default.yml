@@ -1,4 +1,3 @@
-# This builds & validates the code
 name: Build & Test
 
 on:
@@ -27,9 +26,8 @@ jobs:
 
       - name: Run tests if they exist
         run: |
-          # Check if there are any test files before running tests
           if [ -d "src" ] && find src -name "*.test.*" -o -name "*.spec.*" | grep -q .; then
-            npm test -- --coverage --watchAll=false
+            npm test -- --watchAll=false
           else
             echo "No test files found, skipping tests"
           fi
@@ -38,3 +36,4 @@ jobs:
         run: npm run build
         env:
           CI: false
+          ESLINT_NO_DEV_ERRORS: false
