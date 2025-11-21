@@ -1,12 +1,12 @@
-# This generates React build & uploads to GitHub Release
-name: Generate Artifacts & Deploy (React)
+# This generates build artifacts & uploads to release
+name: Generate artifacts & deploy
 
 on:
   workflow_dispatch:
 
 jobs:
   publish:
-    name: Build React Artifact
+    name: Build artifact
     runs-on: ubuntu-latest
 
     steps:
@@ -16,20 +16,26 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: '18'
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Build React app
-        run: CI=false npm run build
+      - name: Run tests
+        run: npm test -- --watchAll=false
 
-      - name: Zip build folder
+      - name: Build project (Production)
+        run: npm run build
+        env:
+          CI: false
+
+      - name: Create build artifacts
         run: |
-          cd build
-          zip -r ../react-build.zip .
-          cd ..
+          # Create a zip file of the build folder
+          zip -r build-artifact.zip build/
+          # Also create tar.gz for alternative download
+          tar -czf build-artifact.tar.gz build/
 
       - name: Generate release tag version
         run: |
@@ -37,8 +43,8 @@ jobs:
           current_datetime=$(date +'%Y%m%d%H%M%S')
           echo "TAG_VERSION=$current_datetime-$sha_short" >> $GITHUB_ENV
 
-      - name: Create Release & Upload Artifact
+      - name: Create Release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "react-build.zip"
+          artifacts: "build-artifact.zip,build-artifact.tar.gz"
           tag: ${{ env.TAG_VERSION }}

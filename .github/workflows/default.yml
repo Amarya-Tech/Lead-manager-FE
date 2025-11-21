@@ -1,5 +1,5 @@
-# This builds & validates the React project
-name: Build & Test (React)
+# This builds & validates the code
+name: Build & Test
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    name: Install, Build & Test
+    name: Compile & Test
     runs-on: ubuntu-latest
 
     steps:
@@ -19,14 +19,14 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: '18'
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Run tests
-        run: npm test -- --watchAll=false --passWithNoTests
-        
-      - name: Build React app
+        run: npm test -- --coverage --watchAll=false
+
+      - name: Build project
         run: npm run build
