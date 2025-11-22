@@ -2,7 +2,6 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { CircularProgress, Box } from "@mui/material";
 import { ToastContainer } from 'react-toastify';
-import Cookies from 'js-cookie';
 
 // Pages
 import Dashboard from "./pages/Dashboard.js";

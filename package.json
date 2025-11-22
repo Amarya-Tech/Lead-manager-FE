@@ -26,20 +26,16 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "build:ci": "GENERATE_SOURCEMAP=false ESLINT_NO_DEV_ERRORS=true react-scripts build",
     "test": "react-scripts test",
+    "test:ci": "react-scripts test --watchAll=false --passWithNoTests",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": [
       "react-app",
       "react-app/jest"
-    ],
-    "rules": {
-      "no-unused-vars": "warn",
-      "react-hooks/exhaustive-deps": "warn",
-      "eqeqeq": "warn",
-      "no-mixed-operators": "warn"
-    }
+    ]
   },
   "browserslist": {
     "production": [
