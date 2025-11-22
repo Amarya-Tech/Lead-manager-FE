@@ -23,22 +23,30 @@ jobs:
 
       - name: Run tests if they exist
         run: |
+          # Check if there are any test files before running tests
           if [ -d "src" ] && find src -name "*.test.*" -o -name "*.spec.*" | grep -q .; then
-            npm test -- --watchAll=false
+            npm test -- --watchAll=false --passWithNoTests
           else
             echo "No test files found, skipping tests"
+            npm test -- --watchAll=false --passWithNoTests
           fi
+
+      - name: Update browserslist database
+        run: npx update-browserslist-db@latest
 
       - name: Build project (Production)
         run: |
-          # Temporarily disable ESLint to allow build to complete
-          DISABLE_ESLINT_PLUGIN=true npm run build
+          # Disable ESLint errors and build optimized production bundle
+          DISABLE_ESLINT_PLUGIN=true GENERATE_SOURCEMAP=false npm run build
         env:
           CI: false
+          NODE_ENV: production
 
       - name: Create build artifacts
         run: |
+          # Create a zip file of the build folder
           zip -r build-artifact.zip build/
+          # Also create tar.gz for alternative download
           tar -czf build-artifact.tar.gz build/
 
       - name: Generate release tag version
