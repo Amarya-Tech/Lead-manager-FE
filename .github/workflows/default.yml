@@ -28,8 +28,4 @@ jobs:
         run: echo "Skipping tests as no test files exist"
 
       - name: Build project
-        run: |
-          # Disable ESLint errors for CI build
-          DISABLE_ESLINT_PLUGIN=true npm run build
-        env:
-          CI: false
+        run: CI=false npm run build
