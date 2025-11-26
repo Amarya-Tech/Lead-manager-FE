@@ -58,6 +58,8 @@ jobs:
           gh release create "${{ env.TAG_VERSION }}" \
             build-artifact.zip build-artifact.tar.gz \
             --title "Release ${{ env.TAG_VERSION }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 
       # - name: Create Release
