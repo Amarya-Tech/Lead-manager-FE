@@ -3,10 +3,8 @@ name: Generate artifacts & deploy
 on:
   workflow_dispatch:
 
-permissions:  # giving the write permission to the 
+permissions:
   contents: write
-  actions: read
-  checks: read
 
 jobs:
   publish:
@@ -34,44 +32,26 @@ jobs:
 
       - name: Build project (Production)
         run: |
-          # Disable ESLint errors and build optimized production bundle
           DISABLE_ESLINT_PLUGIN=true GENERATE_SOURCEMAP=false npm run build
         env:
           CI: false
           NODE_ENV: production
 
-      - name: Debug Token Access
-        run: |
-          curl -H "Authorization: token ${{ secrets.PAT_TOKEN }}" \
-              https://api.github.com/repos/Amarya-Tech/Lead-manager-FE
-
       - name: Create build artifacts
         run: |
-          # Create a zip file of the build folder
           zip -r build-artifact.zip build/
-          # Also create tar.gz for alternative download
           tar -czf build-artifact.tar.gz build/
-
 
       - name: Generate release tag version
         run: |
           sha_short=$(git rev-parse --short "$GITHUB_SHA")
           current_datetime=$(date +'%Y%m%d%H%M%S')
           echo "TAG_VERSION=$current_datetime-$sha_short" >> $GITHUB_ENV
-      
+
       - name: Create Release using gh CLI
         run: |
           gh release create "${{ env.TAG_VERSION }}" \
             build-artifact.zip build-artifact.tar.gz \
             --title "Release ${{ env.TAG_VERSION }}"
         env:
-          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
-
-
-
-      # - name: Create Release
-      #   uses: ncipollo/release-action@v1
-      #   with:
-      #     artifacts: "build-artifact.zip,build-artifact.tar.gz"
-      #     tag: ${{ env.TAG_VERSION }}
-      #     token: ${{ secrets.PAT_TOKEN }}  # for personal access token remove this line
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
