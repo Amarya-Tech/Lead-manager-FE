@@ -40,6 +40,11 @@ jobs:
           CI: false
           NODE_ENV: production
 
+      - name: Debug Token Access
+        run: |
+          curl -H "Authorization: token ${{ secrets.PAT_TOKEN }}" \
+              https://api.github.com/repos/Amarya-Tech/Lead-manager-FE
+
       - name: Create build artifacts
         run: |
           # Create a zip file of the build folder
@@ -47,10 +52,6 @@ jobs:
           # Also create tar.gz for alternative download
           tar -czf build-artifact.tar.gz build/
 
-      - name: Debug Token Access
-        run: |
-          curl -H "Authorization: token ${{ secrets.RELEASE_TOKEN }}" \
-              https://api.github.com/repos/Amarya-Tech/Lead-manager-FE
 
       - name: Generate release tag version
         run: |
