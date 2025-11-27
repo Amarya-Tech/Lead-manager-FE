@@ -47,6 +47,11 @@ jobs:
           # Also create tar.gz for alternative download
           tar -czf build-artifact.tar.gz build/
 
+      - name: Debug Token Access
+        run: |
+          curl -H "Authorization: token ${{ secrets.RELEASE_TOKEN }}" \
+              https://api.github.com/repos/Amarya-Tech/Lead-manager-FE
+
       - name: Generate release tag version
         run: |
           sha_short=$(git rev-parse --short "$GITHUB_SHA")
@@ -60,11 +65,6 @@ jobs:
       #       --title "Release ${{ env.TAG_VERSION }}"
       #   env:
       #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Debug Token Access
-        run: |
-          curl -H "Authorization: token ${{ secrets.RELEASE_TOKEN }}" \
-              https://api.github.com/repos/Amarya-Tech/Lead-manager-FE
 
 
 
