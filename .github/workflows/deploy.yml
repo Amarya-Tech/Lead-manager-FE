@@ -61,6 +61,12 @@ jobs:
       #   env:
       #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Debug Token Access
+        run: |
+          curl -H "Authorization: token ${{ secrets.RELEASE_TOKEN }}" \
+              https://api.github.com/repos/Amarya-Tech/Lead-manager-FE
+
+
 
       - name: Create Release
         uses: ncipollo/release-action@v1
