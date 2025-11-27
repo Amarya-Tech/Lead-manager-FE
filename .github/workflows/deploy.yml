@@ -53,18 +53,18 @@ jobs:
           current_datetime=$(date +'%Y%m%d%H%M%S')
           echo "TAG_VERSION=$current_datetime-$sha_short" >> $GITHUB_ENV
       
-      - name: Create Release using gh CLI
-        run: |
-          gh release create "${{ env.TAG_VERSION }}" \
-            build-artifact.zip build-artifact.tar.gz \
-            --title "Release ${{ env.TAG_VERSION }}"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Create Release using gh CLI
+      #   run: |
+      #     gh release create "${{ env.TAG_VERSION }}" \
+      #       build-artifact.zip build-artifact.tar.gz \
+      #       --title "Release ${{ env.TAG_VERSION }}"
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 
-      # - name: Create Release
-      #   uses: ncipollo/release-action@v1
-      #   with:
-      #     artifacts: "build-artifact.zip,build-artifact.tar.gz"
-      #     tag: ${{ env.TAG_VERSION }}
-      #     token: ${{ secrets.RELEASE_TOKEN }} # for personal access token remove this line
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "build-artifact.zip,build-artifact.tar.gz"
+          tag: ${{ env.TAG_VERSION }}
+          token: ${{ secrets.PAT_TOKEN }}  # for personal access token remove this line
