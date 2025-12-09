@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 import Sidebar from "../components/SideBar.js";
 import LeadsTable from "../components/LeadsTable.js";
+import DownloadIcon from '@mui/icons-material/Download';
 import "./css/Leads.css";
 
 import {
@@ -29,6 +30,7 @@ export default function Dashboard() {
   const [userCompanies, setUserCompanies] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState("");
   const [advancedOpen, setAdvancedOpen] = useState(false);
+
 
   // Advanced search fields
   const [filters, setFilters] = useState({
@@ -67,6 +69,31 @@ export default function Dashboard() {
     assignedPerson: ""
   });
   };
+
+  // const downloadLeadsInCsv = async () => {
+  //   try{
+  //     let response, companyId = null;
+  //     const company_name = userCompanies.filter((company) => company.id == selectedCompany);
+  //     const downloadBySelectedCompany = company_name.length == 0 ? "All Brands" : company_name[0].parent_company_name;
+  //     response = await apiClient.get(`/lead/export-leads/${userId}?parent_company_name=${downloadBySelectedCompany}` , {
+  //       responseType : 'blob'
+  //     });
+  //     const blob = new Blob([response.data], { type: "text/csv" });
+  //   const url = window.URL.createObjectURL(blob);
+
+  //   const link = document.createElement("a");
+  //   link.href = url;
+  //   link.download = downloadBySelectedCompany ? `${downloadBySelectedCompany}-leads.csv` : `all-leads.csv`;
+
+  //   document.body.appendChild(link);
+  //   link.click();
+
+  //   link.remove();
+  //   window.URL.revokeObjectURL(url);
+  //   }catch(error){
+  //     console.error("Failed to fetch leads:", error);
+  //   }
+  // }
 
   useEffect(() => {
     const fetchLeadCounts = async () => {
@@ -259,44 +286,47 @@ export default function Dashboard() {
         </Box>
 
         {/*Filter by Company/Brand  */}
-        <Box position="relative" mb={1} width="250px">
-          <Typography variant="h6" sx={{
-            fontSize: '12px',
-            fontWeight: 'bold',
-            color: '#000000',
-            fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif`
-          }}>Filter by Managing Brand
-          </Typography>
+        <Box position="relative" width="100%" display="flex" justifyContent="space-between" alignItems="center">       
+          <Box position="relative" mb={1} width="250px">
+            <Typography variant="h6" sx={{
+              fontSize: '12px',
+              fontWeight: 'bold',
+              color: '#000000',
+              fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif`
+            }}>Filter by Managing Brand
+            </Typography>
 
-          <TextField
-            select
-            fullWidth
-            variant="outlined"
-            Placeholder="Filter by Managing Brand"
-            value={selectedCompany}
-            onChange={(e) => setSelectedCompany(e.target.value)}
-            SelectProps={{ native: true }}
-            sx={{
-              '& .MuiInputBase-root': {
-                fontSize: '12px',   // font for selected value
-                height: '40px',
-              },
-              '& .MuiInputLabel-root': {
-                fontSize: '10px',   // font for label
-              },
-              '& option': {
-                fontSize: '10px',   // font for dropdown items
-              },
-            }}
-          >
+            <TextField
+              select
+              fullWidth
+              variant="outlined"
+              Placeholder="Filter by Managing Brand"
+              value={selectedCompany}
+              onChange={(e) => setSelectedCompany(e.target.value)}
+              SelectProps={{ native: true }}
+              sx={{
+                '& .MuiInputBase-root': {
+                  fontSize: '12px',   // font for selected value
+                  height: '40px',
+                },
+                '& .MuiInputLabel-root': {
+                  fontSize: '10px',   // font for label
+                },
+                '& option': {
+                  fontSize: '10px',   // font for dropdown items
+                },
+              }}
+            >
 
-            <option value="">All Brands</option>
-            {userCompanies.map((company) => (
-              <option key={company.id} value={company.id}>
-                {company.parent_company_name}
-              </option>
-            ))}
-          </TextField>
+              <option value="">All Brands</option>
+              {userCompanies.map((company) => (
+                <option key={company.id} value={company.id} onClick={() => setDownloadBySelectedCompany(company.parent_company_name)}>
+                  {company.parent_company_name}
+                </option>
+              ))}
+            </TextField>
+          </Box>
+          {/* {(userRole === "super_admin" && searchTerm === '') && <DownloadIcon onClick={() => downloadLeadsInCsv()}/> } */}
         </Box>
 
         {/* Search Box For Advanced Search*/}

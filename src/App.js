@@ -17,6 +17,7 @@ import PossibleInactiveLeadsTable from "./components/PossibleInactiveLeads.js";
 import AssignedLeads from "./components/AssignedLeads.js";
 import UnAssignedLeads from "./components/UnassignedLeads.js";
 import FollowupLeads from "./components/FollowupLeads.js";
+import ExportExcel from "./components/ExportExcel.js";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -93,6 +94,12 @@ function App() {
         <Route path="/upload-sheet" element={
           <RoleProtectedRoute allowedRoles={['super_admin']}>
             <CsvUploadPage />
+          </RoleProtectedRoute>
+        } />
+
+        <Route path="/download-sheet" element={
+          <RoleProtectedRoute allowedRoles={['super_admin']}>
+            <ExportExcel />
           </RoleProtectedRoute>
         } />
 

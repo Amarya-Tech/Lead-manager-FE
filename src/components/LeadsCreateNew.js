@@ -304,10 +304,10 @@ const LeadsNewPage = () => {
 
     setShowContactErrors(true);
 
-    if (!validateContactForm()) {
-      toast.error('Please fill in all required contact fields');
-      return;
-    }
+    // if (!validateContactForm()) {
+    //   toast.error('Please fill in all required contact fields');
+    //   return;
+    // }
 
     try {
       const requestBody = {
@@ -794,9 +794,8 @@ const LeadsNewPage = () => {
                       onChange={(e) =>
                         setContactForm({ ...contactForm, name: e.target.value })
                       }
-                      error={showContactErrors && !contactForm.name}
+                      error={showContactErrors}
                       disabled={contactSaved || contactSkipped}
-                      required
                     />
                   </Grid>
 
@@ -809,9 +808,8 @@ const LeadsNewPage = () => {
                       onChange={(e) =>
                         setContactForm({ ...contactForm, designation: e.target.value })
                       }
-                      error={showContactErrors && !contactForm.designation}
+                      error={showContactErrors}
                       disabled={contactSaved || contactSkipped}
-                      required
                     />
                   </Grid>
 

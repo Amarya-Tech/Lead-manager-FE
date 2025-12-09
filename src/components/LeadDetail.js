@@ -647,8 +647,8 @@ function ContactSection({ leadDetails, leadId, isEditing, onEdit, onCancel, onSa
       !contact.name?.trim() &&
       !contact.designation?.trim() &&
       !contact.email?.trim() &&
-      !contact.phone?.trim() &&
-      !contact.alt_phone?.trim();
+      !contact.phone?.toString().trim() &&
+      !contact.alt_phone?.toString().trim();
 
     if (
       initialContacts.length === 0 ||
@@ -707,10 +707,11 @@ function ContactSection({ leadDetails, leadId, isEditing, onEdit, onCancel, onSa
   const validateContacts = () => {
     for (let i = 0; i < contacts.length; i++) {
       const contact = contacts[i];
-      if (!contact.name?.trim()) {
-        alert(`Contact ${i + 1}: Name is required`);
-        return false;
-      }
+      //contact isoptional now
+      // if (!contact.name?.trim()) {
+      //   alert(`Contact ${i + 1}: Name is required`);
+      //   return false;
+      // }
       if (contact.email && !/\S+@\S+\.\S+/.test(contact.email)) {
         alert(`Contact ${i + 1}: Please enter a valid email address`);
         return false;
@@ -760,14 +761,12 @@ function ContactSection({ leadDetails, leadId, isEditing, onEdit, onCancel, onSa
                   label="Name"
                   value={contact.name || ''}
                   onChange={(e) => handleContactChange(index, 'name', e.target.value)}
-                  required
                   fullWidth
                 />
                 <TextField
                   label="Designation"
                   value={contact.designation || ''}
                   onChange={(e) => handleContactChange(index, 'designation', e.target.value)}
-                  required
                   fullWidth
                 />
                 <TextField

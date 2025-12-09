@@ -74,7 +74,7 @@ export default function Sidebar() {
     ]
   },
     ...(isAdmin || isSuperAdmin ? [{ text: 'User Management', path: '/users' }] : []),
-    ...(isSuperAdmin ? [{ text: 'Upload Sheet', path: '/upload-sheet' }] : []),
+    ...(isSuperAdmin ? [{ text: 'Upload Sheet', path: '/upload-sheet' }, {text : 'Download Sheet' , path : "/download-sheet"}] : []),
     { text: 'My Profile', path: '/user-profile' },
   ];
 
