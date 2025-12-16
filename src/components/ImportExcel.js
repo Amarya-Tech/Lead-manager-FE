@@ -50,7 +50,7 @@ const CsvUploadPage = () => {
       const response = await apiClient.post(apiUrl, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
-
+      console.log("response" , response);
       if (!response.data.success && response.status === 201) {
         setErrorData(response.data.data);
       } else if (response.data.success && response.status === 200) {
@@ -70,7 +70,9 @@ const CsvUploadPage = () => {
   const getHeaders = (data) => {
     if (!data || data.length === 0) return [];
     const keys = new Set();
+    console.log("errors array" , data)
     data.forEach(row => {
+      console.log(row)
       Object.keys(row).forEach(key => {
         if (key !== 'validation_error') {
           keys.add(key);
@@ -272,7 +274,10 @@ const CsvUploadPage = () => {
                               borderBottom: "1px solid #f0f0f0",
                             }}
                           >
-                            {row[key] || ""}
+                            {typeof row[key] === "object" && row[key] !== null
+                              ? JSON.stringify(row[key])  // or row[key].parent_company_name
+                              : row[key] || ""
+                            }
                           </TableCell>
                         ))}
                       </TableRow>
