@@ -33,3 +33,19 @@ jobs:
           DISABLE_ESLINT_PLUGIN=true GENERATE_SOURCEMAP=false npm run build
         env:
           CI: false
+
+      - name: Create ZIP artifact
+        run: |
+          zip -r frontend-build.zip build/
+
+      - name: Generate release tag
+        run: |
+          TAG="v$(date +'%Y%m%d%H%M%S')"
+          echo "TAG_NAME=$TAG" >> $GITHUB_ENV
+
+      - name: Create GitHub Release
+        run: |
+          gh release create "$TAG_NAME" frontend-build.zip \
+            --title "Frontend Release $TAG_NAME"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
