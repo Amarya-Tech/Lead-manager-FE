@@ -1070,7 +1070,7 @@ function OfficeSection({ leadDetails, leadId, isEditing, onEdit, onCancel, onSav
 
               <Box mt={2} display="grid" gridTemplateColumns="repeat(auto-fit, minmax(250px, 1fr))" gap={2}>
                 <TextField
-                  label="Address *"
+                  label="Address "
                   value={office.address || ''}
                   onChange={(e) => handleOfficeChange(index, 'address', e.target.value)}
                   required
@@ -1079,7 +1079,7 @@ function OfficeSection({ leadDetails, leadId, isEditing, onEdit, onCancel, onSav
                   fullWidth
                 />
                 <FormControl fullWidth>
-                  <InputLabel>Country</InputLabel>
+                  <InputLabel>Country *</InputLabel>
                   <Select
                     value={office.countryCode || ''}
                     onChange={(e) => {
