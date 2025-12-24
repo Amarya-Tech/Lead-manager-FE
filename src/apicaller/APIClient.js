@@ -3,7 +3,6 @@ import { useAuthStore } from './AuthStore.js';
 
 const apiClient = axios.create({
   baseURL: `${process.env.REACT_APP_API_URL}`,
-  timeout: 10000,
   withCredentials: true, 
 });
 
